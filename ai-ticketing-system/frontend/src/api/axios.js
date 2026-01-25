@@ -1,0 +1,25 @@
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://127.0.0.1:8000",
+});
+
+api.interceptors.request.use((config)=>{
+    const token = localStorage.getItem("token");
+    const tenant = localStorage.getItem("tenant_id");
+
+    if(token){
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if(tenant){
+        config.headers["X-Tenant-ID"] = tenant;
+    }
+
+  return config;
+});
+
+export default api;
+
+
+

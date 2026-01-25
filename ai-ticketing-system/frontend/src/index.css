@@ -1,0 +1,127 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  color: #333;
+  transition: background 0.3s ease;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+body.dark {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #e0e0e0;
+}
+
+body.dark code {
+  background: #333;
+  color: #e0e0e0;
+}
+
+.card {
+  background: #fff;
+  color: #333;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+}
+
+body.dark .card {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+body.dark .card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+}
+
+.stat-card {
+  padding: 30px;
+  border-radius: 16px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255,255,255,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: all 0.5s;
+  transform: rotate(0deg);
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.2);
+}
+
+.stat-card:hover::before {
+  transform: rotate(360deg);
+}
+
+.stat-card h2 {
+  margin: 10px 0 0 0;
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.stat-card h3 {
+  margin: 0 0 5px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.stat-card p {
+  margin: 5px 0 0 0;
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+.button-dark {
+  background-color: #444;
+  color: white;
+}
+
+.button-dark:hover {
+  background-color: #555;
+}
+
+.button-light {
+  background-color: #f0f0f0;
+  color: black;
+}
+

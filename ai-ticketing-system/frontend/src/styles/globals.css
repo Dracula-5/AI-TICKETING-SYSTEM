@@ -1,0 +1,193 @@
+/* Global Utilities */
+
+body {
+  overflow-x: hidden;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+body.dark ::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+body.dark ::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+body.dark ::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Selection */
+::selection {
+  background: #667eea;
+  color: white;
+}
+
+body.dark ::selection {
+  background: #764ba2;
+  color: white;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Material UI Overrides for better styling */
+.MuiCard-root {
+  background-color: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark .MuiCard-root {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.MuiButton-contained {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.MuiButton-contained:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
+.MuiTextField-root .MuiOutlinedInput-root {
+  transition: all 0.3s ease;
+}
+
+.MuiTextField-root .MuiOutlinedInput-root:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.MuiChip-root {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Table Styling */
+.MuiTable-root {
+  background: white;
+}
+
+body.dark .MuiTable-root {
+  background: #2a2a2a;
+}
+
+.MuiTableRow-root {
+  transition: all 0.2s ease;
+}
+
+.MuiTableRow-root:hover {
+  background-color: #f5f5f5;
+}
+
+body.dark .MuiTableRow-root:hover {
+  background-color: #333;
+}
+
+/* Drawer and AppBar */
+.MuiDrawer-paper {
+  transition: all 0.3s ease;
+}
+
+.MuiAppBar-root {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 960px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .MuiCard-root {
+    border-radius: 12px;
+  }
+}
+
+/* Accessibility improvements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Link styling */
+a {
+  color: #667eea;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  color: #764ba2;
+}
+
+body.dark a {
+  color: #a8e6cf;
+}
+
+body.dark a:hover {
+  color: #7fd8be;
+}
