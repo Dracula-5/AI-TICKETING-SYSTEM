@@ -1,7 +1,7 @@
 def predict_priority(text: str) -> str:
     """
     Simple NLP-based priority predictor.
-    Later we will replace this with ML.
+    Can be replaced later with ML model.
     """
 
     text = text.lower()
@@ -16,6 +16,10 @@ def predict_priority(text: str) -> str:
         "broken", "immediately"
     ]
 
+    medium_keywords = [
+        "slow", "sometimes"
+    ]
+
     for word in critical_keywords:
         if word in text:
             return "critical"
@@ -24,16 +28,8 @@ def predict_priority(text: str) -> str:
         if word in text:
             return "high"
 
-    return "medium"
-
-def predict_priority(description: str):
-    text = description.lower()
-
-    if "urgent" in text or "immediately" in text or "critical" in text:
-        return "high"
-
-    if "slow" in text or "sometimes" in text:
-        return "medium"
+    for word in medium_keywords:
+        if word in text:
+            return "medium"
 
     return "low"
-
