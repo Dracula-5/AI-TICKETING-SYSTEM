@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.db.database import get_db
 from app.core.security import get_current_user
 from app.db.models import User, Tenant
+from app.services.seed_users import create_default_tenant
 from app.schemas.auth import RegisterRequest, RegisterSimpleRequest, Token
 from app.core.security import (
     get_current_user,
@@ -53,7 +54,8 @@ def register_simple(user: RegisterSimpleRequest, db: Session = Depends(get_db)):
 
     tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
     if not tenant:
-        raise HTTPException(status_code=404, detail="Tenant not found")
+        tenant_id = create_default_tenant(db)
+        user.tenant_id = tenant_id
 
     hashed_password = get_password_hash(user.password)
 
