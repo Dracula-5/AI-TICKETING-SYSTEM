@@ -26,7 +26,7 @@ def add_comment(
 
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
-
+        
     # tenant security
     if ticket.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=403, detail="Forbidden")

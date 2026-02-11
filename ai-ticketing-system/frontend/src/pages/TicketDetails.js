@@ -30,9 +30,8 @@ export default function TicketDetails() {
   function addComment() {
     if (!text.trim()) return;
     
-    api.post("/comments", {
-      content: text,
-      ticket_id: id
+    api.post(`/comments/${id}`, {
+      content: text
     }).then(() => {
       setText("");
       load();

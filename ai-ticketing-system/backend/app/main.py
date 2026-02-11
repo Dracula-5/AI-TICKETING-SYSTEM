@@ -9,6 +9,7 @@ from app.routers import auth, tenant, ticket, comments, users
 from app.routers import providers
 from app.services.sla_monitor import check_sla
 from app.routers import sla
+from app.core.config import settings
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI(title="AI Ticketing System")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000","http://127.0.0.1:3000"],
+    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,6 +47,14 @@ def sla_background_job():
 @app.get("/")
 def home():
     return {"message": "Backend running"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+@app.get("/ready")
+def ready():
+    return {"status": "ready"}
 
 @app.get("/ping")
 def ping():

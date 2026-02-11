@@ -1,7 +1,7 @@
 def predict_priority(text: str) -> str:
     """
     Simple NLP-based priority predictor.
-    Can be replaced later with ML model.
+    will be replaced later with ML model.
     """
 
     text = text.lower()

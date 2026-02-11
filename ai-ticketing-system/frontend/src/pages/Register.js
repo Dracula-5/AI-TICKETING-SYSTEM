@@ -1,18 +1,19 @@
 import { useState } from "react";
 import { Button, TextField, Card, CircularProgress, Alert } from "@mui/material";
-import LockIcon from "@mui/icons-material/Lock";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import api from "../api/axios";
 import "../styles/login.css";
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function login() {
+  async function register() {
     if (!email || !password) {
-      setError("Please fill in all fields");
+      setError("Email and password are required");
       return;
     }
 
@@ -20,33 +21,27 @@ export default function Login() {
     setError("");
 
     try {
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
-
-      const res = await api.post("/auth/login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
+      const res = await api.post("/auth/register-simple", {
+        email,
+        password,
+        name: name || undefined
       });
 
       localStorage.setItem("token", res.data.access_token);
-
       const me = await api.get("/auth/me");
       localStorage.setItem("role", me.data.role);
       localStorage.setItem("tenant_id", me.data.tenant_id);
 
       window.location.href = "/dashboard";
     } catch (err) {
-      console.error(err);
-      setError("Invalid email or password. Please try again.");
+      setError(err.response?.data?.detail || "Registration failed");
     } finally {
       setLoading(false);
     }
   }
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") login();
+    if (e.key === "Enter") register();
   };
 
   return (
@@ -57,13 +52,26 @@ export default function Login() {
         <Card className="login-card">
           <div className="login-header">
             <div className="login-icon-wrapper">
-              <LockIcon className="login-icon" />
+              <PersonAddIcon className="login-icon" />
             </div>
-            <h1>Welcome</h1>
-            <p>AI Ticketing System</p>
+            <h1>Create Account</h1>
+            <p>Join the AI Ticketing System</p>
           </div>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+          <TextField
+            label="Name (optional)"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyPress={handleKeyPress}
+            disabled={loading}
+            placeholder="Your name"
+            sx={{ mb: 2 }}
+            autoFocus
+          />
 
           <TextField
             label="Email Address"
@@ -76,7 +84,6 @@ export default function Login() {
             disabled={loading}
             placeholder="you@example.com"
             sx={{ mb: 2 }}
-            autoFocus
           />
 
           <TextField
@@ -95,7 +102,7 @@ export default function Login() {
           <Button
             variant="contained"
             fullWidth
-            onClick={login}
+            onClick={register}
             disabled={loading}
             className="login-button"
             sx={{
@@ -109,17 +116,11 @@ export default function Login() {
               }
             }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : "Sign In"}
+            {loading ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
           </Button>
 
           <p className="login-footer">
-            Demo Credentials:<br/>
-            Email: user@example.com<br/>
-            Password: password
-          </p>
-
-          <p className="login-footer">
-            New user? <a href="/register">Create an account</a>
+            Already have an account? <a href="/">Sign in</a>
           </p>
         </Card>
       </div>

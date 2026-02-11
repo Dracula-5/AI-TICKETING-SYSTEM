@@ -41,6 +41,61 @@ body.dark .provider-header p {
   transition: all 0.3s ease;
 }
 
+.provider-open-card {
+  margin-top: 24px;
+}
+
+.provider-legend {
+  margin-bottom: 20px;
+  border-radius: 16px;
+}
+
+.legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #555;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-open { background: #9e9e9e; }
+.legend-progress { background: #ed6c02; }
+.legend-resolved { background: #2e7d32; }
+.legend-high { background: #d32f2f; }
+
+.provider-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.provider-section-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+body.dark .legend-item { color: #cfcfcf; }
+body.dark .provider-section-header h2 { color: #e0e0e0; }
+
 .provider-tickets-card:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }

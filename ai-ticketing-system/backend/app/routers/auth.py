@@ -4,8 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.db.database import get_db
 from app.core.security import get_current_user
-from app.db.models import User
-from app.schemas.auth import RegisterRequest, Token
+from app.db.models import User, Tenant
+from app.schemas.auth import RegisterRequest, RegisterSimpleRequest, Token
 from app.core.security import (
     get_current_user,
     get_password_hash,
@@ -29,6 +29,36 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
 
     new_user = User(
         name=user.name,
+        email=user.email,
+        hashed_password=hashed_password,
+        role=user.role,
+        tenant_id=user.tenant_id
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    token = create_access_token({"sub": str(new_user.id)})
+    return {"access_token": token, "token_type": "bearer"}
+
+@router.post("/register-simple", response_model=Token, status_code=status.HTTP_201_CREATED)
+def register_simple(user: RegisterSimpleRequest, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    tenant = db.query(Tenant).filter(Tenant.id == user.tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    hashed_password = get_password_hash(user.password)
+
+    new_user = User(
+        name=user.name or user.email.split("@")[0],
         email=user.email,
         hashed_password=hashed_password,
         role=user.role,

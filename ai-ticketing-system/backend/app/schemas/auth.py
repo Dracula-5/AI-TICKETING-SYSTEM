@@ -13,6 +13,17 @@ class RegisterRequest(BaseModel):
 
 
 # =========================
+# SIMPLE REGISTER REQUEST
+# =========================
+class RegisterSimpleRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str | None = None
+    role: str = "customer"
+    tenant_id: int = 1
+
+
+# =========================
 # JWT TOKEN RESPONSE
 # =========================
 class Token(BaseModel):

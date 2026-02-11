@@ -40,7 +40,9 @@ def create_ticket(
     priority = ticket.priority if ticket.priority else auto_priority
 
     # SLA Times
-    if priority == "high":
+    if priority == "critical":
+        sla_hours = 2
+    elif priority == "high":
         sla_hours = 6
     elif priority == "medium":
         sla_hours = 12
@@ -205,6 +207,49 @@ def provider_my_tickets(
         Ticket.assigned_to_user_id == current_user.id
     ).all()
 
+@router.get("/provider/open", response_model=list[TicketOut])
+def provider_open_tickets(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["provider", "service_provider"]:
+        raise HTTPException(status_code=403, detail="Only providers allowed")
+
+    return db.query(Ticket).filter(
+        Ticket.tenant_id == current_user.tenant_id,
+        Ticket.assigned_to_user_id == None,  # noqa: E711
+        Ticket.status == "open"
+    ).all()
+
+@router.post("/provider/offer/{ticket_id}")
+def provider_offer_help(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role not in ["provider", "service_provider"]:
+        raise HTTPException(status_code=403, detail="Only providers allowed")
+
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    if ticket.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    if ticket.assigned_to_user_id is not None:
+        raise HTTPException(status_code=400, detail="Ticket already assigned")
+
+    if ticket.status != "open":
+        raise HTTPException(status_code=400, detail="Ticket is not open")
+
+    ticket.assigned_to_user_id = current_user.id
+    ticket.status = "in-progress"
+    db.commit()
+    db.refresh(ticket)
+
+    return {"message": "You are now assigned to this ticket", "ticket": ticket}
+
 
 # ========================
 # Provider Update Status
@@ -284,13 +329,25 @@ def ai_create_ticket(
     priority = predict_priority(text)
     category = predict_category(text, text)
 
+    if priority == "critical":
+        sla_hours = 2
+    elif priority == "high":
+        sla_hours = 6
+    elif priority == "medium":
+        sla_hours = 12
+    else:
+        sla_hours = 24
+
+    sla_due_time = datetime.utcnow() + timedelta(hours=sla_hours)
+
     new_ticket = Ticket(
         title=title,
         description=text,
         priority=priority,
         category=category,
         tenant_id=tenant_id,
-        created_by_user_id=current_user.id
+        created_by_user_id=current_user.id,
+        sla_due=sla_due_time
     )
 
     db.add(new_ticket)

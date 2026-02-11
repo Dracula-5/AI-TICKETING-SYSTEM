@@ -99,7 +99,7 @@ export default function AiTicketCreate() {
           <Card className="result-card">
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-                <span style={{ fontSize: "24px" }}>✅</span>
+                <span style={{ fontSize: "14px", fontWeight: 700 }}>OK</span>
                 <h3 style={{ margin: 0, color: "#333", fontSize: "20px", fontWeight: 700 }}>Ticket Created Successfully!</h3>
               </Box>
 

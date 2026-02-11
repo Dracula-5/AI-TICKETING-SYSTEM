@@ -129,12 +129,10 @@ Pre-configured users (auto-created on first startup):
 
 ### Technical Features
 ✅ **20+ REST API Endpoints** - Complete CRUD operations
-✅ **Swagger Documentation** - Interactive API testing at /docs
-✅ **Password Hashing** - Bcrypt for secure storage
-✅ **Database Abstraction** - SQLAlchemy ORM for flexibility
-✅ **Background Jobs** - Daemon threads for SLA monitoring
-✅ **Email Ready** - Notification system configured
-✅ **Migration Support** - Alembic ready for schema evolution
+
+This project exposes multiple REST endpoints (tickets, users, comments, auth, SLA).
+
+**Full interactive documentation at**: http://localhost:8000/docs
 
 ---
 
@@ -149,7 +147,7 @@ Pre-configured users (auto-created on first startup):
 - **Uvicorn** - ASGI server
 
 ### Frontend
-- **React 19** - UI framework
+- **React 18** - UI framework
 - **Material-UI** - Component library
 - **Axios** - HTTP client
 - **React Router** - Navigation
@@ -283,6 +281,15 @@ SECRET_KEY=your-secret-key-here
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+Create `.env` file in `frontend/` directory:
+```
+REACT_APP_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Examples are included:
+- `ai-ticketing-system/backend/.env.example`
+- `ai-ticketing-system/frontend/.env.example`
 
 ### Streamlit Configuration
 Configured in `.streamlit/config.toml`:

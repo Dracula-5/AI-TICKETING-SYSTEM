@@ -47,6 +47,7 @@ class Ticket(Base):
 
     status = Column(String, default="open")
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     tenant_id = Column(Integer, ForeignKey("tenants.id"))
     created_by_user_id = Column(Integer, ForeignKey("users.id"))

@@ -7,17 +7,12 @@ from app.core.config import settings
 # Use the database URL from Settings
 DATABASE_URL = settings.database_url
 
-
-SQLALCHEMY_DATABASE_URL = "sqlite:///./tickets.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
-
+connect_args = {}
+if DATABASE_URL.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
 
 # Create SQLAlchemy engine
-engine = create_engine(DATABASE_URL, future=True)
+engine = create_engine(DATABASE_URL, connect_args=connect_args, future=True)
 
 # Create a configured "Session" class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

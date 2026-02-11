@@ -1,0 +1,12 @@
+[build]
+  base = "ai-ticketing-system/frontend"
+  publish = "build"
+  command = "npm run build"
+
+[build.environment]
+  REACT_APP_API_BASE_URL = "https://YOUR_RENDER_SERVICE.onrender.com"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

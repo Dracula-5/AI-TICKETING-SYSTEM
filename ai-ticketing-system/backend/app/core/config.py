@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     secret_key: str = "TDwXmO7vcIeybQPYU8UNXYLtIGdqeP-yxcQKRTreR4WIzfIqwFW2z_WOkjSfUQP2"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 30
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     class Config:
         env_file = ".env"
