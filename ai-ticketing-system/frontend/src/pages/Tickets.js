@@ -18,7 +18,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
-import ChatBot from "../components/ChatBot";
 import "../styles/tickets.css";
 
 

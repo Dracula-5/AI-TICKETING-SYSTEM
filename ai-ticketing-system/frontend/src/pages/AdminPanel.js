@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Button, Table, TableHead, TableRow, TableCell, TableBody, Card, CardContent, Box, Alert, CircularProgress, Paper, TableContainer } from "@mui/material";
-import SettingsIcon from "@mui/icons-material/Settings";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
@@ -11,7 +10,6 @@ export default function AdminPanel() {
 
   const [tickets, setTickets] = useState([]);
   const [providers, setProviders] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [slaRunning, setSlaRunning] = useState(false);
 

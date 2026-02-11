@@ -3,7 +3,6 @@ import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { Table, TableRow, TableHead, TableCell, TableBody, Card, CardContent, Paper, TableContainer, Chip, Box } from "@mui/material";
-import PeopleIcon from "@mui/icons-material/People";
 import "../styles/users.css";
 
 export default function Users() {

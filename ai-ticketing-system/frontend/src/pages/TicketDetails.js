@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Card, CardContent, Chip, Button, TextField, Box, Avatar, Divider, CircularProgress
 } from "@mui/material";
@@ -17,15 +17,15 @@ export default function TicketDetails() {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(true);
 
-  function load() {
+  const load = useCallback(() => {
     api.get(`/tickets/${id}`).then(res => {
       setTicket(res.data);
       setLoading(false);
     });
     api.get(`/comments/${id}`).then(res => setComments(res.data || []));
-  }
+  }, [id]);
 
-  useEffect(() => { load(); }, [id])
+  useEffect(() => { load(); }, [load])
 
   function addComment() {
     if (!text.trim()) return;

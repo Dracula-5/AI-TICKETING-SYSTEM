@@ -5,7 +5,6 @@ import api from "../api/axios";
 import { Card, CardContent, Grid, Box, LinearProgress } from "@mui/material";
 import { Pie, Bar } from "react-chartjs-2";
 import "chart.js/auto";
-import ChatBot from "../components/ChatBot";
 import "../styles/dashboard.css";
 
 
@@ -39,9 +38,7 @@ export default function Dashboard() {
     low: tickets.filter(t => t.priority === "low").length,
   };
 
-  const totalPriority = priorities.high + priorities.medium + priorities.low;
   const openPercentage = tickets.length > 0 ? Math.round((open / tickets.length) * 100) : 0;
-  const closedPercentage = tickets.length > 0 ? Math.round((closed / tickets.length) * 100) : 0;
 
   return (
     <>
