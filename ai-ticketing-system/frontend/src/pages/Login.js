@@ -39,7 +39,7 @@ export default function Login() {
       window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
-      setError("Invalid email or password. Please try again.");
+      setError(err.response?.data?.detail || "Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -114,8 +114,9 @@ export default function Login() {
 
           <p className="login-footer">
             Demo Credentials:<br/>
-            Email: user@example.com<br/>
-            Password: password
+            Customer: customer@gmail.com / customer123<br/>
+            Provider: provider@gmail.com / provider123<br/>
+            Admin: admin@gmail.com / admin123
           </p>
 
           <p className="login-footer">

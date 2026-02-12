@@ -7,6 +7,7 @@ from app.core.security import get_current_user
 from app.db.models import User, Tenant
 from app.services.seed_users import create_default_tenant
 from app.schemas.auth import RegisterRequest, RegisterSimpleRequest, Token
+from app.schemas.users import UserOut
 from app.core.security import (
     get_current_user,
     get_password_hash,
@@ -91,7 +92,7 @@ def login(
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
-@router.get("/me")
+@router.get("/me", response_model=UserOut)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
