@@ -43,6 +43,19 @@ def get_users(
         User.tenant_id == current_user.tenant_id
     ).all()
 
+@router.get("/providers", response_model=list[UserOut])
+def get_provider_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    return db.query(User).filter(
+        User.tenant_id == current_user.tenant_id,
+        User.role.in_(["provider", "service_provider"])
+    ).all()
+
 @router.post("/create-default-users")
 def seed_users(
     db: Session = Depends(get_db),

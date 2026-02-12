@@ -39,7 +39,7 @@ export default function AdminAssign() {
     }
   }
 
-  const unassignedTickets = tickets.filter(t => !t.assigned_to);
+  const unassignedTickets = tickets.filter(t => !t.assigned_to_user_id);
   const pendingTickets = tickets.filter(t => t.status === "open");
 
   return (
