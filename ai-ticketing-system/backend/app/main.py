@@ -23,6 +23,8 @@ def _parse_cors_origins(value: str) -> list[str]:
 
 app = FastAPI(title="AI Ticketing System")
 origins = _parse_cors_origins(settings.cors_origins)
+if not origins:
+    origins = ["*"]
 allow_credentials = True
 if origins == ["*"]:
     allow_credentials = False
