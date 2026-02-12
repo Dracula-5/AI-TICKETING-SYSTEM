@@ -48,7 +48,7 @@ export default function ChatBot() {
         ...prev,
         {
           me: false,
-          text: `✅ Ticket Created Successfully!\n\n🆔 ID: ${res.data.id}\n📂 Category: ${res.data.category}\n⚡ Priority: ${res.data.priority}`,
+          text: `Ticket Created Successfully!\n\nID: ${res.data.id}\nCategory: ${res.data.category}\nPriority: ${res.data.priority}`,
         },
       ]);
     } catch (err) {
@@ -56,7 +56,7 @@ export default function ChatBot() {
         ...prev,
         {
           me: false,
-          text: "❌ Failed to create ticket.\nPlease login again and try.",
+          text: "Failed to create ticket.\nPlease login again and try.",
         },
       ]);
     }
@@ -71,7 +71,7 @@ export default function ChatBot() {
         style={{ position: "fixed", right: 20, bottom: 20 }}
         onClick={() => setOpen(true)}
       >
-        Chat Assistant 🤖
+        Chat Assistant
       </Button>
     );
 
