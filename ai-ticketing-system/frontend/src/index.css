@@ -7,13 +7,22 @@ html {
 }
 
 body {
+  --page-bg: linear-gradient(145deg, #e7edf4 0%, #c9d4e1 55%, #b8c4d1 100%);
+  --surface: #f7f9fb;
+  --surface-muted: #eef2f6;
+  --text: #1f2933;
+  --muted: #7a8793;
+  --accent: #3a5a7a;
+  --accent-strong: #2f4b63;
+  --card-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  --card-shadow-hover: 0 12px 28px rgba(15, 23, 42, 0.14);
   margin: 0;
   font-family: 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--page-bg);
   min-height: 100vh;
-  color: #333;
+  color: var(--text);
   transition: background 0.3s ease;
 }
 
@@ -25,8 +34,17 @@ code {
 }
 
 body.dark {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  color: #e0e0e0;
+  --page-bg: linear-gradient(145deg, #0f172a 0%, #1b2432 55%, #222c3a 100%);
+  --surface: #1f2937;
+  --surface-muted: #273142;
+  --text: #e2e8f0;
+  --muted: #9aa4b2;
+  --accent: #8bb7d0;
+  --accent-strong: #6a97b3;
+  --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  --card-shadow-hover: 0 14px 30px rgba(0, 0, 0, 0.5);
+  background: var(--page-bg);
+  color: var(--text);
 }
 
 body.dark code {
@@ -35,26 +53,16 @@ body.dark code {
 }
 
 .card {
-  background: #fff;
-  color: #333;
+  background: var(--surface);
+  color: var(--text);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
 }
 
 .card:hover {
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  box-shadow: var(--card-shadow-hover);
   transform: translateY(-2px);
-}
-
-body.dark .card {
-  background: #2a2a2a;
-  color: #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-
-body.dark .card:hover {
-  box-shadow: 0 8px 16px rgba(0,0,0,0.5);
 }
 
 .stat-card {
@@ -124,4 +132,3 @@ body.dark .card:hover {
   background-color: #f0f0f0;
   color: black;
 }
-

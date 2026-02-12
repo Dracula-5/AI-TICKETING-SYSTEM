@@ -121,7 +121,7 @@ export default function TicketDetails() {
                   <Card key={c.id} className="comment-card">
                     <CardContent>
                       <Box sx={{ display: "flex", gap: 2, alignItems: "flex-start" }}>
-                        <Avatar sx={{ background: "#667eea", width: 40, height: 40 }}>
+                        <Avatar sx={{ background: "var(--accent)", width: 40, height: 40 }}>
                           {c.user_name?.[0] || "U"}
                         </Avatar>
                         <div style={{ flex: 1 }}>
@@ -165,7 +165,7 @@ export default function TicketDetails() {
                   onClick={addComment}
                   endIcon={<SendIcon />}
                   sx={{
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
                     textTransform: "none",
                     fontWeight: 600
                   }}

@@ -2,11 +2,11 @@
   margin-left: 270px;
   padding: 30px 40px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--page-bg);
 }
 
 body.dark .dashboard-main {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: var(--page-bg);
 }
 
 .dashboard-header {
@@ -27,47 +27,47 @@ body.dark .dashboard-main {
 
 .dashboard-header h1 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text);
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -1px;
 }
 
 body.dark .dashboard-header h1 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .dashboard-header p {
   margin: 0;
-  color: #999;
+  color: var(--muted);
   font-size: 16px;
 }
 
 body.dark .dashboard-header p {
-  color: #b0b0b0;
+  color: var(--muted);
 }
 
 .chart-card {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
   height: 100%;
 }
 
 .chart-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--card-shadow-hover);
   transform: translateY(-4px);
 }
 
 .chart-card h3 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: var(--text);
   font-size: 18px;
   font-weight: 600;
 }
 
 body.dark .chart-card h3 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 @media (max-width: 768px) {

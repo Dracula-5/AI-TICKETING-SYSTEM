@@ -57,7 +57,7 @@ export default function Dashboard() {
             <Box
               className="stat-card"
               style={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)"
               }}
             >
               <CardContent>
@@ -71,7 +71,7 @@ export default function Dashboard() {
             <Box
               className="stat-card"
               style={{
-                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
+                background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)"
               }}
             >
               <CardContent>
@@ -91,8 +91,8 @@ export default function Dashboard() {
               className="stat-card"
               style={{
                 background: sla_breach > 0 
-                  ? "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
-                  : "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+                  ? "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)"
+                  : "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)"
               }}
             >
               <CardContent>
@@ -116,7 +116,7 @@ export default function Dashboard() {
                     datasets: [
                       {
                         data: [open, closed],
-                        backgroundColor: ["#f093fb", "#4facfe"],
+                        backgroundColor: ["#7aa1b3", "#556a7c"],
                         borderColor: "#fff",
                         borderWidth: 2
                       },
@@ -148,8 +148,8 @@ export default function Dashboard() {
                       {
                         label: "Tickets",
                         data: [priorities.high, priorities.medium, priorities.low],
-                        backgroundColor: ["#ef5350", "#ffa726", "#66bb6a"],
-                        borderColor: ["#e53935", "#fb8c00", "#43a047"],
+                        backgroundColor: ["#7b4f4f", "#8a6f4e", "#4f6f5b"],
+                        borderColor: ["#6a4040", "#725a3f", "#405c4a"],
                         borderWidth: 1,
                         borderRadius: 8
                       },

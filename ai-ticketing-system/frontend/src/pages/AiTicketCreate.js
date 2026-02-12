@@ -49,7 +49,7 @@ export default function AiTicketCreate() {
         <Card className="ai-ticket-card">
           <CardContent>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 3 }}>
-              <AutoAwesomeIcon sx={{ color: "#667eea", fontSize: 24 }} />
+              <AutoAwesomeIcon sx={{ color: "var(--accent)", fontSize: 24 }} />
               <h3 style={{ margin: 0, color: "#333" }}>Smart Ticket Generation</h3>
             </Box>
 
@@ -84,9 +84,9 @@ export default function AiTicketCreate() {
                 fontSize: "1rem",
                 fontWeight: 600,
                 textTransform: "none",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
                 "&:hover": {
-                  background: "linear-gradient(135deg, #5568d3 0%, #6b3f8f 100%)"
+                  background: "linear-gradient(135deg, #243146 0%, #344059 100%)"
                 }
               }}
             >
@@ -106,7 +106,7 @@ export default function AiTicketCreate() {
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mt: 3 }}>
                 <div className="result-item">
                   <label>Ticket ID</label>
-                  <p style={{ color: "#667eea", fontWeight: 700, fontSize: "18px" }}>#{result.id}</p>
+                  <p style={{ color: "var(--accent)", fontWeight: 700, fontSize: "18px" }}>#{result.id}</p>
                 </div>
 
                 <div className="result-item">
@@ -134,7 +134,7 @@ export default function AiTicketCreate() {
                   variant="contained"
                   onClick={() => setResult(null)}
                   sx={{
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
                     textTransform: "none",
                     fontWeight: 600
                   }}

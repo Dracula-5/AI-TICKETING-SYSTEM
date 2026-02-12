@@ -52,19 +52,19 @@ export default function Users() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
             <CardContent>
               <p>Total Users</p>
               <h2>{users.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)" }}>
             <CardContent>
               <p>Admins</p>
               <h2>{users.filter(u => u.role === "admin").length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
             <CardContent>
               <p>Providers</p>
               <h2>{users.filter(u => u.role === "provider").length}</h2>
@@ -100,7 +100,7 @@ export default function Users() {
                           borderBottom: "1px solid #e0e0e0"
                         }}
                       >
-                        <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>{u.id}</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{u.id}</TableCell>
                         <TableCell sx={{ fontWeight: 500 }}>{u.name}</TableCell>
                         <TableCell>{u.email}</TableCell>
                         <TableCell>

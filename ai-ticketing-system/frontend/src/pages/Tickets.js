@@ -122,7 +122,7 @@ export default function Tickets() {
                             borderBottom: "1px solid #e0e0e0"
                           }}
                         >
-                          <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>{t.id}</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{t.id}</TableCell>
                           <TableCell sx={{ maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis" }}>
                             {t.title}
                           </TableCell>

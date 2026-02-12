@@ -2,11 +2,11 @@
   margin-left: 270px;
   padding: 30px 40px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--page-bg);
 }
 
 body.dark .ticket-details-main {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: var(--page-bg);
 }
 
 .ticket-header {
@@ -16,23 +16,23 @@ body.dark .ticket-details-main {
 
 .ticket-header h1 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text);
   font-size: 32px;
   font-weight: 700;
 }
 
 body.dark .ticket-header h1 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .ticket-header p {
   margin: 0;
-  color: #999;
+  color: var(--muted);
   font-size: 16px;
 }
 
 body.dark .ticket-header p {
-  color: #b0b0b0;
+  color: var(--muted);
 }
 
 .ticket-content {
@@ -43,34 +43,34 @@ body.dark .ticket-header p {
 
 .ticket-main-card {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
 }
 
 .ticket-main-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--card-shadow-hover);
   transform: translateY(-4px);
 }
 
 .ticket-main-card h3 {
   margin: 0 0 12px 0;
-  color: #333;
+  color: var(--text);
   font-size: 22px;
   font-weight: 700;
 }
 
 body.dark .ticket-main-card h3 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .ticket-description {
-  color: #555;
+  color: var(--text);
   line-height: 1.8;
   margin: 0 0 16px 0;
 }
 
 body.dark .ticket-description {
-  color: #d0d0d0;
+  color: var(--text);
 }
 
 .ticket-details-grid {
@@ -82,17 +82,17 @@ body.dark .ticket-description {
 
 .detail-item {
   padding: 12px;
-  background: #f9f9f9;
+  background: var(--surface-muted);
   border-radius: 8px;
 }
 
 body.dark .detail-item {
-  background: #333;
+  background: var(--surface-muted);
 }
 
 .detail-item label {
   display: block;
-  color: #999;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -102,12 +102,12 @@ body.dark .detail-item {
 
 .detail-item p {
   margin: 0;
-  color: #333;
+  color: var(--text);
   font-weight: 500;
 }
 
 body.dark .detail-item p {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .comments-section {
@@ -128,13 +128,13 @@ body.dark .detail-item p {
 
 .comments-section h3 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: var(--text);
   font-size: 20px;
   font-weight: 700;
 }
 
 body.dark .comments-section h3 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .comments-list {
@@ -149,23 +149,23 @@ body.dark .comments-section h3 {
 
 .comment-card {
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid var(--accent);
 }
 
 .comment-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .add-comment-card {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
 }
 
 .add-comment-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--card-shadow-hover);
 }
 
 @media (max-width: 1024px) {

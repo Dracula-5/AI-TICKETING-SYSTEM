@@ -148,9 +148,9 @@ export default function CreateTicket() {
                   fontWeight: 600,
                   textTransform: "none",
                   borderRadius: "10px",
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
                   "&:hover": {
-                    background: "linear-gradient(135deg, #5568d3 0%, #6b3f8f 100%)"
+                    background: "linear-gradient(135deg, #243146 0%, #344059 100%)"
                   }
                 }}
               >

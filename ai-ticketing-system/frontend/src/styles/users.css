@@ -2,11 +2,11 @@
   margin-left: 270px;
   padding: 30px 40px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--page-bg);
 }
 
 body.dark .users-main {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: var(--page-bg);
 }
 
 .users-header {
@@ -16,33 +16,33 @@ body.dark .users-main {
 
 .users-header h1 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text);
   font-size: 32px;
   font-weight: 700;
 }
 
 body.dark .users-header h1 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .users-header p {
   margin: 0;
-  color: #999;
+  color: var(--muted);
   font-size: 16px;
 }
 
 body.dark .users-header p {
-  color: #b0b0b0;
+  color: var(--muted);
 }
 
 .users-card {
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
 }
 
 .users-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--card-shadow-hover);
 }
 
 @media (max-width: 768px) {

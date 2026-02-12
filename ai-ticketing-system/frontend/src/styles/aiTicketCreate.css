@@ -2,11 +2,11 @@
   margin-left: 270px;
   padding: 30px 40px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--page-bg);
 }
 
 body.dark .ai-ticket-main {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: var(--page-bg);
 }
 
 .ai-ticket-header {
@@ -16,41 +16,41 @@ body.dark .ai-ticket-main {
 
 .ai-ticket-header h1 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: var(--text);
   font-size: 32px;
   font-weight: 700;
 }
 
 body.dark .ai-ticket-header h1 {
-  color: #e0e0e0;
+  color: var(--text);
 }
 
 .ai-ticket-header p {
   margin: 0;
-  color: #999;
+  color: var(--muted);
   font-size: 16px;
 }
 
 body.dark .ai-ticket-header p {
-  color: #b0b0b0;
+  color: var(--muted);
 }
 
 .ai-ticket-card {
   max-width: 800px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
   margin-bottom: 20px;
 }
 
 .ai-ticket-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .result-card {
   max-width: 800px;
   border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--card-shadow);
   transition: all 0.3s ease;
   animation: slideUp 0.5s ease-out;
   border-left: 4px solid #4caf50;
@@ -69,17 +69,17 @@ body.dark .ai-ticket-header p {
 
 .result-item {
   padding: 12px;
-  background: #f9f9f9;
+  background: var(--surface-muted);
   border-radius: 8px;
 }
 
 body.dark .result-item {
-  background: #333;
+  background: var(--surface-muted);
 }
 
 .result-item label {
   display: block;
-  color: #999;
+  color: var(--muted);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;

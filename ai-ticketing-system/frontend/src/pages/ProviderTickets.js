@@ -117,19 +117,19 @@ export default function ProviderTickets() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
             <CardContent>
               <p>Total Assigned</p>
               <h2>{stats.total}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
             <CardContent>
               <p>In Progress</p>
               <h2>{stats.inProgress}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
             <CardContent>
               <p>Resolved</p>
               <h2>{stats.resolved}</h2>
@@ -182,7 +182,7 @@ export default function ProviderTickets() {
                             borderBottom: "1px solid #e0e0e0"
                           }}
                         >
-                          <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>{t.id}</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{t.id}</TableCell>
                           <TableCell>{t.title}</TableCell>
                           <TableCell>
                             <Chip
@@ -275,7 +275,7 @@ export default function ProviderTickets() {
                     {openTickets.length > 0 ? (
                       openTickets.map(t => (
                         <TableRow key={t.id}>
-                          <TableCell sx={{ fontWeight: 600, color: "#667eea" }}>{t.id}</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{t.id}</TableCell>
                           <TableCell>{t.title}</TableCell>
                           <TableCell>
                             <Chip

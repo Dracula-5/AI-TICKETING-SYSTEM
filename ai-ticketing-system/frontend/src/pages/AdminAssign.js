@@ -57,19 +57,19 @@ export default function AdminAssign() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
             <CardContent>
               <p>Total Tickets</p>
               <h2>{tickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
             <CardContent>
               <p>Unassigned</p>
               <h2>{unassignedTickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
             <CardContent>
               <p>Providers</p>
               <h2>{providers.length}</h2>
@@ -117,7 +117,7 @@ export default function AdminAssign() {
                     disabled={loading || !selected[t.id]}
                     startIcon={<AssignmentIcon />}
                     sx={{
-                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                      background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
                       textTransform: "none",
                       fontWeight: 600
                     }}
