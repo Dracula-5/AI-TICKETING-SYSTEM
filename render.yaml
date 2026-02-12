@@ -19,7 +19,7 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "1800"
       - key: CORS_ORIGINS
-        value: "https://YOUR_NETLIFY_SITE.netlify.app"
+        value: "https://ticketingsyst.netlify.app"
 databases:
   - name: ai-ticketing-postgres
     plan: free

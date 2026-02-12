@@ -4,7 +4,7 @@
   command = "npm run build"
 
 [build.environment]
-  REACT_APP_API_BASE_URL = "https://YOUR_RENDER_SERVICE.onrender.com"
+  REACT_APP_API_BASE_URL = "https://ai-ticketing-system-1-t7wn.onrender.com"
 
 [[redirects]]
   from = "/*"
