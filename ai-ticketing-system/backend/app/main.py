@@ -15,11 +15,22 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 
+def _parse_cors_origins(value: str) -> list[str]:
+    raw = [part.strip() for part in value.replace(";", ",").split(",")]
+    origins = [o.rstrip("/") for o in raw if o]
+    return origins or []
+
+
 app = FastAPI(title="AI Ticketing System")
+origins = _parse_cors_origins(settings.cors_origins)
+allow_credentials = True
+if origins == ["*"]:
+    allow_credentials = False
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
-    allow_credentials=True,
+    allow_origins=origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
