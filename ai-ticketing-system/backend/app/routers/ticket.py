@@ -448,6 +448,11 @@ def accept_bargaining_offer(
     current_user: User = Depends(get_current_user),
 ):
     ticket = _load_ticket_for_tenant(ticket_id, db, current_user)
+    if ticket.pricing_status == "finalized":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Deal already finalized at Rs {ticket.final_price}"
+        )
 
     if current_user.role == "customer":
         if ticket.created_by_user_id != current_user.id:
@@ -461,6 +466,13 @@ def accept_bargaining_offer(
     latest_offer = _load_target_offer(db, ticket_id, payload.negotiation_id)
     if not latest_offer:
         raise HTTPException(status_code=400, detail="Selected offer not found")
+
+    latest_open_offer = _load_latest_proposal(db, ticket_id)
+    if not latest_open_offer or latest_open_offer.id != latest_offer.id:
+        raise HTTPException(
+            status_code=409,
+            detail="Selected offer is stale. Another update happened. Please refresh and use the latest offer."
+        )
 
     if latest_offer.sender_user_id == current_user.id:
         raise HTTPException(status_code=400, detail="You cannot accept your own offer")
@@ -500,6 +512,11 @@ def reject_bargaining_offer(
     current_user: User = Depends(get_current_user),
 ):
     ticket = _load_ticket_for_tenant(ticket_id, db, current_user)
+    if ticket.pricing_status == "finalized":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Deal already finalized at Rs {ticket.final_price}"
+        )
 
     if current_user.role == "customer":
         if ticket.created_by_user_id != current_user.id:
@@ -513,6 +530,13 @@ def reject_bargaining_offer(
     latest_offer = _load_target_offer(db, ticket_id, payload.negotiation_id)
     if not latest_offer:
         raise HTTPException(status_code=400, detail="Selected offer not found")
+
+    latest_open_offer = _load_latest_proposal(db, ticket_id)
+    if not latest_open_offer or latest_open_offer.id != latest_offer.id:
+        raise HTTPException(
+            status_code=409,
+            detail="Selected offer is stale. Another update happened. Please refresh and use the latest offer."
+        )
 
     if latest_offer.sender_user_id == current_user.id:
         raise HTTPException(status_code=400, detail="You cannot reject your own offer")

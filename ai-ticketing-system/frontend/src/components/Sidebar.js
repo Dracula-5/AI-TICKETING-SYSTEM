@@ -10,10 +10,12 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import SchoolIcon from "@mui/icons-material/School";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { clearAuthSession, getAuthItem } from "../utils/authSession";
 import "../styles/sidebar.css";
 
 export default function Sidebar({ role }) {
   const location = useLocation();
+  const effectiveRole = getAuthItem("role") || role;
   const [palette, setPalette] = useState(localStorage.getItem("ui_palette") || "indigo");
 
   const menuItems = [
@@ -37,7 +39,7 @@ export default function Sidebar({ role }) {
       icon: <SmartToyIcon />,
       path: "/ai-ticket"
     },
-    ...(role === "admin"
+    ...(effectiveRole === "admin"
       ? [
           {
             label: "Assign Tickets",
@@ -54,7 +56,7 @@ export default function Sidebar({ role }) {
   ];
 
   function logout() {
-    localStorage.clear();
+    clearAuthSession();
     window.location.href = "/";
   }
 
@@ -68,8 +70,8 @@ export default function Sidebar({ role }) {
     document.body.setAttribute("data-palette", palette);
   }, [palette]);
 
-  const userName = localStorage.getItem("name") || localStorage.getItem("username") || "Signed User";
-  const userEmail = localStorage.getItem("email") || "support@company.com";
+  const userName = getAuthItem("name") || getAuthItem("username") || "Signed User";
+  const userEmail = getAuthItem("email") || "support@company.com";
 
   return (
     <Drawer

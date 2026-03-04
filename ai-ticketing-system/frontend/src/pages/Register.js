@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button, TextField, Card, CircularProgress, Alert } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import api from "../api/axios";
+import { setAuthSession } from "../utils/authSession";
 import "../styles/login.css";
 
 export default function Register() {
@@ -27,10 +28,15 @@ export default function Register() {
         name: name || undefined
       });
 
-      localStorage.setItem("token", res.data.access_token);
+      setAuthSession({ token: res.data.access_token });
       const me = await api.get("/auth/me");
-      localStorage.setItem("role", me.data.role);
-      localStorage.setItem("tenant_id", me.data.tenant_id);
+      setAuthSession({
+        user_id: me.data.id,
+        name: me.data.name || "",
+        email: me.data.email || "",
+        role: me.data.role,
+        tenant_id: me.data.tenant_id
+      });
 
       window.location.href = "/dashboard";
     } catch (err) {

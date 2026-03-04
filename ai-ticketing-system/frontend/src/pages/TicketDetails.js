@@ -7,6 +7,7 @@ import SendIcon from "@mui/icons-material/Send";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
+import { getAuthItem } from "../utils/authSession";
 import "../styles/ticketDetails.css";
 
 export default function TicketDetails() {
@@ -22,21 +23,26 @@ export default function TicketDetails() {
   const [bargainLoading, setBargainLoading] = useState(false);
   const [bargainError, setBargainError] = useState("");
   const [bargainSuccess, setBargainSuccess] = useState("");
+  const [lastSyncAt, setLastSyncAt] = useState(null);
   const [loading, setLoading] = useState(true);
-  const role = localStorage.getItem("role");
+  const role = getAuthItem("role");
 
   const load = useCallback(() => {
     api.get(`/tickets/${id}`).then(res => {
       setTicket(res.data);
       setLoading(false);
+      setLastSyncAt(new Date());
     });
     api.get(`/comments/${id}`).then(res => setComments(res.data || []));
-    api.get(`/tickets/${id}/bargaining`).then(res => setBargains(res.data || []));
+    api.get(`/tickets/${id}/bargaining`).then(res => {
+      setBargains(res.data || []);
+      setLastSyncAt(new Date());
+    });
   }, [id]);
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 4000);
+    const interval = setInterval(load, 1500);
     return () => clearInterval(interval);
   }, [load]);
 
@@ -55,20 +61,25 @@ export default function TicketDetails() {
     .reverse()
     .find((x) => x.action === "offer" || x.action === "counter");
   const selectedOffer = bargains.find((x) => x.id === selectedOfferId);
+  const isSelectedLatestOffer = Boolean(selectedOffer && latestOffer && selectedOffer.id === latestOffer.id);
 
   const canUseBargainControls = role === "customer" || role === "provider" || role === "service_provider";
-  const currentUserId = Number(localStorage.getItem("user_id"));
+  const currentUserId = Number(getAuthItem("user_id"));
   const currentSide = role === "customer" ? "customer" : (role === "provider" || role === "service_provider" ? "provider" : role);
   const canRespondToSelected = Boolean(
     selectedOffer
+    && isSelectedLatestOffer
+    && ticket?.pricing_status !== "finalized"
     && selectedOffer.sender_role !== currentSide
   );
 
   const selectedOfferHint = selectedOffer
     ? (
-      selectedOffer.sender_role === currentSide
-        ? `Selected offer was posted by ${selectedOffer.sender_role}. Waiting for the other side to accept/reject.`
-        : `Selected offer was posted by ${selectedOffer.sender_role}. You can accept or reject it.`
+      !isSelectedLatestOffer
+        ? "Selected offer is not the latest active offer. Select the latest row to accept/reject."
+        : selectedOffer.sender_role === currentSide
+          ? `Selected offer was posted by ${selectedOffer.sender_role}. Waiting for the other side to accept/reject.`
+          : `Selected offer was posted by ${selectedOffer.sender_role}. You can accept or reject it.`
     )
     : "Select an offer row (offer/counter) to accept or reject.";
 
@@ -88,6 +99,7 @@ export default function TicketDetails() {
       load();
     } catch (err) {
       setBargainError(err.response?.data?.detail || "Failed to send offer");
+      load();
     } finally {
       setBargainLoading(false);
     }
@@ -107,6 +119,7 @@ export default function TicketDetails() {
       load();
     } catch (err) {
       setBargainError(err.response?.data?.detail || "Failed to accept offer");
+      load();
     } finally {
       setBargainLoading(false);
     }
@@ -126,6 +139,7 @@ export default function TicketDetails() {
       load();
     } catch (err) {
       setBargainError(err.response?.data?.detail || "Failed to reject offer");
+      load();
     } finally {
       setBargainLoading(false);
     }
@@ -134,7 +148,7 @@ export default function TicketDetails() {
   if (loading || !ticket) return (
     <>
       <Navbar />
-      <Sidebar role={localStorage.getItem("role")} />
+      <Sidebar role={getAuthItem("role")} />
       <div className="ticket-details-main" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress />
       </div>
@@ -146,7 +160,7 @@ export default function TicketDetails() {
   return (
     <>
       <Navbar />
-      <Sidebar role={localStorage.getItem("role")} />
+      <Sidebar role={getAuthItem("role")} />
 
       <div className="ticket-details-main">
         <div className="ticket-header">
@@ -221,6 +235,9 @@ export default function TicketDetails() {
               <h3 style={{ marginTop: 0 }}>Live Bargaining</h3>
               <p style={{ marginTop: 0, color: "#64748b" }}>
                 Provider and customer can negotiate service cost here. Admin can monitor this timeline.
+              </p>
+              <p style={{ marginTop: -6, marginBottom: 12, color: "#94a3b8", fontSize: 12 }}>
+                Live sync active (every ~1.5s){lastSyncAt ? ` • Last update: ${lastSyncAt.toLocaleTimeString()}` : ""}
               </p>
 
               {bargainError && <Alert severity="error" sx={{ mb: 2 }}>{bargainError}</Alert>}

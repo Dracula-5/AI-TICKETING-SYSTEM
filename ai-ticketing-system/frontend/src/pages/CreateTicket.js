@@ -18,6 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import { getAuthItem } from "../utils/authSession";
 import "../styles/createTicket.css";
 
 export default function CreateTicket() {
@@ -54,7 +55,7 @@ export default function CreateTicket() {
         description,
         priority,
         category: category || "general",
-        tenant_id: Number(localStorage.getItem("tenant_id"))
+        tenant_id: Number(getAuthItem("tenant_id"))
       });
 
       setSuccess("Ticket created successfully.");
