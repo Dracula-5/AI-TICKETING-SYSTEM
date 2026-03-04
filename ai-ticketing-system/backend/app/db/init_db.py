@@ -20,6 +20,12 @@ def _ensure_ticket_columns():
             conn.execute(text("ALTER TABLE tickets ADD COLUMN sla_due DATETIME"))
         if "is_escalated" not in existing:
             conn.execute(text("ALTER TABLE tickets ADD COLUMN is_escalated BOOLEAN DEFAULT 0"))
+        if "pricing_status" not in existing:
+            conn.execute(text("ALTER TABLE tickets ADD COLUMN pricing_status VARCHAR DEFAULT 'pending'"))
+        if "final_price" not in existing:
+            conn.execute(text("ALTER TABLE tickets ADD COLUMN final_price FLOAT"))
+        if "price_finalized_at" not in existing:
+            conn.execute(text("ALTER TABLE tickets ADD COLUMN price_finalized_at DATETIME"))
 
 def init_db():
     models.Base.metadata.create_all(bind=engine)

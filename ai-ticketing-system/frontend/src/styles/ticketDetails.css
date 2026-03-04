@@ -115,6 +115,49 @@ body.dark .detail-item p {
   animation: slideUp 0.5s ease-out 0.1s backwards;
 }
 
+.bargain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.bargain-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.bargain-item.selectable {
+  cursor: pointer;
+}
+
+.bargain-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, #ffffff);
+}
+
+.bargain-item small {
+  color: #64748b;
+}
+
+.bargain-item p {
+  margin: 6px 0 0 0;
+  color: #334155;
+}
+
+body.dark .bargain-item {
+  background: #0f172a;
+  border-color: #1f2937;
+}
+
+body.dark .bargain-item p {
+  color: #cbd5e1;
+}
+
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -181,7 +224,7 @@ body.dark .comments-section h3 {
 @media (max-width: 768px) {
   .ticket-details-main {
     margin-left: 0;
-    padding: 20px;
+    padding: 88px 20px 20px;
   }
 
   .ticket-header h1 {

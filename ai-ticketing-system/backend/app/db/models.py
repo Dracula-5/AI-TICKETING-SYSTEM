@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.database import Base
@@ -33,6 +33,11 @@ class User(Base):
         back_populates="created_by_user",
         foreign_keys="Ticket.created_by_user_id"
     )
+    price_negotiations = relationship(
+        "PriceNegotiation",
+        back_populates="sender_user",
+        cascade="all, delete"
+    )
 
 
 class Ticket(Base):
@@ -46,6 +51,9 @@ class Ticket(Base):
     category = Column(String, nullable=True)
 
     status = Column(String, default="open")
+    pricing_status = Column(String, default="pending")
+    final_price = Column(Float, nullable=True)
+    price_finalized_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -73,6 +81,12 @@ class Ticket(Base):
         back_populates="ticket",
         cascade="all, delete"
     )
+    price_negotiations = relationship(
+        "PriceNegotiation",
+        back_populates="ticket",
+        cascade="all, delete",
+        order_by="PriceNegotiation.created_at"
+    )
 
 
 class TicketComment(Base):
@@ -97,3 +111,20 @@ class Provider(Base):
     tenant_id = Column(Integer, ForeignKey("tenants.id"))
 
     tenant = relationship("Tenant", back_populates="providers")
+
+
+class PriceNegotiation(Base):
+    __tablename__ = "price_negotiations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False, index=True)
+    sender_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    sender_role = Column(String, nullable=False)
+    action = Column(String, nullable=False)  # offer | counter | accept | reject
+    amount = Column(Float, nullable=False)
+    message = Column(Text, nullable=True)
+    is_final = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    ticket = relationship("Ticket", back_populates="price_negotiations")
+    sender_user = relationship("User", back_populates="price_negotiations")

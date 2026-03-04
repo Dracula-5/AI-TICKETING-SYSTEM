@@ -33,6 +33,9 @@ export default function Login() {
       localStorage.setItem("token", res.data.access_token);
 
       const me = await api.get("/auth/me");
+      localStorage.setItem("user_id", me.data.id);
+      localStorage.setItem("name", me.data.name || "");
+      localStorage.setItem("email", me.data.email || "");
       localStorage.setItem("role", me.data.role);
       localStorage.setItem("tenant_id", me.data.tenant_id);
 

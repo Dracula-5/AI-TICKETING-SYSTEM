@@ -3,6 +3,8 @@ import { Button, Table, TableHead, TableRow, TableCell, TableBody, Chip, Card, C
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
@@ -81,6 +83,7 @@ export default function ProviderActions() {
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Title</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Status</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: "#333" }}>Details</TableCell>
                     </TableRow>
                   </TableHead>
 
@@ -119,6 +122,7 @@ export default function ProviderActions() {
                                 variant="outlined"
                                 startIcon={<PlayArrowIcon />}
                                 onClick={() => update(t.id, "in-progress")}
+                                disabled={t.pricing_status !== "finalized"}
                                 sx={{ textTransform: "none", fontSize: "12px" }}
                               >
                                 Start
@@ -143,11 +147,23 @@ export default function ProviderActions() {
                               </Button>
                             </Box>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              component={Link}
+                              to={`/ticket/${t.id}`}
+                              startIcon={<VisibilityIcon />}
+                              sx={{ textTransform: "none", fontSize: "12px" }}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                        <TableCell colSpan={5} sx={{ textAlign: "center", py: 4, color: "#999" }}>
                           No tickets assigned
                         </TableCell>
                       </TableRow>

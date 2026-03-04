@@ -10,12 +10,14 @@ export default function AdminPanel() {
 
   const [tickets, setTickets] = useState([]);
   const [providers, setProviders] = useState([]);
+  const [bargainRows, setBargainRows] = useState([]);
   const [success, setSuccess] = useState("");
   const [slaRunning, setSlaRunning] = useState(false);
 
   function load() {
     api.get("/tickets").then(res => setTickets(res.data || []));
     api.get("/users/providers").then(res => setProviders(res.data || []));
+    api.get("/tickets/bargaining/monitor").then(res => setBargainRows(res.data || [])).catch(() => setBargainRows([]));
   }
 
   useEffect(() => { load(); }, [])
@@ -160,6 +162,53 @@ export default function AdminPanel() {
                 Showing 10 of {pendingTickets.length} pending tickets. View all in Tickets page.
               </p>
             )}
+          </CardContent>
+        </Card>
+
+        <Card sx={{ borderRadius: "16px", mt: 4 }}>
+          <CardContent>
+            <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Bargaining Monitor</h3>
+            <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: "none" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Ticket</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Pricing</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Latest Action</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Latest Amount</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Final Price</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {bargainRows.length > 0 ? (
+                    bargainRows.map((row) => (
+                      <TableRow key={row.ticket_id}>
+                        <TableCell>
+                          <div style={{ fontWeight: 600 }}>#{row.ticket_id}</div>
+                          <div style={{ color: "#64748b", fontSize: 13 }}>{row.ticket_title}</div>
+                        </TableCell>
+                        <TableCell>{row.ticket_status}</TableCell>
+                        <TableCell>
+                          <span style={{ color: row.pricing_status === "finalized" ? "#2e7d32" : "#5b21b6", fontWeight: 700 }}>
+                            {row.pricing_status}
+                          </span>
+                        </TableCell>
+                        <TableCell>{row.last_action ? `${row.last_sender_role} ${row.last_action}` : "-"}</TableCell>
+                        <TableCell>{row.last_amount != null ? `Rs ${row.last_amount}` : "-"}</TableCell>
+                        <TableCell>{row.final_price != null ? `Rs ${row.final_price}` : "-"}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                        No bargaining activity yet
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </CardContent>
         </Card>
       </div>

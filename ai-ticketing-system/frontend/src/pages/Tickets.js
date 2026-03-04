@@ -12,9 +12,12 @@ import {
   TableContainer,
   Box,
   InputAdornment,
-  TextField
+  TextField,
+  Button
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import api from "../api/axios";
@@ -97,6 +100,7 @@ export default function Tickets() {
                     <TableCell sx={{ fontWeight: 700, color: "#333" }}><b>Status</b></TableCell>
                     <TableCell sx={{ fontWeight: 700, color: "#333" }}><b>Priority</b></TableCell>
                     <TableCell sx={{ fontWeight: 700, color: "#333" }}><b>SLA Due</b></TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: "#333" }}><b>Action</b></TableCell>
                   </TableRow>
                 </TableHead>
 
@@ -159,12 +163,24 @@ export default function Tickets() {
                               {t.sla_due ? new Date(t.sla_due).toLocaleDateString() : "N/A"}
                             </span>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              component={Link}
+                              to={`/ticket/${t.id}`}
+                              startIcon={<VisibilityIcon />}
+                              sx={{ textTransform: "none" }}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                      <TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#999" }}>
                         No tickets found
                       </TableCell>
                     </TableRow>

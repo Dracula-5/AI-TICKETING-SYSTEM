@@ -6,6 +6,8 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
@@ -72,6 +74,7 @@ export default function ProviderTickets() {
 
   const stats = {
     total: tickets.length,
+    negotiating: tickets.filter(t => t.status === "negotiating").length,
     inProgress: tickets.filter(t => t.status === "in-progress").length,
     resolved: tickets.filter(t => t.status === "resolved").length
   };
@@ -125,6 +128,12 @@ export default function ProviderTickets() {
           </Card>
           <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
             <CardContent>
+              <p>Negotiating</p>
+              <h2>{stats.negotiating}</h2>
+            </CardContent>
+          </Card>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2f4f5a 0%, #25637b 100%)" }}>
+            <CardContent>
               <p>In Progress</p>
               <h2>{stats.inProgress}</h2>
             </CardContent>
@@ -149,6 +158,7 @@ export default function ProviderTickets() {
               >
                 <ToggleButton value="all">All</ToggleButton>
                 <ToggleButton value="open">Open</ToggleButton>
+                <ToggleButton value="negotiating">Negotiating</ToggleButton>
                 <ToggleButton value="in-progress">In-Progress</ToggleButton>
                 <ToggleButton value="resolved">Resolved</ToggleButton>
               </ToggleButtonGroup>
@@ -165,6 +175,7 @@ export default function ProviderTickets() {
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Status</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Priority</TableCell>
                       <TableCell sx={{ fontWeight: 700, color: "#333" }}>Actions</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: "#333" }}>Details</TableCell>
                     </TableRow>
                   </TableHead>
 
@@ -215,6 +226,7 @@ export default function ProviderTickets() {
                                 variant={t.status === "in-progress" ? "contained" : "outlined"}
                                 startIcon={<HourglassTopIcon />}
                                 onClick={() => updateStatus(t.id, "in-progress")}
+                                disabled={t.pricing_status !== "finalized"}
                                 sx={{ textTransform: "none", fontSize: "12px" }}
                               >
                                 In Progress
@@ -239,11 +251,23 @@ export default function ProviderTickets() {
                               </Button>
                             </Box>
                           </TableCell>
+                          <TableCell>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              component={Link}
+                              to={`/ticket/${t.id}`}
+                              startIcon={<VisibilityIcon />}
+                              sx={{ textTransform: "none", fontSize: "12px" }}
+                            >
+                              View
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                        <TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#999" }}>
                           No tickets for this filter
                         </TableCell>
                       </TableRow>

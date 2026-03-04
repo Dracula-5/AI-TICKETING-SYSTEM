@@ -3,8 +3,16 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from app.db.database import get_db
-from app.db.models import Ticket, User
-from app.schemas.tickets import TicketCreate, TicketOut
+from app.db.models import Ticket, User, PriceNegotiation
+from app.schemas.tickets import (
+    TicketCreate,
+    TicketOut,
+    BargainingOfferIn,
+    BargainingActionIn,
+    BargainingEntryOut,
+    BargainingMonitorOut,
+    BargainingActionOut,
+)
 from app.core.security import get_current_user
 
 from app.services.auto_router import predict_category
@@ -17,6 +25,47 @@ router = APIRouter(
     prefix="/tickets",
     tags=["tickets"]
 )
+
+PROVIDER_ROLES = ["provider", "service_provider"]
+
+
+def _is_provider(user: User) -> bool:
+    return user.role in PROVIDER_ROLES
+
+
+def _load_ticket_for_tenant(ticket_id: int, db: Session, current_user: User) -> Ticket:
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    if ticket.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return ticket
+
+
+def _load_latest_proposal(db: Session, ticket_id: int) -> PriceNegotiation | None:
+    return (
+        db.query(PriceNegotiation)
+        .filter(
+            PriceNegotiation.ticket_id == ticket_id,
+            PriceNegotiation.action.in_(["offer", "counter"]),
+        )
+        .order_by(PriceNegotiation.created_at.desc(), PriceNegotiation.id.desc())
+        .first()
+    )
+
+
+def _load_target_offer(db: Session, ticket_id: int, negotiation_id: int | None) -> PriceNegotiation | None:
+    if negotiation_id is not None:
+        return (
+            db.query(PriceNegotiation)
+            .filter(
+                PriceNegotiation.ticket_id == ticket_id,
+                PriceNegotiation.id == negotiation_id,
+                PriceNegotiation.action.in_(["offer", "counter"]),
+            )
+            .first()
+        )
+    return _load_latest_proposal(db, ticket_id)
 
 
 # ========================
@@ -124,7 +173,7 @@ def update_status(
     if ticket.tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    allowed_status = ["open", "in-progress", "resolved", "closed"]
+    allowed_status = ["open", "negotiating", "in-progress", "resolved", "closed"]
     if status not in allowed_status:
         raise HTTPException(status_code=400, detail="Invalid status value")
 
@@ -212,7 +261,7 @@ def provider_open_tickets(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role not in ["provider", "service_provider"]:
+    if current_user.role not in PROVIDER_ROLES:
         raise HTTPException(status_code=403, detail="Only providers allowed")
 
     return db.query(Ticket).filter(
@@ -227,7 +276,7 @@ def provider_offer_help(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role not in ["provider", "service_provider"]:
+    if current_user.role not in PROVIDER_ROLES:
         raise HTTPException(status_code=403, detail="Only providers allowed")
 
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -244,11 +293,13 @@ def provider_offer_help(
         raise HTTPException(status_code=400, detail="Ticket is not open")
 
     ticket.assigned_to_user_id = current_user.id
-    ticket.status = "in-progress"
+    ticket.status = "negotiating"
+    if ticket.pricing_status == "pending":
+        ticket.pricing_status = "negotiating"
     db.commit()
     db.refresh(ticket)
 
-    return {"message": "You are now assigned to this ticket", "ticket": ticket}
+    return {"message": "You are now assigned. Finalize cost with customer before starting work.", "ticket": ticket}
 
 
 # ========================
@@ -261,7 +312,7 @@ def provider_update_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role not in ["provider", "service_provider"]:
+    if current_user.role not in PROVIDER_ROLES:
         raise HTTPException(status_code=403, detail="Only providers allowed")
 
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -271,9 +322,15 @@ def provider_update_status(
     if ticket.assigned_to_user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not your ticket")
 
-    allowed = ["in-progress", "resolved", "closed"]
+    allowed = ["negotiating", "in-progress", "resolved", "closed"]
     if status not in allowed:
         raise HTTPException(status_code=400, detail=f"Allowed: {allowed}")
+
+    if status in ["in-progress", "resolved", "closed"] and ticket.pricing_status != "finalized":
+        raise HTTPException(
+            status_code=400,
+            detail="Finalize bargaining price before accepting or closing this ticket"
+        )
 
     ticket.status = status
     db.commit()
@@ -315,6 +372,216 @@ def run_sla_check(
         "message": "SLA check completed",
         "tickets_escalated": escalated_count
     }
+
+
+@router.get("/{ticket_id}/bargaining", response_model=list[BargainingEntryOut])
+def get_bargaining_history(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _load_ticket_for_tenant(ticket_id, db, current_user)
+    return (
+        db.query(PriceNegotiation)
+        .filter(PriceNegotiation.ticket_id == ticket_id)
+        .order_by(PriceNegotiation.created_at.asc(), PriceNegotiation.id.asc())
+        .all()
+    )
+
+
+@router.post("/{ticket_id}/bargaining/offer", response_model=BargainingActionOut, status_code=status.HTTP_201_CREATED)
+def create_bargaining_offer(
+    ticket_id: int,
+    payload: BargainingOfferIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ticket = _load_ticket_for_tenant(ticket_id, db, current_user)
+
+    if ticket.pricing_status == "finalized":
+        raise HTTPException(status_code=400, detail="Price already finalized for this ticket")
+
+    if current_user.role == "customer":
+        if ticket.created_by_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only ticket owner can bargain as customer")
+        if ticket.assigned_to_user_id is None:
+            raise HTTPException(status_code=400, detail="Wait for a provider to pick the ticket first")
+    elif _is_provider(current_user):
+        if ticket.assigned_to_user_id is None:
+            ticket.assigned_to_user_id = current_user.id
+        elif ticket.assigned_to_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only assigned provider can bargain on this ticket")
+    else:
+        raise HTTPException(status_code=403, detail="Only customer/provider can bargain")
+
+    action = "counter" if _load_latest_proposal(db, ticket_id) else "offer"
+    sender_role = "provider" if _is_provider(current_user) else "customer"
+
+    entry = PriceNegotiation(
+        ticket_id=ticket.id,
+        sender_user_id=current_user.id,
+        sender_role=sender_role,
+        action=action,
+        amount=payload.amount,
+        message=payload.message,
+        is_final=False,
+    )
+    ticket.pricing_status = "negotiating"
+    ticket.status = "negotiating" if ticket.status == "open" else ticket.status
+
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return {
+        "message": f"Budget/offer submitted at Rs {entry.amount}",
+        "pricing_status": ticket.pricing_status,
+        "final_price": ticket.final_price,
+        "negotiation": entry,
+    }
+
+
+@router.post("/{ticket_id}/bargaining/accept", response_model=BargainingActionOut)
+def accept_bargaining_offer(
+    ticket_id: int,
+    payload: BargainingActionIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ticket = _load_ticket_for_tenant(ticket_id, db, current_user)
+
+    if current_user.role == "customer":
+        if ticket.created_by_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only ticket owner can accept as customer")
+    elif _is_provider(current_user):
+        if ticket.assigned_to_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only assigned provider can accept for this ticket")
+    else:
+        raise HTTPException(status_code=403, detail="Only customer/provider can accept bargain")
+
+    latest_offer = _load_target_offer(db, ticket_id, payload.negotiation_id)
+    if not latest_offer:
+        raise HTTPException(status_code=400, detail="Selected offer not found")
+
+    if latest_offer.sender_user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot accept your own offer")
+
+    sender_role = "provider" if _is_provider(current_user) else "customer"
+    entry = PriceNegotiation(
+        ticket_id=ticket.id,
+        sender_user_id=current_user.id,
+        sender_role=sender_role,
+        action="accept",
+        amount=latest_offer.amount,
+        message=payload.message,
+        is_final=True,
+    )
+
+    ticket.final_price = latest_offer.amount
+    ticket.pricing_status = "finalized"
+    ticket.price_finalized_at = datetime.utcnow()
+    ticket.status = "in-progress"
+
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return {
+        "message": f"Deal finalized at Rs {latest_offer.amount}",
+        "pricing_status": ticket.pricing_status,
+        "final_price": ticket.final_price,
+        "negotiation": entry,
+    }
+
+
+@router.post("/{ticket_id}/bargaining/reject", response_model=BargainingActionOut)
+def reject_bargaining_offer(
+    ticket_id: int,
+    payload: BargainingActionIn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ticket = _load_ticket_for_tenant(ticket_id, db, current_user)
+
+    if current_user.role == "customer":
+        if ticket.created_by_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only ticket owner can reject as customer")
+    elif _is_provider(current_user):
+        if ticket.assigned_to_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only assigned provider can reject for this ticket")
+    else:
+        raise HTTPException(status_code=403, detail="Only customer/provider can reject bargain")
+
+    latest_offer = _load_target_offer(db, ticket_id, payload.negotiation_id)
+    if not latest_offer:
+        raise HTTPException(status_code=400, detail="Selected offer not found")
+
+    if latest_offer.sender_user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="You cannot reject your own offer")
+
+    sender_role = "provider" if _is_provider(current_user) else "customer"
+    entry = PriceNegotiation(
+        ticket_id=ticket.id,
+        sender_user_id=current_user.id,
+        sender_role=sender_role,
+        action="reject",
+        amount=latest_offer.amount,
+        message=payload.message,
+        is_final=False,
+    )
+    ticket.pricing_status = "negotiating"
+    ticket.status = "negotiating"
+
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return {
+        "message": f"Offer at Rs {latest_offer.amount} rejected. Share your budget/counter.",
+        "pricing_status": ticket.pricing_status,
+        "final_price": ticket.final_price,
+        "negotiation": entry,
+    }
+
+
+@router.get("/bargaining/monitor", response_model=list[BargainingMonitorOut])
+def admin_bargaining_monitor(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    tickets = (
+        db.query(Ticket)
+        .filter(Ticket.tenant_id == current_user.tenant_id)
+        .order_by(Ticket.updated_at.desc())
+        .all()
+    )
+
+    monitor_rows: list[BargainingMonitorOut] = []
+    for ticket in tickets:
+        last_entry = (
+            db.query(PriceNegotiation)
+            .filter(PriceNegotiation.ticket_id == ticket.id)
+            .order_by(PriceNegotiation.created_at.desc(), PriceNegotiation.id.desc())
+            .first()
+        )
+        if not last_entry and ticket.pricing_status == "pending":
+            continue
+
+        monitor_rows.append(
+            BargainingMonitorOut(
+                ticket_id=ticket.id,
+                ticket_title=ticket.title,
+                ticket_status=ticket.status,
+                pricing_status=ticket.pricing_status,
+                final_price=ticket.final_price,
+                last_action=last_entry.action if last_entry else None,
+                last_amount=last_entry.amount if last_entry else None,
+                last_sender_role=last_entry.sender_role if last_entry else None,
+                last_created_at=last_entry.created_at if last_entry else None,
+            )
+        )
+
+    return monitor_rows
 
 @router.post("/ai-create", response_model=TicketOut)
 def ai_create_ticket(

@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import {
-  Card, CardContent, Chip, Button, TextField, Box, Avatar, Divider, CircularProgress
+  Card, CardContent, Chip, Button, TextField, Box, Avatar, Divider, CircularProgress, Alert
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import Navbar from "../components/Navbar";
@@ -15,7 +15,15 @@ export default function TicketDetails() {
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
   const [text, setText] = useState("");
+  const [offerAmount, setOfferAmount] = useState("");
+  const [offerNote, setOfferNote] = useState("");
+  const [bargains, setBargains] = useState([]);
+  const [selectedOfferId, setSelectedOfferId] = useState(null);
+  const [bargainLoading, setBargainLoading] = useState(false);
+  const [bargainError, setBargainError] = useState("");
+  const [bargainSuccess, setBargainSuccess] = useState("");
   const [loading, setLoading] = useState(true);
+  const role = localStorage.getItem("role");
 
   const load = useCallback(() => {
     api.get(`/tickets/${id}`).then(res => {
@@ -23,9 +31,14 @@ export default function TicketDetails() {
       setLoading(false);
     });
     api.get(`/comments/${id}`).then(res => setComments(res.data || []));
+    api.get(`/tickets/${id}/bargaining`).then(res => setBargains(res.data || []));
   }, [id]);
 
-  useEffect(() => { load(); }, [load])
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 4000);
+    return () => clearInterval(interval);
+  }, [load]);
 
   function addComment() {
     if (!text.trim()) return;
@@ -36,6 +49,86 @@ export default function TicketDetails() {
       setText("");
       load();
     });
+  }
+
+  const latestOffer = [...bargains]
+    .reverse()
+    .find((x) => x.action === "offer" || x.action === "counter");
+  const selectedOffer = bargains.find((x) => x.id === selectedOfferId);
+
+  const canUseBargainControls = role === "customer" || role === "provider" || role === "service_provider";
+  const currentUserId = Number(localStorage.getItem("user_id"));
+  const currentSide = role === "customer" ? "customer" : (role === "provider" || role === "service_provider" ? "provider" : role);
+  const canRespondToSelected = Boolean(
+    selectedOffer
+    && selectedOffer.sender_role !== currentSide
+  );
+
+  const selectedOfferHint = selectedOffer
+    ? (
+      selectedOffer.sender_role === currentSide
+        ? `Selected offer was posted by ${selectedOffer.sender_role}. Waiting for the other side to accept/reject.`
+        : `Selected offer was posted by ${selectedOffer.sender_role}. You can accept or reject it.`
+    )
+    : "Select an offer row (offer/counter) to accept or reject.";
+
+  async function placeOffer() {
+    if (!offerAmount || Number(offerAmount) <= 0) return;
+    setBargainLoading(true);
+    setBargainError("");
+    setBargainSuccess("");
+    try {
+      const res = await api.post(`/tickets/${id}/bargaining/offer`, {
+        amount: Number(offerAmount),
+        message: offerNote || null
+      });
+      setOfferAmount("");
+      setOfferNote("");
+      setBargainSuccess(res.data?.message || "Budget/offer submitted");
+      load();
+    } catch (err) {
+      setBargainError(err.response?.data?.detail || "Failed to send offer");
+    } finally {
+      setBargainLoading(false);
+    }
+  }
+
+  async function acceptOffer() {
+    setBargainLoading(true);
+    setBargainError("");
+    setBargainSuccess("");
+    try {
+      const res = await api.post(`/tickets/${id}/bargaining/accept`, {
+        negotiation_id: selectedOffer?.id,
+        message: "Accepted. Finalized."
+      });
+      setBargainSuccess(res.data?.message || `Deal finalized at Rs ${res.data?.final_price ?? selectedOffer?.amount}`);
+      setSelectedOfferId(null);
+      load();
+    } catch (err) {
+      setBargainError(err.response?.data?.detail || "Failed to accept offer");
+    } finally {
+      setBargainLoading(false);
+    }
+  }
+
+  async function rejectOffer() {
+    setBargainLoading(true);
+    setBargainError("");
+    setBargainSuccess("");
+    try {
+      const res = await api.post(`/tickets/${id}/bargaining/reject`, {
+        negotiation_id: selectedOffer?.id,
+        message: "Rejected, please counter."
+      });
+      setBargainSuccess(res.data?.message || "Offer rejected. Send your budget/counter.");
+      setSelectedOfferId(null);
+      load();
+    } catch (err) {
+      setBargainError(err.response?.data?.detail || "Failed to reject offer");
+    } finally {
+      setBargainLoading(false);
+    }
   }
 
   if (loading || !ticket) return (
@@ -107,6 +200,109 @@ export default function TicketDetails() {
                   <label>Updated</label>
                   <p>{ticket.updated_at ? new Date(ticket.updated_at).toLocaleDateString() : "N/A"}</p>
                 </div>
+                <div className="detail-item">
+                  <label>Bargaining Status</label>
+                  <p style={{ fontWeight: 600, color: ticket.pricing_status === "finalized" ? "#2e7d32" : "#5b21b6" }}>
+                    {ticket.pricing_status || "pending"}
+                  </p>
+                </div>
+                <div className="detail-item">
+                  <label>Finalized Price</label>
+                  <p style={{ fontWeight: 600 }}>
+                    {ticket.final_price != null ? `Rs ${ticket.final_price}` : "Not finalized"}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="ticket-main-card">
+            <CardContent>
+              <h3 style={{ marginTop: 0 }}>Live Bargaining</h3>
+              <p style={{ marginTop: 0, color: "#64748b" }}>
+                Provider and customer can negotiate service cost here. Admin can monitor this timeline.
+              </p>
+
+              {bargainError && <Alert severity="error" sx={{ mb: 2 }}>{bargainError}</Alert>}
+              {bargainSuccess && <Alert severity="success" sx={{ mb: 2 }}>{bargainSuccess}</Alert>}
+              {ticket.pricing_status === "finalized" && ticket.final_price != null && (
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Deal finalized at Rs {ticket.final_price}
+                </Alert>
+              )}
+
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
+                <Chip label={`Pricing: ${ticket.pricing_status || "pending"}`} color={ticket.pricing_status === "finalized" ? "success" : "info"} />
+                {latestOffer && (
+                  <Chip
+                    label={`Latest: Rs ${latestOffer.amount} by ${latestOffer.sender_role}`}
+                    variant="outlined"
+                  />
+                )}
+                {selectedOffer && (
+                  <Chip
+                    label={`Selected: Rs ${selectedOffer.amount} by ${selectedOffer.sender_role}`}
+                    color="warning"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+
+              <Alert severity={canRespondToSelected ? "info" : "warning"} sx={{ mb: 2 }}>
+                {selectedOfferHint}
+              </Alert>
+
+              {canUseBargainControls && ticket.pricing_status !== "finalized" && (
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "160px 1fr auto auto auto" }, gap: 1.2, mb: 2 }}>
+                  <TextField
+                    label="Your Budget / Offer"
+                    type="number"
+                    value={offerAmount}
+                    onChange={(e) => setOfferAmount(e.target.value)}
+                    size="small"
+                  />
+                  <TextField
+                    label="Negotiation Note"
+                    value={offerNote}
+                    onChange={(e) => setOfferNote(e.target.value)}
+                    size="small"
+                  />
+                  <Button disabled={bargainLoading} variant="contained" onClick={placeOffer}>Offer/Counter</Button>
+                  <Button disabled={bargainLoading || !canRespondToSelected} variant="outlined" color="success" onClick={acceptOffer}>Accept</Button>
+                  <Button disabled={bargainLoading || !canRespondToSelected} variant="outlined" color="error" onClick={rejectOffer}>Reject</Button>
+                </Box>
+              )}
+
+              <div className="bargain-list">
+                {bargains.length === 0 ? (
+                  <p style={{ color: "#94a3b8", margin: 0 }}>No bargaining activity yet.</p>
+                ) : (
+                  bargains.map((b) => {
+                    const isOfferRow = b.action === "offer" || b.action === "counter";
+                    const selectable = isOfferRow;
+                    const isSelected = selectedOfferId === b.id;
+                    const who = b.sender_role === "customer" ? "Customer" : "Provider";
+                    const you =
+                      (currentUserId && Number(b.sender_user_id) === currentUserId)
+                      || b.sender_role === currentSide;
+                    return (
+                    <div
+                      key={b.id}
+                      className={`bargain-item${selectable ? " selectable" : ""}${isSelected ? " selected" : ""}`}
+                      onClick={() => {
+                        if (!selectable) return;
+                        setSelectedOfferId(b.id);
+                      }}
+                    >
+                      <div>
+                        <strong>Posted by {who}</strong> {you ? "(You)" : ""} - {b.action} <strong>Rs {b.amount}</strong>
+                        {b.is_final ? " (finalized)" : ""}
+                      </div>
+                      <small>{new Date(b.created_at).toLocaleString()}</small>
+                      {b.message && <p>{b.message}</p>}
+                    </div>
+                  )})
+                )}
               </div>
             </CardContent>
           </Card>
