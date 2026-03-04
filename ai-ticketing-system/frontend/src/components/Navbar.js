@@ -1,86 +1,53 @@
-import { AppBar, Toolbar, Button, IconButton, Badge, Box, Tooltip } from "@mui/material";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import LogoutIcon from "@mui/icons-material/Logout";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import tenants from "../config/tenantTheme";
+import { AppBar, Toolbar, IconButton, Badge, Box, Tooltip } from "@mui/material";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
+import SettingsSuggestOutlinedIcon from "@mui/icons-material/SettingsSuggestOutlined";
+import LaptopMacOutlinedIcon from "@mui/icons-material/LaptopMacOutlined";
 import "../styles/navbar.css";
 
 export default function Navbar() {
-
-  const tenantId = localStorage.getItem("tenant_id");
-  const theme = tenants[tenantId] || tenants[1];
   const isDark = document.body.classList.contains("dark");
-
-  function logout() {
-    localStorage.clear();
-    window.location.href = "/";
-  }
 
   function toggleDark() {
     document.body.classList.toggle("dark");
   }
 
   return (
-    <AppBar 
-      position="fixed" 
-      style={{ 
-        background: theme.gradient || theme.color,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
-      }}
-    >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between", py: 1 }}>
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <div className="navbar-logo">
-            <span className="navbar-logo-icon">📋</span>
-          </div>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: "18px", 
-            fontWeight: 700,
-            letterSpacing: "0.5px"
-          }}>
-            {theme.name}
-          </h3>
+    <AppBar position="fixed" className="app-navbar" elevation={0}>
+      <Toolbar className="app-navbar-toolbar">
+        <Box className="navbar-title-wrap">
+          <h3>AI Ticketing Dashboard</h3>
+          <p>Manage tickets with clarity</p>
         </Box>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* Notifications */}
+        <Box className="navbar-actions">
+          <Tooltip title="Preferences">
+            <IconButton className="navbar-icon-btn">
+              <SettingsSuggestOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={isDark ? "Light Mode" : "Dark Mode"}>
+            <IconButton onClick={toggleDark} className="navbar-icon-btn">
+              {isDark ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Device View">
+            <IconButton className="navbar-icon-btn">
+              <LaptopMacOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title="Notifications">
-            <IconButton color="inherit" className="navbar-icon-btn">
-              <Badge badgeContent={3} color="error">
-                <NotificationsIcon />
+            <IconButton className="navbar-icon-btn">
+              <Badge badgeContent={4} color="error">
+                <NotificationsNoneRoundedIcon fontSize="small" />
               </Badge>
             </IconButton>
           </Tooltip>
-
-          {/* Dark Mode Toggle */}
-          <Tooltip title={isDark ? "Light Mode" : "Dark Mode"}>
-            <IconButton color="inherit" onClick={toggleDark} className="navbar-icon-btn">
-              {isDark ? <Brightness7Icon /> : <Brightness4Icon />}
-            </IconButton>
-          </Tooltip>
-
-          {/* Logout */}
-          <Tooltip title="Logout">
-            <Button 
-              color="inherit" 
-              onClick={logout}
-              startIcon={<LogoutIcon />}
-              className="navbar-logout-btn"
-              sx={{
-                textTransform: "none",
-                fontSize: "14px",
-                fontWeight: 600,
-                ml: 1
-              }}
-            >
-              Logout
-            </Button>
-          </Tooltip>
         </Box>
-
       </Toolbar>
     </AppBar>
   );

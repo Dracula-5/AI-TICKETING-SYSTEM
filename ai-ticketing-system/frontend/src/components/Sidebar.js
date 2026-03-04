@@ -1,18 +1,20 @@
-import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider } from "@mui/material";
+import { Drawer, List, ListItemButton, ListItemIcon, ListItemText, Box, Divider, Avatar, Button } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
-import { Link } from "react-router-dom";
-import tenants from "../config/tenantTheme";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import PeopleIcon from "@mui/icons-material/People";
+import LogoutIcon from "@mui/icons-material/Logout";
+import SettingsIcon from "@mui/icons-material/Settings";
+import SchoolIcon from "@mui/icons-material/School";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import "../styles/sidebar.css";
 
 export default function Sidebar({ role }) {
-
-  const isMobile = window.innerWidth < 768;
-
-  const tenantId = localStorage.getItem("tenant_id");
-  const theme = tenants[tenantId] || tenants[1];
+  const location = useLocation();
+  const [palette, setPalette] = useState(localStorage.getItem("ui_palette") || "indigo");
 
   const menuItems = [
     {
@@ -30,77 +32,150 @@ export default function Sidebar({ role }) {
       icon: <AddCircleIcon />,
       path: "/create-ticket"
     },
-    ...(role === "admin" ? [{
-      label: "Assign Tickets",
-      icon: <AssignmentIndIcon />,
-      path: "/assign"
-    }] : [])
+    {
+      label: "AI Create",
+      icon: <SmartToyIcon />,
+      path: "/ai-ticket"
+    },
+    ...(role === "admin"
+      ? [
+          {
+            label: "Assign Tickets",
+            icon: <AssignmentIndIcon />,
+            path: "/assign"
+          },
+          {
+            label: "Users",
+            icon: <PeopleIcon />,
+            path: "/users"
+          }
+        ]
+      : [])
   ];
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "/";
+  }
+
+  function changePalette(nextPalette) {
+    setPalette(nextPalette);
+    localStorage.setItem("ui_palette", nextPalette);
+    document.body.setAttribute("data-palette", nextPalette);
+  }
+
+  useEffect(() => {
+    document.body.setAttribute("data-palette", palette);
+  }, [palette]);
+
+  const userName = localStorage.getItem("name") || localStorage.getItem("username") || "Signed User";
+  const userEmail = localStorage.getItem("email") || "support@company.com";
 
   return (
     <Drawer
-      variant={isMobile ? "temporary" : "permanent"}
-      anchor="left"
-      open={true}
+      variant="permanent"
+      className="app-sidebar"
       sx={{
+        display: { xs: "none", md: "block" },
         "& .MuiDrawer-paper": {
           width: 270,
-          background: `linear-gradient(180deg, ${theme.color} 0%, ${theme.darkColor} 100%)`,
-          color: "white",
-          boxShadow: "4px 0 16px rgba(0,0,0,0.1)",
-          borderRight: "1px solid rgba(255,255,255,0.1)"
+          boxSizing: "border-box"
         }
       }}
     >
-      <List sx={{ height: "100%", display: "flex", flexDirection: "column", pt: 2 }}>
-
-        {/* Logo Section */}
-        <Box sx={{ px: 2, pb: 2, mb: 1 }}>
-          <Box className="sidebar-logo-section">
-            <span className="sidebar-logo-icon">📋</span>
-            <h2 style={{ margin: "0 0 4px 0", fontSize: "18px", fontWeight: 700 }}>
-              {theme.name.split(" ")[0]}
-            </h2>
-            <p style={{ margin: 0, fontSize: "11px", opacity: 0.8 }}>Ticketing System</p>
+      <Box className="sidebar-shell">
+        <Box className="sidebar-brand">
+          <Avatar className="sidebar-brand-avatar">
+            <SchoolIcon fontSize="small" />
+          </Avatar>
+          <Box>
+            <h2>Smart Ticketing System</h2>
+            <p>Workspace</p>
           </Box>
         </Box>
 
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", my: 1 }} />
-
-        {/* Menu Items */}
-        {menuItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            component={Link}
-            to={item.path}
-            className="sidebar-menu-item"
-          >
-            <ListItemIcon sx={{ color: "white", minWidth: 40 }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.label}
-              sx={{
-                "& .MuiListItemText-primary": {
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  letterSpacing: "0.3px"
-                }
-              }}
-            />
-          </ListItemButton>
-        ))}
-
-        {/* Spacer */}
-        <Box sx={{ flexGrow: 1 }} />
-
-        {/* Footer */}
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", my: 1 }} />
-        <Box sx={{ p: 2, textAlign: "center", fontSize: "12px", opacity: 0.7 }}>
-          <p style={{ margin: 0 }}>v1.0.0</p>
+        <Box className="sidebar-palette">
+          <span className="palette-title">Palette</span>
+          <div className="palette-row">
+            <button
+              className={`palette-chip palette-indigo${palette === "indigo" ? " active" : ""}`}
+              aria-label="Indigo palette"
+              type="button"
+              onClick={() => changePalette("indigo")}
+            >
+              <i />
+              <i />
+              <i />
+            </button>
+            <button
+              className={`palette-chip palette-ocean${palette === "ocean" ? " active" : ""}`}
+              aria-label="Ocean palette"
+              type="button"
+              onClick={() => changePalette("ocean")}
+            >
+              <i />
+              <i />
+              <i />
+            </button>
+            <button
+              className={`palette-chip palette-sunset${palette === "sunset" ? " active" : ""}`}
+              aria-label="Sunset palette"
+              type="button"
+              onClick={() => changePalette("sunset")}
+            >
+              <i />
+              <i />
+              <i />
+            </button>
+          </div>
         </Box>
 
-      </List>
+        <Divider className="sidebar-divider" />
+
+        <List className="sidebar-menu-list">
+          {menuItems.map((item) => {
+            const active = location.pathname === item.path;
+            return (
+              <ListItemButton
+                key={item.path}
+                component={Link}
+                to={item.path}
+                className={`sidebar-menu-item${active ? " active" : ""}`}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            );
+          })}
+
+          <ListItemButton className="sidebar-menu-item sidebar-muted-item">
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Settings" />
+          </ListItemButton>
+        </List>
+
+        <Box className="sidebar-footer">
+          <Box className="sidebar-user">
+            <Avatar className="sidebar-user-avatar">{userName.charAt(0).toUpperCase()}</Avatar>
+            <Box>
+              <h4>{userName}</h4>
+              <p>{userEmail}</p>
+            </Box>
+          </Box>
+
+          <Button
+            fullWidth
+            variant="outlined"
+            onClick={logout}
+            startIcon={<LogoutIcon />}
+            className="sidebar-logout"
+          >
+            Sign Out
+          </Button>
+        </Box>
+      </Box>
     </Drawer>
   );
 }

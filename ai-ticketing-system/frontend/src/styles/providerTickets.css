@@ -1,6 +1,6 @@
 .provider-tickets-main {
   margin-left: 270px;
-  padding: 30px 40px;
+  padding: 100px 40px 30px;
   min-height: 100vh;
   background: var(--page-bg);
 }
@@ -121,3 +121,4 @@ body.dark .provider-section-header h2 { color: var(--text); }
     transform: translateY(0);
   }
 }
+

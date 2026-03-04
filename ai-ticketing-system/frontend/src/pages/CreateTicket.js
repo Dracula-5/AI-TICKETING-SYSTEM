@@ -1,9 +1,23 @@
-import { TextField, Button, Card, CardContent, Box, FormControl, InputLabel, Select, MenuItem, Alert } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert
+} from "@mui/material";
 import { useState } from "react";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
+import AutorenewRoundedIcon from "@mui/icons-material/AutorenewRounded";
+import AddIcon from "@mui/icons-material/Add";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
-import AddIcon from "@mui/icons-material/Add";
 import "../styles/createTicket.css";
 
 export default function CreateTicket() {
@@ -14,6 +28,15 @@ export default function CreateTicket() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+
+  function resetAll() {
+    setTitle("");
+    setDesc("");
+    setPriority("medium");
+    setCategory("general");
+    setError("");
+    setSuccess("");
+  }
 
   async function submit() {
     if (!title || !description) {
@@ -34,17 +57,11 @@ export default function CreateTicket() {
         tenant_id: Number(localStorage.getItem("tenant_id"))
       });
 
-      setSuccess("Ticket created successfully!");
+      setSuccess("Ticket created successfully.");
       setTitle("");
       setDesc("");
       setPriority("medium");
       setCategory("general");
-
-      setTimeout(() => {
-        setSuccess("");
-        // Optionally redirect
-        // window.location.href = "/tickets";
-      }, 2000);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to create ticket");
     } finally {
@@ -56,106 +73,149 @@ export default function CreateTicket() {
     <>
       <Navbar />
       <Sidebar role={localStorage.getItem("role")} />
+
       <div className="create-ticket-main">
-        <div className="create-ticket-header">
-          <h1>Create New Ticket</h1>
-          <p>Submit a new support request</p>
+        <div className="create-ticket-headline">
+          <div>
+            <h1>Import Ticket Details</h1>
+            <p>Set configuration and submit your support request in one flow.</p>
+          </div>
+
+          <Button
+            variant="outlined"
+            onClick={resetAll}
+            startIcon={<RestartAltRoundedIcon />}
+            className="reset-btn"
+          >
+            Reset All
+          </Button>
         </div>
+
+        <Card className="config-card">
+          <CardContent>
+            <Box className="config-title-wrap">
+              <InfoOutlinedIcon fontSize="small" />
+              <h3>Your Configuration</h3>
+            </Box>
+
+            <Box className="config-grid">
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={category}
+                  label="Category"
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={loading}
+                >
+                  <MenuItem value="general">General</MenuItem>
+                  <MenuItem value="technical">Technical</MenuItem>
+                  <MenuItem value="billing">Billing</MenuItem>
+                  <MenuItem value="account">Account</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={priority}
+                  label="Priority"
+                  onChange={(e) => setPriority(e.target.value)}
+                  disabled={loading}
+                >
+                  <MenuItem value="low">Low</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="critical">Critical</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="contained"
+                className="reload-btn"
+                startIcon={<AutorenewRoundedIcon />}
+                onClick={() => {
+                  setPriority("medium");
+                  setCategory("general");
+                }}
+              >
+                Reload Defaults
+              </Button>
+            </Box>
+
+            <p className="config-helper">Configuration helps auto-route your ticket to the right team.</p>
+          </CardContent>
+        </Card>
 
         <Card className="create-ticket-card">
           <CardContent>
-            {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-            {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+            <div className="import-header">
+              <h3>Submit Ticket Request</h3>
+              <p>Complete the steps, then create your ticket.</p>
+            </div>
 
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {/* Title Field */}
+            <div className="step-list">
+              <div className="step-item">
+                <span>1</span>
+                <div>
+                  <h4>Add a clear title</h4>
+                  <p>Use one sentence that explains the issue.</p>
+                </div>
+              </div>
+              <div className="step-item">
+                <span>2</span>
+                <div>
+                  <h4>Describe the problem</h4>
+                  <p>Include what happened, expected behavior, and impact.</p>
+                </div>
+              </div>
+              <div className="step-item">
+                <span>3</span>
+                <div>
+                  <h4>Submit for assignment</h4>
+                  <p>The system assigns and prioritizes based on configuration.</p>
+                </div>
+              </div>
+            </div>
+
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
               <TextField
                 fullWidth
                 label="Ticket Title"
-                placeholder="Brief description of your issue"
+                placeholder="Example: Unable to access invoice page"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={loading}
-                variant="outlined"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "10px"
-                  }
-                }}
               />
 
-              {/* Description Field */}
               <TextField
                 fullWidth
                 multiline
-                rows={5}
-                label="Description"
-                placeholder="Provide detailed information about your issue..."
+                rows={7}
+                label="Detailed Description"
+                placeholder="Paste full issue details here. Extra text is fine, include errors and steps to reproduce."
                 value={description}
                 onChange={(e) => setDesc(e.target.value)}
                 disabled={loading}
-                variant="outlined"
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "10px"
-                  }
-                }}
               />
 
-              {/* Priority & Category Row */}
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                <FormControl fullWidth>
-                  <InputLabel>Priority</InputLabel>
-                  <Select
-                    value={priority}
-                    label="Priority"
-                    onChange={(e) => setPriority(e.target.value)}
-                    disabled={loading}
-                  >
-                    <MenuItem value="low">Low</MenuItem>
-                    <MenuItem value="medium">Medium</MenuItem>
-                    <MenuItem value="high">High</MenuItem>
-                    <MenuItem value="critical">Critical</MenuItem>
-                  </Select>
-                </FormControl>
+              <Box className="create-ticket-actions">
+                <Button variant="text" onClick={() => setDesc("")} disabled={loading}>
+                  Clear Description
+                </Button>
 
-                <FormControl fullWidth>
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={category}
-                    label="Category"
-                    onChange={(e) => setCategory(e.target.value)}
-                    disabled={loading}
-                  >
-                    <MenuItem value="general">General</MenuItem>
-                    <MenuItem value="technical">Technical</MenuItem>
-                    <MenuItem value="billing">Billing</MenuItem>
-                    <MenuItem value="account">Account</MenuItem>
-                  </Select>
-                </FormControl>
+                <Button
+                  variant="contained"
+                  onClick={submit}
+                  disabled={loading}
+                  startIcon={<AddIcon />}
+                  className="submit-btn"
+                >
+                  {loading ? "Creating..." : "Create Ticket"}
+                </Button>
               </Box>
-
-              {/* Submit Button */}
-              <Button
-                variant="contained"
-                size="large"
-                onClick={submit}
-                disabled={loading}
-                startIcon={<AddIcon />}
-                sx={{
-                  height: 48,
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  textTransform: "none",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #243146 0%, #344059 100%)"
-                  }
-                }}
-              >
-                {loading ? "Creating..." : "Create Ticket"}
-              </Button>
             </Box>
           </CardContent>
         </Card>

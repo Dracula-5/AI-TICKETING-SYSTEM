@@ -1,70 +1,237 @@
 .create-ticket-main {
   margin-left: 270px;
-  padding: 30px 40px;
+  padding: 100px 34px 30px;
   min-height: 100vh;
   background: var(--page-bg);
 }
 
-body.dark .create-ticket-main {
-  background: var(--page-bg);
+.create-ticket-headline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
-.create-ticket-header {
-  margin-bottom: 30px;
-  animation: slideDown 0.5s ease-out;
-}
-
-.create-ticket-header h1 {
-  margin: 0 0 10px 0;
-  color: var(--text);
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -1px;
-}
-
-body.dark .create-ticket-header h1 {
-  color: var(--text);
-}
-
-.create-ticket-header p {
+.create-ticket-headline h1 {
   margin: 0;
-  color: var(--muted);
-  font-size: 16px;
+  color: #4f46e5;
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
-body.dark .create-ticket-header p {
-  color: var(--muted);
+.create-ticket-headline p {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 21px;
+}
+
+.reset-btn {
+  border-color: #fca5a5 !important;
+  color: #dc2626 !important;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+}
+
+.config-card {
+  border-radius: 16px !important;
+  background: #ecebff !important;
+  border: 1px solid #d5d6ff;
+  box-shadow: none !important;
+  margin-bottom: 20px;
+}
+
+.config-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #4338ca;
+  margin-bottom: 16px;
+}
+
+.config-title-wrap h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 34px;
+  font-weight: 800;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.config-grid .MuiOutlinedInput-root {
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.reload-btn {
+  height: 56px;
+  border-radius: 12px !important;
+  text-transform: none !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+  white-space: nowrap;
+}
+
+.config-helper {
+  margin: 10px 0 0;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .create-ticket-card {
-  max-width: 800px;
-  border-radius: 16px;
-  box-shadow: var(--card-shadow);
-  transition: all 0.3s ease;
+  border-radius: 16px !important;
+  border: 1px solid #e2e8f0;
+  box-shadow: none !important;
 }
 
-.create-ticket-card:hover {
-  box-shadow: var(--card-shadow-hover);
+.import-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  font-weight: 800;
 }
 
-@media (max-width: 768px) {
+.import-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.step-list {
+  margin: 20px 0 24px;
+  display: grid;
+  gap: 12px;
+}
+
+.step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.step-item span {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ecebff;
+  color: #4f46e5;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.step-item h4 {
+  margin: 0;
+  font-size: 19px;
+  color: #111827;
+}
+
+.step-item p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.create-ticket-card .MuiOutlinedInput-root {
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.create-ticket-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.submit-btn {
+  min-width: 168px;
+  height: 46px;
+  border-radius: 10px !important;
+  text-transform: none !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important;
+}
+
+body.dark .config-card,
+body.dark .create-ticket-card {
+  border-color: #1f2937;
+}
+
+body.dark .create-ticket-headline h1 {
+  color: #a5b4fc;
+}
+
+body.dark .import-header h3,
+body.dark .step-item h4 {
+  color: #e2e8f0;
+}
+
+body.dark .config-grid .MuiOutlinedInput-root,
+body.dark .create-ticket-card .MuiOutlinedInput-root {
+  background: #0f172a;
+}
+
+@media (max-width: 1200px) {
+  .create-ticket-headline h1 {
+    font-size: 42px;
+  }
+
+  .config-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reload-btn {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
   .create-ticket-main {
     margin-left: 0;
-    padding: 20px;
+    padding: 88px 18px 24px;
   }
 
-  .create-ticket-header h1 {
+  .create-ticket-headline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .create-ticket-headline h1 {
+    font-size: 34px;
+  }
+
+  .create-ticket-headline p {
+    font-size: 16px;
+  }
+
+  .config-title-wrap h3 {
     font-size: 24px;
   }
-}
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
+  .config-grid {
+    grid-template-columns: 1fr;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .create-ticket-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .submit-btn {
+    width: 100%;
   }
 }

@@ -1,6 +1,6 @@
 .dashboard-main {
   margin-left: 270px;
-  padding: 30px 40px;
+  padding: 100px 40px 30px;
   min-height: 100vh;
   background: var(--page-bg);
 }
@@ -80,3 +80,4 @@ body.dark .chart-card h3 {
     font-size: 24px;
   }
 }
+
