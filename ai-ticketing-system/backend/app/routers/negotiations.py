@@ -226,6 +226,11 @@ async def negotiation_ws(websocket: WebSocket, session_id: int, db: Session = De
                 session.status = "accepted"
                 session.current_offer_price = amount
                 session.closed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            elif msg_type == "offer" and amount is not None:
+                # Track the running price so anything that reads the session
+                # (vendor inbox list, etc.) reflects the latest counter, not
+                # just the offer the negotiation opened with.
+                session.current_offer_price = amount
 
             db.commit()
             db.refresh(entry)

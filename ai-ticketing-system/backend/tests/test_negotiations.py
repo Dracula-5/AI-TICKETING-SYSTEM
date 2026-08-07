@@ -82,6 +82,21 @@ class TestNegotiationREST:
         assert len(data["messages"]) == 2
         assert data["messages"][1]["sender_role"] == "ai_assistant"
 
+    def test_auto_negotiate_counter_updates_session_price(self, client, db, customer_user, product):
+        """
+        Regression test: current_offer_price used to only get set at session
+        creation (the customer's opening offer) and on accept -- a vendor
+        scanning their inbox saw the original offer forever, never the
+        assistant's counter, even though the chat itself had moved on.
+        """
+        product.auto_negotiate_enabled = True
+        db.commit()
+        resp = client.post("/negotiations/", json={"product_id": product.id, "amount": 500.0}, headers=auth_headers(customer_user))
+        data = resp.json()
+        counter_amount = data["messages"][1]["amount"]
+        assert counter_amount != 500.0
+        assert data["current_offer_price"] == counter_amount
+
     def test_get_negotiation_participant_allowed(self, client, customer_user, product):
         created = client.post("/negotiations/", json={"product_id": product.id, "amount": 800.0}, headers=auth_headers(customer_user)).json()
         resp = client.get(f"/negotiations/{created['id']}", headers=auth_headers(customer_user))
@@ -140,6 +155,22 @@ class TestNegotiationWebSocket:
 
         resp = client.get(f"/negotiations/{session_id}", headers=auth_headers(customer_user))
         assert resp.json()["status"] == "accepted"
+
+    def test_ws_counter_offer_updates_session_price(self, client, customer_user, vendor_user, product):
+        """Regression test: a vendor's counter-offer over WS must update
+        current_offer_price, not just accept -- otherwise anything reading
+        the session (e.g. the vendor inbox list) shows a stale price."""
+        created = client.post("/negotiations/", json={"product_id": product.id, "amount": 500.0}, headers=auth_headers(customer_user)).json()
+        session_id = created["id"]
+        vendor_token = create_access_token({"sub": str(vendor_user.id)})
+
+        with client.websocket_connect(f"/negotiations/{session_id}/ws?token={vendor_token}") as vend_ws:
+            vend_ws.send_json({"type": "offer", "amount": 900.0, "text": "How about 900?"})
+            echoed = vend_ws.receive_json()
+            assert echoed["amount"] == 900.0
+
+        resp = client.get(f"/negotiations/{session_id}", headers=auth_headers(customer_user))
+        assert resp.json()["current_offer_price"] == 900.0
 
     def test_ws_rejects_non_participant(self, client, db, tenant, customer_user, product):
         from app.db.models import User

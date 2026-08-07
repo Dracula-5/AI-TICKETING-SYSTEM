@@ -149,6 +149,11 @@ async def generate_vendor_response(db, session, product, vendor, messages: list[
         session.status = "accepted"
         session.current_offer_price = decision["amount"]
         session.closed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    elif decision["message_type"] == "counter_offer":
+        # Keep the session's tracked price current so anything reading it
+        # (vendor inbox list, etc.) reflects the assistant's latest counter,
+        # not just the customer's opening offer.
+        session.current_offer_price = decision["amount"]
 
     db.commit()
     db.refresh(entry)
