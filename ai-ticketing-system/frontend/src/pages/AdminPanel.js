@@ -1,0 +1,217 @@
+import { useEffect, useState } from "react";
+import { Button, Table, TableHead, TableRow, TableCell, TableBody, Card, CardContent, Box, Alert, CircularProgress, Paper, TableContainer } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
+import api from "../api/axios";
+import "../styles/adminPanel.css";
+
+export default function AdminPanel() {
+
+  const [tickets, setTickets] = useState([]);
+  const [providers, setProviders] = useState([]);
+  const [bargainRows, setBargainRows] = useState([]);
+  const [success, setSuccess] = useState("");
+  const [slaRunning, setSlaRunning] = useState(false);
+
+  function load() {
+    api.get("/tickets").then(res => setTickets(res.data || []));
+    api.get("/users/providers").then(res => setProviders(res.data || []));
+    api.get("/tickets/bargaining/monitor").then(res => setBargainRows(res.data || [])).catch(() => setBargainRows([]));
+  }
+
+  useEffect(() => { load(); }, [])
+
+  function assign(ticketId, userId) {
+    api.put(`/tickets/${ticketId}/assign/${userId}`).then(() => {
+      setSuccess("Ticket assigned successfully!");
+      setTimeout(() => setSuccess(""), 2000);
+      load();
+    });
+  }
+
+  function runSla() {
+    setSlaRunning(true);
+    api.post("/tickets/admin/run-sla-check")
+      .then(() => {
+        setSuccess("SLA Check completed!");
+        setTimeout(() => setSuccess(""), 2000);
+        load();
+      })
+      .catch(() => {
+        setSuccess("");
+      })
+      .finally(() => setSlaRunning(false));
+  }
+
+  const pendingTickets = tickets.filter(t => t.status === "open" || t.status === "in-progress");
+  const slaBreach = tickets.filter(t => t.sla_due && new Date(t.sla_due) < new Date() && t.status !== "closed").length;
+
+  return (
+    <>
+      <Navbar />
+      <Sidebar role={"admin"} />
+
+      <div className="admin-panel-main">
+        <div className="admin-panel-header">
+          <h1>Admin Control Panel</h1>
+          <p>System administration and management tools</p>
+        </div>
+
+        {success && <Alert severity="success" sx={{ mb: 3 }}>{success}</Alert>}
+
+        {/* Stats */}
+        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2, mb: 4 }}>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
+            <CardContent>
+              <p>Total Tickets</p>
+              <h2>{tickets.length}</h2>
+            </CardContent>
+          </Card>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
+            <CardContent>
+              <p>Pending</p>
+              <h2>{pendingTickets.length}</h2>
+            </CardContent>
+          </Card>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)" }}>
+            <CardContent>
+              <p>SLA Breached</p>
+              <h2>{slaBreach}</h2>
+            </CardContent>
+          </Card>
+          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
+            <CardContent>
+              <p>Providers</p>
+              <h2>{providers.length}</h2>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* SLA Check Button */}
+        <Card sx={{ mb: 4, borderRadius: "16px" }}>
+          <CardContent>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Box>
+                <h3 style={{ margin: "0 0 5px 0", color: "#333" }}>Run SLA Check</h3>
+                <p style={{ margin: 0, color: "#999", fontSize: "14px" }}>Check all tickets for SLA breaches</p>
+              </Box>
+              <Button
+                variant="contained"
+                onClick={runSla}
+                disabled={slaRunning}
+                startIcon={slaRunning ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
+                sx={{
+                  background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
+                  textTransform: "none",
+                  fontWeight: 600
+                }}
+              >
+                {slaRunning ? "Running..." : "Run Now"}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Tickets Table */}
+        <Card sx={{ borderRadius: "16px" }}>
+          <CardContent>
+            <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Quick Assignment</h3>
+            <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: "none" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                    <TableCell sx={{ fontWeight: 700, color: "#333" }}>Ticket ID</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: "#333" }}>Title</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: "#333" }}>Assign To</TableCell>
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {pendingTickets.slice(0, 10).map(t => (
+                    <TableRow key={t.id} sx={{ borderBottom: "1px solid #e0e0e0" }}>
+                      <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{t.id}</TableCell>
+                      <TableCell>{t.title}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          {providers.slice(0, 3).map(p => (
+                            <Button
+                              key={p.id}
+                              size="small"
+                              variant="outlined"
+                              onClick={() => assign(t.id, p.id)}
+                              sx={{
+                                textTransform: "none",
+                                fontSize: "12px",
+                                borderRadius: "6px"
+                              }}
+                            >
+                              {p.name.split(" ")[0]}
+                            </Button>
+                          ))}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {pendingTickets.length > 10 && (
+              <p style={{ marginTop: 16, color: "#999", fontSize: "14px" }}>
+                Showing 10 of {pendingTickets.length} pending tickets. View all in Tickets page.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card sx={{ borderRadius: "16px", mt: 4 }}>
+          <CardContent>
+            <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Bargaining Monitor</h3>
+            <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: "none" }}>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Ticket</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Pricing</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Latest Action</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Latest Amount</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Final Price</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {bargainRows.length > 0 ? (
+                    bargainRows.map((row) => (
+                      <TableRow key={row.ticket_id}>
+                        <TableCell>
+                          <div style={{ fontWeight: 600 }}>#{row.ticket_id}</div>
+                          <div style={{ color: "#64748b", fontSize: 13 }}>{row.ticket_title}</div>
+                        </TableCell>
+                        <TableCell>{row.ticket_status}</TableCell>
+                        <TableCell>
+                          <span style={{ color: row.pricing_status === "finalized" ? "#2e7d32" : "#5b21b6", fontWeight: 700 }}>
+                            {row.pricing_status}
+                          </span>
+                        </TableCell>
+                        <TableCell>{row.last_action ? `${row.last_sender_role} ${row.last_action}` : "-"}</TableCell>
+                        <TableCell>{row.last_amount != null ? `Rs ${row.last_amount}` : "-"}</TableCell>
+                        <TableCell>{row.final_price != null ? `Rs ${row.final_price}` : "-"}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                        No bargaining activity yet
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}

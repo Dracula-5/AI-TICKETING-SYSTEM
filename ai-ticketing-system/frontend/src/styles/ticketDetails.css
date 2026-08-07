@@ -1,0 +1,245 @@
+.ticket-details-main {
+  margin-left: 270px;
+  padding: 100px 40px 30px;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+body.dark .ticket-details-main {
+  background: var(--page-bg);
+}
+
+.ticket-header {
+  margin-bottom: 30px;
+  animation: slideDown 0.5s ease-out;
+}
+
+.ticket-header h1 {
+  margin: 0 0 10px 0;
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+body.dark .ticket-header h1 {
+  color: var(--text);
+}
+
+.ticket-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+body.dark .ticket-header p {
+  color: var(--muted);
+}
+
+.ticket-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.ticket-main-card {
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+}
+
+.ticket-main-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-4px);
+}
+
+.ticket-main-card h3 {
+  margin: 0 0 12px 0;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+body.dark .ticket-main-card h3 {
+  color: var(--text);
+}
+
+.ticket-description {
+  color: var(--text);
+  line-height: 1.8;
+  margin: 0 0 16px 0;
+}
+
+body.dark .ticket-description {
+  color: var(--text);
+}
+
+.ticket-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.detail-item {
+  padding: 12px;
+  background: var(--surface-muted);
+  border-radius: 8px;
+}
+
+body.dark .detail-item {
+  background: var(--surface-muted);
+}
+
+.detail-item label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.detail-item p {
+  margin: 0;
+  color: var(--text);
+  font-weight: 500;
+}
+
+body.dark .detail-item p {
+  color: var(--text);
+}
+
+.comments-section {
+  grid-column: 1 / -1;
+  animation: slideUp 0.5s ease-out 0.1s backwards;
+}
+
+.bargain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.bargain-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.bargain-item.selectable {
+  cursor: pointer;
+}
+
+.bargain-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, #ffffff);
+}
+
+.bargain-item small {
+  color: #64748b;
+}
+
+.bargain-item p {
+  margin: 6px 0 0 0;
+  color: #334155;
+}
+
+body.dark .bargain-item {
+  background: #0f172a;
+  border-color: #1f2937;
+}
+
+body.dark .bargain-item p {
+  color: #cbd5e1;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.comments-section h3 {
+  margin: 0 0 20px 0;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+body.dark .comments-section h3 {
+  color: var(--text);
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.comment-card {
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--accent);
+}
+
+.comment-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+.add-comment-card {
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
+}
+
+.add-comment-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+
+@media (max-width: 1024px) {
+  .ticket-content {
+    grid-template-columns: 1fr;
+  }
+
+  .ticket-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .ticket-details-main {
+    margin-left: 0;
+    padding: 88px 20px 20px;
+  }
+
+  .ticket-header h1 {
+    font-size: 24px;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

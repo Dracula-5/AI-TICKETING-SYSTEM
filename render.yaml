@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: ai-ticketing-backend
+    env: python
+    plan: free
+    rootDir: ai-ticketing-system/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-ticketing-postgres
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1800"
+      # Auth is Bearer-token based (no cookies), so a wildcard origin carries
+      # no credential-leak risk here -- it just sidesteps the chicken-and-egg
+      # problem of not knowing the Netlify URL until that site is created.
+      # Tighten to the real Netlify URL after both services are live, e.g.
+      # "https://your-site-name.netlify.app".
+      - key: CORS_ORIGINS
+        value: "*"
+      # Demo/portfolio deploy: seeds 6 category-locked vendors + demo
+      # customers on first boot so the live link isn't an empty shell.
+      # Set to "false" if this is ever pointed at a real database.
+      - key: SEED_MARKETPLACE_DEMO_DATA
+        value: "true"
+databases:
+  - name: ai-ticketing-postgres
+    plan: free

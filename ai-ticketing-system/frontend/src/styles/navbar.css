@@ -1,0 +1,79 @@
+.app-navbar {
+  left: 270px !important;
+  width: calc(100% - 270px) !important;
+  background: rgba(249, 250, 252, 0.92) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e2e8f0;
+  color: #111827;
+}
+
+.app-navbar-toolbar {
+  min-height: 68px !important;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 18px !important;
+}
+
+.navbar-title-wrap h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.navbar-title-wrap p {
+  margin: 1px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+.navbar-icon-btn:hover {
+  background: #f8fafc !important;
+}
+
+body.dark .app-navbar {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-bottom-color: #1e293b;
+}
+
+body.dark .navbar-title-wrap h3 {
+  color: #e2e8f0;
+}
+
+body.dark .navbar-title-wrap p {
+  color: #94a3b8;
+}
+
+body.dark .navbar-icon-btn {
+  background: #111827 !important;
+  border-color: #1f2937 !important;
+  color: #94a3b8 !important;
+}
+
+@media (max-width: 900px) {
+  .app-navbar {
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  .navbar-title-wrap p {
+    display: none;
+  }
+}

@@ -1,0 +1,109 @@
+from datetime import datetime, timedelta, timezone
+from typing import Optional
+
+import bcrypt
+from fastapi import Depends, HTTPException, WebSocket, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
+from app.db.database import get_db
+from app.db.models import User
+
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
+
+# IMPORTANT: NO LEADING SLASH
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+
+
+def get_password_hash(password: str) -> str:
+    return bcrypt.hashpw(password[:72].encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password[:72].encode(), hashed_password.encode())
+
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc).replace(tzinfo=None) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Not authenticated",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+
+    if not user:
+        raise credentials_exception
+
+    return user
+
+
+def get_current_user_ws(websocket: WebSocket, db: Session) -> User | None:
+    """
+    WebSocket equivalent of get_current_user. Browsers cannot set a custom
+    Authorization header on a WebSocket handshake, so the JWT is passed as a
+    `token` query param instead. Returns None instead of raising so the
+    caller can close the connection with a WS-appropriate code.
+    """
+    token = websocket.query_params.get("token")
+    if not token:
+        return None
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str | None = payload.get("sub")
+        if user_id is None:
+            return None
+    except JWTError:
+        return None
+
+    return db.query(User).filter(User.id == int(user_id)).first()
+
+
+def ensure_same_tenant(resource_tenant_id: int, current_user: User):
+    if resource_tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Cross-tenant access not allowed"
+        )
+
+
+def require_admin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access required"
+        )
+    return current_user
+
+
+def require_role(user: User, roles: list[str]):
+    if user.role not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to perform this action"
+        )

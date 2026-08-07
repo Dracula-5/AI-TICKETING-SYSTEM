@@ -1,0 +1,167 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  # ── Backend: lint + unit tests ────────────────────────────────────────────
+  backend:
+    name: Backend (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    defaults:
+      run:
+        working-directory: ai-ticketing-system/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: ai-ticketing-system/backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint with ruff (fast, zero-config)
+        run: |
+          pip install ruff
+          ruff check app/ tests/ --select E,F,W --ignore E501
+
+      - name: Run tests
+        env:
+          DATABASE_URL: "sqlite:///:memory:"
+          SECRET_KEY: "ci-test-secret-key-not-for-production"
+          ALGORITHM: "HS256"
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          CORS_ORIGINS: "http://localhost:3000"
+        run: pytest tests/ -v --tb=short --cov=app --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ai-ticketing-system/backend/coverage.xml
+
+  # ── Backend: full suite against real Postgres ─────────────────────────────
+  backend-postgres:
+    name: Backend (Postgres integration)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ticketing_test
+          POSTGRES_USER: ticketing
+          POSTGRES_PASSWORD: ci-test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: ai-ticketing-system/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ai-ticketing-system/backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Alembic migrations against Postgres
+        env:
+          DATABASE_URL: "postgresql://ticketing:ci-test-password@localhost:5432/ticketing_test"
+        run: alembic upgrade head
+
+      - name: Run tests against Postgres
+        env:
+          TEST_DATABASE_URL: "postgresql://ticketing:ci-test-password@localhost:5432/ticketing_test"
+          SECRET_KEY: "ci-test-secret-key-not-for-production"
+          ALGORITHM: "HS256"
+          ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+          CORS_ORIGINS: "http://localhost:3000"
+        run: pytest tests/ -v --tb=short
+
+  # ── Frontend: install + build ─────────────────────────────────────────────
+  frontend:
+    name: Frontend (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20"]
+
+    defaults:
+      run:
+        working-directory: ai-ticketing-system/frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: ai-ticketing-system/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        env:
+          CI: "true"
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Build production bundle
+        env:
+          REACT_APP_API_BASE_URL: "http://localhost:8000"
+          CI: "false"
+        run: npm run build
+
+  # ── Docker: smoke-test that the image builds ──────────────────────────────
+  docker:
+    name: Docker build check
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t ai-ticketing-backend ai-ticketing-system/backend
+
+      - name: Build frontend image
+        run: docker build -t ai-ticketing-frontend ai-ticketing-system/frontend
+
+      - name: Smoke-test backend container
+        run: |
+          docker run -d --name backend-test \
+            -p 8000:8000 \
+            -e DATABASE_URL="sqlite:///./tickets.db" \
+            -e SECRET_KEY="ci-smoke-test" \
+            ai-ticketing-backend
+          sleep 5
+          curl --fail http://localhost:8000/health
+          docker stop backend-test

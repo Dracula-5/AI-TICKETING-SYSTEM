@@ -1,0 +1,16 @@
+[build]
+  base = "ai-ticketing-system/frontend"
+  publish = "build"
+  command = "npm run build"
+
+# REACT_APP_API_BASE_URL is intentionally NOT set here -- it's baked into the
+# JS bundle at build time, so it must point at your real Render backend URL,
+# which only exists after that service is created. Set it in Netlify's
+# dashboard instead: Site configuration -> Environment variables ->
+# REACT_APP_API_BASE_URL = https://<your-backend>.onrender.com, then trigger
+# a deploy (env var changes alone don't auto-redeploy).
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

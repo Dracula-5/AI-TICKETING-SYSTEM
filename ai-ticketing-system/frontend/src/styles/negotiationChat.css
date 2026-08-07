@@ -1,0 +1,151 @@
+.negotiation-chat-main {
+  margin-left: 270px;
+  padding: 100px 40px 30px;
+  min-height: 100vh;
+  background: var(--page-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.negotiation-chat-loading {
+  display: flex;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.negotiation-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.negotiation-chat-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text);
+}
+
+.negotiation-chat-header p {
+  margin: 2px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.negotiation-chat-status-chip {
+  margin-left: auto;
+}
+
+.negotiation-chat-window {
+  border-radius: 14px !important;
+  box-shadow: var(--card-shadow);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.negotiation-chat-scroll {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-bubble-row {
+  display: flex;
+}
+
+.chat-bubble-row.mine {
+  justify-content: flex-end;
+}
+
+.chat-bubble-row.theirs {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #f0f0f0;
+  color: var(--text);
+}
+
+.chat-bubble p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+}
+
+.chat-bubble.mine {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chat-bubble.offer {
+  border: 1px solid var(--accent);
+}
+
+.chat-bubble.mine.offer {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.chat-offer-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.chat-ai-chip {
+  margin-bottom: 6px;
+}
+
+.chat-accept-label {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.chat-bubble.mine .chat-accept-label {
+  color: #d7ffd9;
+}
+
+.chat-reject-label {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.chat-offer-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.negotiation-chat-input-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.negotiation-offer-input {
+  width: 150px;
+}
+
+@media (max-width: 768px) {
+  .negotiation-chat-main {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .negotiation-chat-input-row {
+    flex-wrap: wrap;
+  }
+
+  .negotiation-offer-input {
+    width: 100%;
+  }
+}
