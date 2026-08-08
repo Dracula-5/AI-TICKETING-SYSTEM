@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  Card, CardContent, Grid, Box, Chip, Button, CircularProgress, Alert,
+  Card, CardContent, Grid, Box, Chip, Button, Alert,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton,
 } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -13,6 +13,7 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import VendorInfoCard from "../components/VendorInfoCard";
+import LoadingState from "../components/LoadingState";
 import { getProduct } from "../api/products";
 import { startNegotiation } from "../api/negotiations";
 import { useCart } from "../context/CartContext";
@@ -83,11 +84,7 @@ export default function ProductDetail() {
       <Sidebar role={localStorage.getItem("role")} />
 
       <div className="product-detail-main">
-        {loading && (
-          <Box className="product-detail-loading">
-            <CircularProgress />
-          </Box>
-        )}
+        {loading && <LoadingState label="Loading product..." />}
 
         {!loading && error && (
           <Card className="product-detail-error">
@@ -132,17 +129,27 @@ export default function ProductDetail() {
                 {product.stock_quantity > 0 && (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
                     <span style={{ fontSize: 14, color: "#64748b" }}>Quantity</span>
-                    <IconButton size="small" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      disabled={quantity <= 1}
+                      aria-label="Decrease quantity"
+                    >
                       <RemoveIcon fontSize="small" />
                     </IconButton>
                     <TextField
                       size="small"
                       value={quantity}
                       sx={{ width: 56 }}
-                      inputProps={{ style: { textAlign: "center" } }}
+                      inputProps={{ style: { textAlign: "center" }, "aria-label": "Quantity" }}
                       onChange={(e) => setQuantity(Math.max(1, Math.min(Number(e.target.value) || 1, product.stock_quantity)))}
                     />
-                    <IconButton size="small" onClick={() => setQuantity((q) => Math.min(product.stock_quantity, q + 1))} disabled={quantity >= product.stock_quantity}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setQuantity((q) => Math.min(product.stock_quantity, q + 1))}
+                      disabled={quantity >= product.stock_quantity}
+                      aria-label="Increase quantity"
+                    >
                       <AddIcon fontSize="small" />
                     </IconButton>
                   </Box>

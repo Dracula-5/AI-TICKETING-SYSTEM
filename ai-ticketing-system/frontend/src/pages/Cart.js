@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box, Card, CardContent, Table, TableHead, TableCell, TableRow, TableBody,
   TableContainer, Paper, IconButton, TextField, Button, Divider,
@@ -6,9 +6,11 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import EmptyState from "../components/EmptyState";
 import { useCart } from "../context/CartContext";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/vendorDashboard.css";
@@ -38,11 +40,13 @@ export default function Cart() {
         </div>
 
         {items.length === 0 ? (
-          <Card>
-            <CardContent sx={{ textAlign: "center", py: 6, color: "#999" }}>
-              Your cart is empty. <Link to="/marketplace">Browse the marketplace</Link>.
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<ShoppingCartOutlinedIcon sx={{ fontSize: 28, color: "text.disabled" }} />}
+            title="Your cart is empty"
+            description="Add products from the marketplace to see them here."
+            action="Browse the marketplace"
+            onAction={() => navigate("/marketplace")}
+          />
         ) : (
           <>
             {Object.entries(byVendor).map(([vendorId, group]) => (
@@ -75,24 +79,39 @@ export default function Cart() {
                           <TableCell>{item.currency} {item.price.toLocaleString()}</TableCell>
                           <TableCell>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                              <IconButton size="small" onClick={() => updateQuantity(item.productId, item.quantity - 1)} disabled={item.quantity <= 1}>
+                              <IconButton
+                                size="small"
+                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                                disabled={item.quantity <= 1}
+                                aria-label={`Decrease quantity of ${item.title}`}
+                              >
                                 <RemoveIcon fontSize="small" />
                               </IconButton>
                               <TextField
                                 size="small"
                                 value={item.quantity}
                                 sx={{ width: 56 }}
-                                inputProps={{ style: { textAlign: "center" } }}
+                                inputProps={{ style: { textAlign: "center" }, "aria-label": `Quantity of ${item.title}` }}
                                 onChange={(e) => updateQuantity(item.productId, Number(e.target.value) || 1)}
                               />
-                              <IconButton size="small" onClick={() => updateQuantity(item.productId, item.quantity + 1)} disabled={item.quantity >= item.maxStock}>
+                              <IconButton
+                                size="small"
+                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                                disabled={item.quantity >= item.maxStock}
+                                aria-label={`Increase quantity of ${item.title}`}
+                              >
                                 <AddIcon fontSize="small" />
                               </IconButton>
                             </Box>
                           </TableCell>
                           <TableCell>{item.currency} {(item.price * item.quantity).toLocaleString()}</TableCell>
                           <TableCell>
-                            <IconButton size="small" color="error" onClick={() => removeItem(item.productId)}>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => removeItem(item.productId)}
+                              aria-label={`Remove ${item.title} from cart`}
+                            >
                               <DeleteOutlineIcon fontSize="small" />
                             </IconButton>
                           </TableCell>

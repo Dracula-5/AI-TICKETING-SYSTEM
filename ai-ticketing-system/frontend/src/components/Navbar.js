@@ -101,13 +101,13 @@ export default function Navbar() {
           </Tooltip>
 
           <Tooltip title={isDark ? "Light Mode" : "Dark Mode"}>
-            <IconButton onClick={toggleDark} className="navbar-icon-btn">
+            <IconButton onClick={toggleDark} className="navbar-icon-btn" aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
               {isDark ? <LightModeOutlinedIcon fontSize="small" /> : <DarkModeOutlinedIcon fontSize="small" />}
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Device View">
-            <IconButton className="navbar-icon-btn">
+            <IconButton className="navbar-icon-btn" aria-label="Device view">
               <LaptopMacOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>

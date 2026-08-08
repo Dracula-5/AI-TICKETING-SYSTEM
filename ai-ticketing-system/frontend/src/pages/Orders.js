@@ -30,7 +30,7 @@ function OrderRow({ order }) {
     <>
       <TableRow>
         <TableCell>
-          <IconButton size="small" onClick={() => setOpen(!open)}>
+          <IconButton size="small" onClick={() => setOpen(!open)} aria-label={open ? "Collapse order details" : "Expand order details"}>
             {open ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
           </IconButton>
         </TableCell>

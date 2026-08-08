@@ -140,7 +140,7 @@ export default function NegotiationChat() {
         {!loading && session && (
           <>
             <Box className="negotiation-chat-header">
-              <IconButton component={Link} to={`/product/${session.product_id}`} size="small">
+              <IconButton component={Link} to={`/product/${session.product_id}`} size="small" aria-label="Back to product">
                 <ArrowBackIcon />
               </IconButton>
               <Box>

@@ -31,7 +31,7 @@ export default function AiTicketCreate() {
         setText("");
       })
       .catch(err => {
-        setError("Failed to create ticket. Please try again.");
+        setError(err.response?.data?.detail || "Failed to create ticket. Please try again.");
       })
       .finally(() => setLoading(false));
   }
