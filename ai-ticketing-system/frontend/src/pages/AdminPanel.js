@@ -4,8 +4,10 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import api from "../api/axios";
 import "../styles/adminPanel.css";
+import { useToast } from "../context/ToastContext";
 
 export default function AdminPanel() {
 
@@ -14,20 +16,26 @@ export default function AdminPanel() {
   const [bargainRows, setBargainRows] = useState([]);
   const [success, setSuccess] = useState("");
   const [slaRunning, setSlaRunning] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   function load() {
-    api.get("/tickets").then(res => setTickets(res.data || []));
-    api.get("/users/providers").then(res => setProviders(res.data || []));
-    api.get("/tickets/bargaining/monitor").then(res => setBargainRows(res.data || [])).catch(() => setBargainRows([]));
+    Promise.allSettled([
+      api.get("/tickets").then(res => setTickets(res.data || [])).catch(() => toast.error("Couldn't load tickets.")),
+      api.get("/users/providers").then(res => setProviders(res.data || [])).catch(() => toast.error("Couldn't load providers.")),
+      api.get("/tickets/bargaining/monitor").then(res => setBargainRows(res.data || [])).catch(() => setBargainRows([])),
+    ]).then(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, [])
+  useEffect(() => { load(); }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function assign(ticketId, userId) {
     api.put(`/tickets/${ticketId}/assign/${userId}`).then(() => {
       setSuccess("Ticket assigned successfully!");
       setTimeout(() => setSuccess(""), 2000);
       load();
+    }).catch((err) => {
+      toast.error(err.response?.data?.detail || "Couldn't assign this ticket.");
     });
   }
 
@@ -40,7 +48,7 @@ export default function AdminPanel() {
         load();
       })
       .catch(() => {
-        setSuccess("");
+        toast.error("SLA check failed to run.");
       })
       .finally(() => setSlaRunning(false));
   }
@@ -118,6 +126,7 @@ export default function AdminPanel() {
         <Card sx={{ borderRadius: "16px" }}>
           <CardContent>
             <h3 style={{ margin: "0 0 20px 0", color: "#333" }}>Quick Assignment</h3>
+            {loading ? <LoadingState label="Loading tickets..." minHeight={200} /> : (
             <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: "none" }}>
               <Table>
                 <TableHead>
@@ -129,7 +138,13 @@ export default function AdminPanel() {
                 </TableHead>
 
                 <TableBody>
-                  {pendingTickets.slice(0, 10).map(t => (
+                  {pendingTickets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} sx={{ textAlign: "center", py: 4, color: "#999" }}>
+                        No pending tickets to assign.
+                      </TableCell>
+                    </TableRow>
+                  ) : pendingTickets.slice(0, 10).map(t => (
                     <TableRow key={t.id} sx={{ borderBottom: "1px solid #e0e0e0" }}>
                       <TableCell sx={{ fontWeight: 600, color: "var(--accent)" }}>{t.id}</TableCell>
                       <TableCell>{t.title}</TableCell>
@@ -157,6 +172,7 @@ export default function AdminPanel() {
                 </TableBody>
               </Table>
             </TableContainer>
+            )}
 
             {pendingTickets.length > 10 && (
               <p style={{ marginTop: 16, color: "#999", fontSize: "14px" }}>

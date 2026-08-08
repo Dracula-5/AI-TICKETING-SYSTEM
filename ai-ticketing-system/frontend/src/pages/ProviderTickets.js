@@ -13,6 +13,7 @@ import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import "../styles/providerTickets.css";
+import { useToast } from "../context/ToastContext";
 
 export default function ProviderTickets() {
   const [tickets, setTickets] = useState([]);
@@ -21,10 +22,12 @@ export default function ProviderTickets() {
   const [loadingOpen, setLoadingOpen] = useState(true);
   const [success, setSuccess] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const toast = useToast();
 
   useEffect(() => {
     loadTickets();
     loadOpenTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function loadTickets() {
@@ -33,8 +36,8 @@ export default function ProviderTickets() {
         setTickets(res.data || []);
         setLoading(false);
       })
-      .catch(err => {
-        console.error("Failed to load tickets");
+      .catch(() => {
+        toast.error("Couldn't load your tickets.");
         setLoading(false);
       });
   }
@@ -46,6 +49,7 @@ export default function ProviderTickets() {
         setLoadingOpen(false);
       })
       .catch(() => {
+        toast.error("Couldn't load open tickets.");
         setLoadingOpen(false);
       });
   }
@@ -57,7 +61,7 @@ export default function ProviderTickets() {
       setTimeout(() => setSuccess(""), 2000);
       loadTickets();
     } catch (err) {
-      alert("Failed to update status");
+      toast.error(err.response?.data?.detail || "Failed to update status");
     }
   }
 
@@ -69,7 +73,7 @@ export default function ProviderTickets() {
       loadTickets();
       loadOpenTickets();
     } catch (err) {
-      alert("Failed to offer help");
+      toast.error(err.response?.data?.detail || "Failed to offer help");
     }
   }
 

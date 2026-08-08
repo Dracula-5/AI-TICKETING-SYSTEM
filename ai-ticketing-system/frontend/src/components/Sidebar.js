@@ -148,7 +148,7 @@ export default function Sidebar({ role }) {
           <SchoolIcon fontSize="small" />
         </Avatar>
         <Box>
-          <h2>Smart Ticketing System</h2>
+          <h2>TicketMind</h2>
           <p>Workspace</p>
         </Box>
       </Box>

@@ -7,8 +7,10 @@ import ChatIcon from "@mui/icons-material/Chat";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import { listVendorInbox } from "../api/negotiations";
 import "../styles/vendorDashboard.css";
+import { useToast } from "../context/ToastContext";
 
 function statusColor(status) {
   if (status === "accepted") return "success";
@@ -18,9 +20,18 @@ function statusColor(status) {
 
 export default function VendorInbox() {
   const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
-    listVendorInbox().then((res) => setSessions(res.data)).catch(() => setSessions([]));
+    listVendorInbox()
+      .then((res) => setSessions(res.data))
+      .catch(() => {
+        setSessions([]);
+        toast.error("Couldn't load your negotiation inbox.");
+      })
+      .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -34,6 +45,7 @@ export default function VendorInbox() {
           <p>Active and past price negotiations across your products</p>
         </div>
 
+        {loading ? <LoadingState label="Loading negotiations..." /> : (
         <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
           <Table>
             <TableHead>
@@ -76,6 +88,7 @@ export default function VendorInbox() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
       </div>
       <Footer />
     </>

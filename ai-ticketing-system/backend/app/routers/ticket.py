@@ -12,6 +12,8 @@ from app.schemas.tickets import (
     BargainingEntryOut,
     BargainingMonitorOut,
     BargainingActionOut,
+    TicketActionOut,
+    SlaCheckOut,
 )
 from app.core.security import get_current_user
 
@@ -28,6 +30,10 @@ router = APIRouter(
 )
 
 PROVIDER_ROLES = ["provider", "service_provider"]
+
+# Safety net for list endpoints with no pagination UI yet -- prevents an
+# unbounded row dump if ticket volume grows well past demo-app scale.
+LIST_SAFETY_CAP = 500
 
 
 def _is_provider(user: User) -> bool:
@@ -201,17 +207,17 @@ def list_tickets(
     if current_user.role in ["admin", "provider", "service_provider"]:
         return db.query(Ticket).filter(
             Ticket.tenant_id == current_user.tenant_id
-        ).all()
+        ).limit(LIST_SAFETY_CAP).all()
 
     return db.query(Ticket).filter(
         Ticket.created_by_user_id == current_user.id
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
 
 # ========================
 # Update Ticket Status
 # ========================
-@router.put("/{ticket_id}/status")
+@router.put("/{ticket_id}/status", response_model=TicketActionOut)
 def update_status(
     ticket_id: int,
     status: str,
@@ -240,7 +246,7 @@ def update_status(
 # ========================
 # Admin Assign Ticket
 # ========================
-@router.put("/{ticket_id}/assign/{user_id}")
+@router.put("/{ticket_id}/assign/{user_id}", response_model=TicketActionOut)
 def assign_ticket(
     ticket_id: int,
     user_id: int,
@@ -286,7 +292,7 @@ def get_tenant_tickets(
     if tenant_id != current_user.tenant_id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
-    tickets = db.query(Ticket).filter(Ticket.tenant_id == tenant_id).all()
+    tickets = db.query(Ticket).filter(Ticket.tenant_id == tenant_id).limit(LIST_SAFETY_CAP).all()
 
     if not tickets:
         raise HTTPException(status_code=404, detail="No tickets found")
@@ -307,7 +313,7 @@ def provider_my_tickets(
 
     return db.query(Ticket).filter(
         Ticket.assigned_to_user_id == current_user.id
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
 @router.get("/provider/open", response_model=list[TicketOut])
 def provider_open_tickets(
@@ -321,9 +327,9 @@ def provider_open_tickets(
         Ticket.tenant_id == current_user.tenant_id,
         Ticket.assigned_to_user_id == None,  # noqa: E711
         Ticket.status == "open"
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
-@router.post("/provider/offer/{ticket_id}")
+@router.post("/provider/offer/{ticket_id}", response_model=TicketActionOut)
 def provider_offer_help(
     ticket_id: int,
     db: Session = Depends(get_db),
@@ -358,7 +364,7 @@ def provider_offer_help(
 # ========================
 # Provider Update Status
 # ========================
-@router.put("/provider/{ticket_id}/status")
+@router.put("/provider/{ticket_id}/status", response_model=TicketActionOut)
 def provider_update_status(
     ticket_id: int,
     status: str,
@@ -405,13 +411,13 @@ def customer_my_tickets(
 
     return db.query(Ticket).filter(
         Ticket.created_by_user_id == current_user.id
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
 
 # ========================
 # Admin SLA Check
 # ========================
-@router.post("/admin/run-sla-check")
+@router.post("/admin/run-sla-check", response_model=SlaCheckOut)
 def run_sla_check(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

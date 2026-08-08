@@ -6,8 +6,10 @@ import {
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import { listAllProductsAdmin, setProductStatus } from "../api/products";
 import "../styles/vendorDashboard.css";
+import { useToast } from "../context/ToastContext";
 
 const STATUS_OPTIONS = ["active", "inactive", "out_of_stock"];
 
@@ -21,11 +23,17 @@ export default function ProductModeration() {
   const [products, setProducts] = useState([]);
   const [filter, setFilter] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   function load() {
     listAllProductsAdmin(filter ? { status: filter } : {})
       .then((res) => setProducts(res.data.items))
-      .catch(() => setProducts([]));
+      .catch(() => {
+        setProducts([]);
+        toast.error("Couldn't load products.");
+      })
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -68,6 +76,7 @@ export default function ProductModeration() {
           </FormControl>
         </Box>
 
+        {loading ? <LoadingState label="Loading products..." /> : (
         <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
           <Table>
             <TableHead>
@@ -110,6 +119,7 @@ export default function ProductModeration() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
       </div>
       <Footer />
     </>

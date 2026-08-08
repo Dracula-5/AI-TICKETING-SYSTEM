@@ -3,27 +3,34 @@ import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
-import { 
+import LoadingState from "../components/LoadingState";
+import {
   Select, MenuItem, Button, Card, CardContent, Typography, FormControl, InputLabel, Box, Alert
 } from "@mui/material";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import "../styles/adminAssign.css";
+import { useToast } from "../context/ToastContext";
 
 export default function AdminAssign() {
   const [tickets, setTickets] = useState([]);
   const [providers, setProviders] = useState([]);
   const [selected, setSelected] = useState({});
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
   const [success, setSuccess] = useState("");
+  const toast = useToast();
 
   useEffect(() => {
-    api.get("/tickets").then(res => setTickets(res.data || []));
-    api.get("/users/providers").then(res => setProviders(res.data || []));
+    Promise.allSettled([
+      api.get("/tickets").then(res => setTickets(res.data || [])).catch(() => toast.error("Couldn't load tickets.")),
+      api.get("/users/providers").then(res => setProviders(res.data || [])).catch(() => toast.error("Couldn't load providers.")),
+    ]).then(() => setPageLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function assign(ticketId) {
     if (!selected[ticketId]) {
-      alert("Please select a provider");
+      toast.error("Please select a provider");
       return;
     }
 
@@ -34,7 +41,7 @@ export default function AdminAssign() {
       setTimeout(() => setSuccess(""), 2000);
       setSelected({ ...selected, [ticketId]: "" });
     } catch (err) {
-      alert("Failed to assign ticket");
+      toast.error(err.response?.data?.detail || "Failed to assign ticket");
     } finally {
       setLoading(false);
     }
@@ -79,6 +86,7 @@ export default function AdminAssign() {
         </Box>
 
         {/* Assignment Cards */}
+        {pageLoading ? <LoadingState label="Loading tickets..." /> : (
         <div className="assignment-grid">
           {pendingTickets.length > 0 ? (
             pendingTickets.map(t => (
@@ -134,6 +142,7 @@ export default function AdminAssign() {
             </Box>
           )}
         </div>
+        )}
       </div>
       <Footer />
     </>

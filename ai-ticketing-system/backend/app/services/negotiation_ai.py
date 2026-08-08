@@ -14,6 +14,7 @@ generate_vendor_response() is the single entry point the negotiations router
 calls after a customer message — it picks a strategy, persists the resulting
 NegotiationMessage, and applies session-state side effects (accept/reject).
 """
+import logging
 from datetime import datetime, timezone
 
 import anthropic
@@ -22,6 +23,8 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.db.models import NegotiationMessage
+
+logger = logging.getLogger(__name__)
 
 MAX_COUNTER_ROUNDS = 5
 
@@ -120,6 +123,7 @@ async def llm_assisted_response(product, vendor, messages: list[NegotiationMessa
     try:
         return await run_in_threadpool(_call_llm, product, vendor, messages, latest_offer_amount)
     except Exception:
+        logger.exception("llm_negotiation_response_failed", extra={"product_id": product.id})
         return None
 
 

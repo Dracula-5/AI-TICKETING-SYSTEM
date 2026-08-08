@@ -136,7 +136,7 @@ def list_vendors(
     query = db.query(Vendor).filter(Vendor.tenant_id == current_user.tenant_id)
     if unverified_only:
         query = query.filter(Vendor.is_verified == False)  # noqa: E712
-    return query.order_by(Vendor.created_at.desc()).all()
+    return query.order_by(Vendor.created_at.desc()).limit(500).all()
 
 
 @router.put("/{vendor_id}/verify", response_model=VendorOut)

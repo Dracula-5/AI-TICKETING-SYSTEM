@@ -20,6 +20,7 @@ import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { listProducts } from "../api/products";
 import { MARKETPLACE_CATEGORIES as CATEGORIES } from "../constants/marketplaceCategories";
 import "../styles/marketplace.css";
+import { useToast } from "../context/ToastContext";
 
 const SKELETON_COUNT = 8;
 
@@ -33,6 +34,7 @@ export default function Marketplace() {
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +53,11 @@ export default function Marketplace() {
         setTotal(res.data.total || 0);
       })
       .catch(() => {
-        if (!cancelled) console.log("Failed to load marketplace products");
+        if (!cancelled) {
+          setProducts([]);
+          setTotal(0);
+          toast.error("Couldn't load products. Please try again.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -60,6 +66,7 @@ export default function Marketplace() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, category, sort, page]);
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));

@@ -10,11 +10,13 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import { listMyProducts, createProduct, updateProduct, deleteProduct } from "../api/products";
 import { getMyVendorProfile } from "../api/vendors";
 import { listVendorOrders, updateOrderStatus } from "../api/orders";
 import { getVendorAnalytics } from "../api/analytics";
 import "../styles/vendorDashboard.css";
+import { useToast } from "../context/ToastContext";
 
 const ANALYTICS_CARDS = [
   { key: "total_products", label: "Products" },
@@ -41,12 +43,20 @@ export default function VendorDashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   function loadAll() {
-    getMyVendorProfile().then((res) => setVendor(res.data)).catch(() => setVendor(null));
-    listMyProducts().then((res) => setProducts(res.data)).catch(() => setProducts([]));
-    listVendorOrders().then((res) => setOrders(res.data)).catch(() => setOrders([]));
-    getVendorAnalytics().then((res) => setAnalytics(res.data)).catch(() => setAnalytics(null));
+    let anyFailed = false;
+    Promise.allSettled([
+      getMyVendorProfile().then((res) => setVendor(res.data)).catch(() => { anyFailed = true; setVendor(null); }),
+      listMyProducts().then((res) => setProducts(res.data)).catch(() => { anyFailed = true; setProducts([]); }),
+      listVendorOrders().then((res) => setOrders(res.data)).catch(() => { anyFailed = true; setOrders([]); }),
+      getVendorAnalytics().then((res) => setAnalytics(res.data)).catch(() => { anyFailed = true; setAnalytics(null); }),
+    ]).then(() => {
+      setLoading(false);
+      if (anyFailed) toast.error("Some dashboard data couldn't be loaded.");
+    });
   }
 
   async function handleOrderStatusChange(orderId, newStatus) {
@@ -60,6 +70,7 @@ export default function VendorDashboard() {
 
   useEffect(() => {
     loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function openCreateDialog() {
@@ -178,6 +189,7 @@ export default function VendorDashboard() {
           </Button>
         </Box>
 
+        {loading ? <LoadingState label="Loading your shop..." /> : (
         <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
           <Table>
             <TableHead>
@@ -223,11 +235,13 @@ export default function VendorDashboard() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
 
         <Box className="vendor-dashboard-toolbar" sx={{ mt: 5 }}>
           <h2>Received Orders ({orders.length})</h2>
         </Box>
 
+        {!loading && (
         <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
           <Table>
             <TableHead>
@@ -275,6 +289,7 @@ export default function VendorDashboard() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
 
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
           <DialogTitle>{editingId ? "Edit Product" : "Add Product"}</DialogTitle>

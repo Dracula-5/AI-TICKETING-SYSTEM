@@ -11,6 +11,9 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 ALLOWED_ORDER_STATUS = ["pending", "confirmed", "shipped", "completed", "cancelled"]
 
+# Safety net for list endpoints with no pagination UI yet.
+LIST_SAFETY_CAP = 500
+
 
 @router.post("/", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 async def create_order(
@@ -84,6 +87,7 @@ def list_my_orders(
         db.query(Order)
         .filter(Order.customer_id == current_user.id)
         .order_by(Order.created_at.desc())
+        .limit(LIST_SAFETY_CAP)
         .all()
     )
 
@@ -102,6 +106,7 @@ def list_vendor_orders(
         db.query(Order)
         .filter(Order.vendor_id == vendor.id)
         .order_by(Order.created_at.desc())
+        .limit(LIST_SAFETY_CAP)
         .all()
     )
 

@@ -10,6 +10,7 @@ import Footer from "../components/Footer";
 import api from "../api/axios";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/ticketDetails.css";
+import { useToast } from "../context/ToastContext";
 
 export default function TicketDetails() {
 
@@ -27,18 +28,23 @@ export default function TicketDetails() {
   const [lastSyncAt, setLastSyncAt] = useState(null);
   const [loading, setLoading] = useState(true);
   const role = getAuthItem("role");
+  const toast = useToast();
 
   const load = useCallback(() => {
     api.get(`/tickets/${id}`).then(res => {
       setTicket(res.data);
       setLoading(false);
       setLastSyncAt(new Date());
+    }).catch(() => {
+      setLoading(false);
+      toast.error("Couldn't load this ticket. It may not exist or you may not have access.");
     });
-    api.get(`/comments/${id}`).then(res => setComments(res.data || []));
+    api.get(`/comments/${id}`).then(res => setComments(res.data || [])).catch(() => {});
     api.get(`/tickets/${id}/bargaining`).then(res => {
       setBargains(res.data || []);
       setLastSyncAt(new Date());
-    });
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -55,6 +61,8 @@ export default function TicketDetails() {
     }).then(() => {
       setText("");
       load();
+    }).catch(() => {
+      toast.error("Couldn't post your comment. Please try again.");
     });
   }
 

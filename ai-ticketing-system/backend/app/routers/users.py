@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -11,6 +12,18 @@ from app.services.seed_users import create_default_users
 router = APIRouter(prefix="/users", tags=["users"])
 
 PROVIDER_ROLES = ["provider", "service_provider"]
+
+# Safety net for list endpoints with no pagination UI yet.
+LIST_SAFETY_CAP = 500
+
+
+class MessageOut(BaseModel):
+    message: str
+
+
+class SeedUsersOut(BaseModel):
+    message: str
+    created_count: int
 
 
 @router.post("/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
@@ -44,7 +57,7 @@ def get_users(
 ):
     return db.query(User).filter(
         User.tenant_id == current_user.tenant_id
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
 @router.get("/providers", response_model=list[UserOut])
 def get_provider_users(
@@ -57,7 +70,7 @@ def get_provider_users(
     return db.query(User).filter(
         User.tenant_id == current_user.tenant_id,
         User.role.in_(["provider", "service_provider"])
-    ).all()
+    ).limit(LIST_SAFETY_CAP).all()
 
 @router.put("/me", response_model=UserOut)
 def update_my_profile(
@@ -80,7 +93,7 @@ def update_my_profile(
     return current_user
 
 
-@router.put("/me/password")
+@router.put("/me/password", response_model=MessageOut)
 def change_my_password(
     payload: PasswordChange,
     db: Session = Depends(get_db),
@@ -124,13 +137,13 @@ def set_my_categories(
     return {"categories": deduped}
 
 
-@router.post("/create-default-users")
+@router.post("/create-default-users", response_model=SeedUsersOut)
 def seed_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     if current_user.role != "admin":
-        return {"error": "Only admin can run this"}
+        raise HTTPException(status_code=403, detail="Only admin can run this")
 
     created = create_default_users(db)
 

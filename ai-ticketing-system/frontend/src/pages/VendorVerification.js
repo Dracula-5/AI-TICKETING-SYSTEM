@@ -7,17 +7,27 @@ import VerifiedIcon from "@mui/icons-material/Verified";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import { listVendors, verifyVendor } from "../api/vendors";
 import "../styles/vendorDashboard.css";
+import { useToast } from "../context/ToastContext";
 
 export default function VendorVerification() {
   const [vendors, setVendors] = useState([]);
   const [unverifiedOnly, setUnverifiedOnly] = useState(true);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   function load() {
-    listVendors(unverifiedOnly).then((res) => setVendors(res.data)).catch(() => setVendors([]));
+    listVendors(unverifiedOnly)
+      .then((res) => setVendors(res.data))
+      .catch(() => {
+        setVendors([]);
+        toast.error("Couldn't load vendors.");
+      })
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -59,6 +69,7 @@ export default function VendorVerification() {
           />
         </Box>
 
+        {loading ? <LoadingState label="Loading vendors..." /> : (
         <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
           <Table>
             <TableHead>
@@ -109,6 +120,7 @@ export default function VendorVerification() {
             </TableBody>
           </Table>
         </TableContainer>
+        )}
       </div>
       <Footer />
     </>

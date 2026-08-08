@@ -10,11 +10,13 @@ import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import api from "../api/axios";
 import "../styles/providerActions.css";
+import { useToast } from "../context/ToastContext";
 
 export default function ProviderActions() {
 
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   function load() {
     api.get("/tickets/provider/my-tickets")
@@ -22,14 +24,20 @@ export default function ProviderActions() {
         setTickets(res.data || []);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        toast.error("Couldn't load your assigned tickets.");
+      });
   }
 
-  useEffect(() => { load(); }, [])
+  useEffect(() => { load(); }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function update(id, status) {
     api.put(`/tickets/provider/${id}/status?status=${status}`)
-      .then(load);
+      .then(load)
+      .catch((err) => {
+        toast.error(err.response?.data?.detail || "Couldn't update ticket status.");
+      });
   }
 
   const stats = {

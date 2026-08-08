@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -16,6 +17,8 @@ from app.services.negotiation_ai import generate_vendor_response
 from app.services.negotiation_ws import manager
 from app.services.notification_service import notify
 from app.db.models import Vendor
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/negotiations", tags=["negotiations"])
 
@@ -116,6 +119,7 @@ def vendor_inbox(db: Session = Depends(get_db), current_user: User = Depends(get
         db.query(NegotiationSession)
         .filter(NegotiationSession.vendor_id == vendor.id)
         .order_by(NegotiationSession.created_at.desc())
+        .limit(500)
         .all()
     )
 
@@ -201,69 +205,77 @@ async def negotiation_ws(websocket: WebSocket, session_id: int, db: Session = De
 
     await manager.connect(session_id, websocket)
     try:
-        while True:
-            data = await websocket.receive_json()
-            msg_type = data.get("type")
-            if msg_type not in WS_ALLOWED_TYPES:
-                continue
-
-            amount = data.get("amount")
-            if msg_type in ("accept", "reject") and amount is None:
-                priced = [m for m in _ordered_messages(db, session.id) if m.amount is not None]
-                amount = priced[-1].amount if priced else None
-
-            entry = NegotiationMessage(
-                session_id=session.id,
-                sender_role=sender_role,
-                sender_user_id=user.id,
-                message_type=msg_type,
-                amount=amount,
-                text_content=data.get("text"),
-            )
-            db.add(entry)
-
-            if msg_type == "accept" and amount is not None:
-                session.status = "accepted"
-                session.current_offer_price = amount
-                session.closed_at = datetime.now(timezone.utc).replace(tzinfo=None)
-            elif msg_type == "offer" and amount is not None:
-                # Track the running price so anything that reads the session
-                # (vendor inbox list, etc.) reflects the latest counter, not
-                # just the offer the negotiation opened with.
-                session.current_offer_price = amount
-
-            db.commit()
-            db.refresh(entry)
-            await manager.broadcast(
-                session_id, NegotiationMessageOut.model_validate(entry).model_dump(mode="json")
-            )
-            await notify(
-                db, session.tenant_id, _negotiation_counterpart(session, sender_role),
-                type_="negotiation_message",
-                title=f"New message on '{product.title}'",
-                message=entry.text_content or (f"Offer: {product.currency} {entry.amount:.2f}" if entry.amount is not None else msg_type),
-                link=f"/negotiation/{session.id}",
-            )
-
-            if (
-                sender_role == "customer"
-                and product.auto_negotiate_enabled
-                and session.status == "open"
-                and msg_type in ("text", "offer")
-            ):
-                ai_entry = await generate_vendor_response(
-                    db, session, product, vendor, _ordered_messages(db, session.id)
-                )
-                if ai_entry:
-                    await manager.broadcast(
-                        session_id, NegotiationMessageOut.model_validate(ai_entry).model_dump(mode="json")
-                    )
-                    await notify(
-                        db, session.tenant_id, session.customer_id,
-                        type_="negotiation_message",
-                        title=f"Vendor responded on '{product.title}'",
-                        message=ai_entry.text_content or (f"Offer: {product.currency} {ai_entry.amount:.2f}" if ai_entry.amount is not None else ai_entry.message_type),
-                        link=f"/negotiation/{session.id}",
-                    )
+        await _negotiation_ws_loop(websocket, session_id, session, product, vendor, sender_role, user, db)
     except WebSocketDisconnect:
+        pass
+    except Exception:
+        logger.exception("negotiation_ws_loop_failed", extra={"session_id": session_id})
+    finally:
         manager.disconnect(session_id, websocket)
+
+
+async def _negotiation_ws_loop(websocket, session_id, session, product, vendor, sender_role, user, db):
+    while True:
+        data = await websocket.receive_json()
+        msg_type = data.get("type")
+        if msg_type not in WS_ALLOWED_TYPES:
+            continue
+
+        amount = data.get("amount")
+        if msg_type in ("accept", "reject") and amount is None:
+            priced = [m for m in _ordered_messages(db, session.id) if m.amount is not None]
+            amount = priced[-1].amount if priced else None
+
+        entry = NegotiationMessage(
+            session_id=session.id,
+            sender_role=sender_role,
+            sender_user_id=user.id,
+            message_type=msg_type,
+            amount=amount,
+            text_content=data.get("text"),
+        )
+        db.add(entry)
+
+        if msg_type == "accept" and amount is not None:
+            session.status = "accepted"
+            session.current_offer_price = amount
+            session.closed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        elif msg_type == "offer" and amount is not None:
+            # Track the running price so anything that reads the session
+            # (vendor inbox list, etc.) reflects the latest counter, not
+            # just the offer the negotiation opened with.
+            session.current_offer_price = amount
+
+        db.commit()
+        db.refresh(entry)
+        await manager.broadcast(
+            session_id, NegotiationMessageOut.model_validate(entry).model_dump(mode="json")
+        )
+        await notify(
+            db, session.tenant_id, _negotiation_counterpart(session, sender_role),
+            type_="negotiation_message",
+            title=f"New message on '{product.title}'",
+            message=entry.text_content or (f"Offer: {product.currency} {entry.amount:.2f}" if entry.amount is not None else msg_type),
+            link=f"/negotiation/{session.id}",
+        )
+
+        if (
+            sender_role == "customer"
+            and product.auto_negotiate_enabled
+            and session.status == "open"
+            and msg_type in ("text", "offer")
+        ):
+            ai_entry = await generate_vendor_response(
+                db, session, product, vendor, _ordered_messages(db, session.id)
+            )
+            if ai_entry:
+                await manager.broadcast(
+                    session_id, NegotiationMessageOut.model_validate(ai_entry).model_dump(mode="json")
+                )
+                await notify(
+                    db, session.tenant_id, session.customer_id,
+                    type_="negotiation_message",
+                    title=f"Vendor responded on '{product.title}'",
+                    message=ai_entry.text_content or (f"Offer: {product.currency} {ai_entry.amount:.2f}" if ai_entry.amount is not None else ai_entry.message_type),
+                    link=f"/negotiation/{session.id}",
+                )

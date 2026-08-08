@@ -5,10 +5,12 @@ import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { Table, TableRow, TableHead, TableCell, TableBody, Card, CardContent, Paper, TableContainer, Chip, Box } from "@mui/material";
 import "../styles/users.css";
+import { useToast } from "../context/ToastContext";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     api.get("/users")
@@ -17,9 +19,10 @@ export default function Users() {
         setLoading(false);
       })
       .catch(() => {
-        console.error("Failed to load users");
+        toast.error("Couldn't load users.");
         setLoading(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getRoleColor = (role) => {

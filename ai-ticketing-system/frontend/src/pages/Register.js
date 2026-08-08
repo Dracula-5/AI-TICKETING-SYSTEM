@@ -61,7 +61,7 @@ export default function Register() {
               <PersonAddIcon className="login-icon" />
             </div>
             <h1>Create Account</h1>
-            <p>Join the AI Ticketing System</p>
+            <p>Join TicketMind</p>
           </div>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

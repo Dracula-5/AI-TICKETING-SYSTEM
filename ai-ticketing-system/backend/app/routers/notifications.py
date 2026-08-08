@@ -1,4 +1,7 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.security import get_current_user, get_current_user_ws
@@ -7,7 +10,13 @@ from app.db.models import Notification, User
 from app.schemas.notifications import NotificationOut, UnreadCountOut
 from app.services.notification_ws import manager
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+
+
+class MessageOut(BaseModel):
+    message: str
 
 LIST_LIMIT = 30
 
@@ -55,7 +64,7 @@ def mark_read(
     return entry
 
 
-@router.put("/read-all")
+@router.put("/read-all", response_model=MessageOut)
 def mark_all_read(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -83,4 +92,8 @@ async def notifications_ws(websocket: WebSocket, db: Session = Depends(get_db)):
             # client to disconnect (or send an occasional keepalive ping).
             await websocket.receive_text()
     except WebSocketDisconnect:
+        pass
+    except Exception:
+        logger.exception("notification_ws_loop_failed", extra={"user_id": user.id})
+    finally:
         manager.disconnect(user.id, websocket)

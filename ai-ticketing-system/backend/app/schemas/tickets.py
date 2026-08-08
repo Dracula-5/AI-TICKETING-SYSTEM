@@ -3,8 +3,8 @@ from typing import Optional
 from datetime import datetime
 
 class TicketCreate(BaseModel):
-    title: str
-    description: str
+    title: str = Field(..., min_length=1, max_length=200)
+    description: str = Field(..., min_length=1, max_length=5000)
     priority: Optional[str] = None
     tenant_id: int
 
@@ -70,3 +70,17 @@ class BargainingActionOut(BaseModel):
     pricing_status: str
     final_price: float | None = None
     negotiation: BargainingEntryOut
+
+
+class TicketActionOut(BaseModel):
+    message: str
+    ticket: TicketOut
+
+
+class SlaCheckOut(BaseModel):
+    message: str
+    tickets_escalated: int
+
+
+class MessageOut(BaseModel):
+    message: str

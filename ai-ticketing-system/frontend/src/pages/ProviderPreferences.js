@@ -7,6 +7,7 @@ import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import { getMyCategories, setMyCategories } from "../api/notifications";
 import { getAuthItem } from "../utils/authSession";
+import { useToast } from "../context/ToastContext";
 
 // Mirrors the categories app/services/auto_router.py auto-assigns to tickets.
 const TICKET_CATEGORIES = ["IT Support", "Electrical", "Plumbing", "Medical", "Security", "General"];
@@ -16,11 +17,14 @@ export default function ProviderPreferences() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     getMyCategories()
       .then((res) => setSelected(res.data?.categories || []))
+      .catch(() => toast.error("Couldn't load your category preferences."))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function toggle(category) {
@@ -38,6 +42,7 @@ export default function ProviderPreferences() {
         setSelected(res.data?.categories || []);
         setSaved(true);
       })
+      .catch(() => toast.error("Couldn't save your preferences."))
       .finally(() => setSaving(false));
   }
 

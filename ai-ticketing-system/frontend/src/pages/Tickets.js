@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Table,
   TableHead,
@@ -21,24 +21,36 @@ import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import api from "../api/axios";
 import "../styles/tickets.css";
+import { useToast } from "../context/ToastContext";
 
 
 export default function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const hasLoadedOnce = useRef(false);
 
   function loadTickets() {
     api.get("/tickets")
       .then(res => setTickets(res.data))
-      .catch(() => console.log("Failed to load tickets"));
+      .catch(() => {
+        if (!hasLoadedOnce.current) toast.error("Couldn't load tickets. Retrying shortly.");
+      })
+      .finally(() => {
+        hasLoadedOnce.current = true;
+        setLoading(false);
+      });
   }
 
   useEffect(() => {
     loadTickets();
     const interval = setInterval(loadTickets, 4000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function getStatusColor(status) {
@@ -92,6 +104,7 @@ export default function Tickets() {
             </Box>
 
             {/* Table */}
+            {loading ? <LoadingState label="Loading tickets..." /> : (
             <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: "none" }}>
               <Table>
                 <TableHead>
@@ -189,6 +202,7 @@ export default function Tickets() {
                 </TableBody>
               </Table>
             </TableContainer>
+            )}
 
             {/* Stats */}
             <Box sx={{ mt: 3, p: 2, backgroundColor: "#f9f9f9", borderRadius: "8px" }}>

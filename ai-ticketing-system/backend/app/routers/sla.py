@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime
 from app.db.database import get_db
@@ -6,7 +7,12 @@ from app.db.models import Ticket
 
 router = APIRouter(prefix="/sla", tags=["sla"])
 
-@router.put("/check")
+
+class SlaCheckResultOut(BaseModel):
+    escalated: int
+
+
+@router.put("/check", response_model=SlaCheckResultOut)
 def check_sla(db: Session = Depends(get_db)):
     now = datetime.utcnow()
 

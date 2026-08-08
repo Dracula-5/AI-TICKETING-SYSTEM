@@ -5,8 +5,10 @@ import "chart.js/auto";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import EmptyState from "../components/EmptyState";
 import { getAdminAnalytics } from "../api/analytics";
 import "../styles/dashboard.css";
+import { useToast } from "../context/ToastContext";
 
 const STAT_CARDS = [
   { key: "total_vendors", label: "Vendors", gradient: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" },
@@ -18,12 +20,17 @@ const STAT_CARDS = [
 export default function AdminAnalytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   useEffect(() => {
     getAdminAnalytics()
       .then((res) => setData(res.data))
-      .catch(() => setData(null))
+      .catch(() => {
+        setData(null);
+        toast.error("Couldn't load platform analytics.");
+      })
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -41,6 +48,13 @@ export default function AdminAnalytics() {
           <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
             <CircularProgress />
           </Box>
+        )}
+
+        {!loading && !data && (
+          <EmptyState
+            title="Couldn't load analytics"
+            description="Something went wrong fetching platform analytics. Try refreshing the page."
+          />
         )}
 
         {!loading && data && (

@@ -9,6 +9,6 @@ test("renders the login page at the default route", () => {
     </MemoryRouter>
   );
 
-  expect(screen.getByText("Welcome")).toBeInTheDocument();
+  expect(screen.getByText("Welcome back")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: /sign in/i })).toBeInTheDocument();
 });

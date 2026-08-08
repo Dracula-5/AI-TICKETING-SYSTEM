@@ -1,27 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import LoadingState from "../components/LoadingState";
+import EmptyState from "../components/EmptyState";
 import api from "../api/axios";
 import { Card, CardContent, Grid, Box, LinearProgress } from "@mui/material";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import { Pie, Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import "../styles/dashboard.css";
+import { useToast } from "../context/ToastContext";
 
 
 export default function Dashboard() {
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+  const hasLoadedOnce = useRef(false);
 
   useEffect(() => {
     load();
     const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function load() {
     api.get("/tickets")
       .then(res => setTickets(res.data || []))
-      .catch(() => console.log("Dashboard load fail"));
+      .catch(() => {
+        if (!hasLoadedOnce.current) toast.error("Couldn't load your ticket overview. Retrying shortly.");
+      })
+      .finally(() => {
+        hasLoadedOnce.current = true;
+        setLoading(false);
+      });
   }
 
   const open = tickets.filter(t => t.status !== "closed").length;
@@ -52,6 +66,16 @@ export default function Dashboard() {
           <p>Welcome back! Here's your ticket overview.</p>
         </div>
 
+        {loading ? (
+          <LoadingState label="Loading your ticket overview..." />
+        ) : tickets.length === 0 ? (
+          <EmptyState
+            icon={<AssignmentOutlinedIcon sx={{ fontSize: 28, color: "text.disabled" }} />}
+            title="No tickets yet"
+            description="Once tickets are created, your overview and charts will appear here."
+          />
+        ) : (
+        <>
         {/* ====== STAT CARDS ====== */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} md={4}>
@@ -175,6 +199,8 @@ export default function Dashboard() {
             </Card>
           </Grid>
         </Grid>
+        </>
+        )}
       </div>
       <Footer />
     </>

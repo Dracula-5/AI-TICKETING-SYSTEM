@@ -65,8 +65,8 @@ export default function Login() {
             <div className="login-icon-wrapper">
               <LockIcon className="login-icon" />
             </div>
-            <h1>Welcome</h1>
-            <p>AI Ticketing System</p>
+            <h1>Welcome back</h1>
+            <p>Sign in to TicketMind</p>
           </div>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}

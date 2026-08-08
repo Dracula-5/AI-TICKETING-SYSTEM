@@ -15,14 +15,15 @@ ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 RUN npm run build
 
 # ── Serve stage ───────────────────────────────────────────────────────────────
-FROM nginx:1.27-alpine
+# nginxinc/nginx-unprivileged already runs as the non-root "nginx" user and
+# listens on 8080 by default -- no need to hand-roll a USER/port switch.
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# SPA routing: fall back to index.html for all routes
-RUN printf 'server {\n  listen 80;\n  root /usr/share/nginx/html;\n  index index.html;\n  location / {\n    try_files $uri $uri/ /index.html;\n  }\n}\n' \
+RUN printf 'server {\n  listen 8080;\n  root /usr/share/nginx/html;\n  index index.html;\n  gzip on;\n  gzip_types text/plain text/css application/javascript application/json image/svg+xml;\n  add_header X-Content-Type-Options nosniff always;\n  add_header X-Frame-Options DENY always;\n  add_header Referrer-Policy strict-origin-when-cross-origin always;\n  location /static/ {\n    add_header Cache-Control "public, max-age=31536000, immutable";\n  }\n  location / {\n    try_files $uri $uri/ /index.html;\n    add_header Cache-Control "no-cache";\n  }\n}\n' \
     > /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost/ || exit 1
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:8080/ || exit 1

@@ -4,11 +4,12 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from app.core.cache import cache_get, cache_set
 from app.core.config import settings
@@ -41,7 +42,10 @@ def _parse_cors_origins(value: str) -> list[str]:
 
 def _sla_background_job():
     while True:
-        check_sla()
+        try:
+            check_sla()
+        except Exception:
+            logger.exception("sla_background_job_iteration_failed")
         time.sleep(30)
 
 
@@ -140,6 +144,20 @@ app.include_router(notifications.router)
 
 
 # ---------------------------------------------------------------------------
+# Catch-all exception handler -- an uncaught error anywhere below should
+# still log full request context and return a generic JSON body instead of
+# leaking a stack trace or an unstructured framework error page.
+# ---------------------------------------------------------------------------
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception(
+        "unhandled_exception",
+        extra={"method": request.method, "path": request.url.path},
+    )
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+# ---------------------------------------------------------------------------
 # Health / readiness
 # ---------------------------------------------------------------------------
 @app.get("/", tags=["meta"])
@@ -148,8 +166,21 @@ def home():
 
 
 @app.get("/health", tags=["meta"])
-def health():
-    return {"status": "ok"}
+def health(response: Response):
+    db_status = "ok"
+    try:
+        db = SessionLocal()
+        try:
+            db.execute(text("SELECT 1"))
+        finally:
+            db.close()
+    except Exception:
+        logger.exception("health_check_db_unreachable")
+        db_status = "unreachable"
+
+    if db_status != "ok":
+        response.status_code = 503
+    return {"status": "ok" if db_status == "ok" else "degraded", "database": db_status}
 
 
 @app.get("/ready", tags=["meta"])

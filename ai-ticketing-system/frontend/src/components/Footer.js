@@ -4,7 +4,7 @@ import "../styles/footer.css";
 export default function Footer() {
   return (
     <footer className="app-footer">
-      <span>&copy; {new Date().getFullYear()} AI Ticketing System</span>
+      <span>&copy; {new Date().getFullYear()} TicketMind</span>
       <span className="app-footer-links">
         <Link to="/privacy">Privacy Policy</Link>
         <Link to="/terms">Terms of Service</Link>

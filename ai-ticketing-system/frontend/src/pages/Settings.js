@@ -4,18 +4,22 @@ import { Card, CardContent, TextField, Button, Alert, Chip, Box, Divider } from 
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import api from "../api/axios";
 import { updateMyProfile, changeMyPassword } from "../api/users";
 import { getMyVendorProfile, updateMyVendorProfile } from "../api/vendors";
 import { getAuthItem, setAuthSession } from "../utils/authSession";
 import "../styles/settings.css";
+import { useToast } from "../context/ToastContext";
 
 export default function Settings() {
   const role = getAuthItem("role");
+  const toast = useToast();
   const [profile, setProfile] = useState({ name: "", email: "" });
   const [profileMsg, setProfileMsg] = useState("");
   const [profileError, setProfileError] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [passwords, setPasswords] = useState({ current: "", next: "", confirm: "" });
   const [passwordMsg, setPasswordMsg] = useState("");
@@ -28,12 +32,15 @@ export default function Settings() {
   const [shopSaving, setShopSaving] = useState(false);
 
   useEffect(() => {
-    api.get("/auth/me").then((res) => {
-      setProfile({ name: res.data.name || "", email: res.data.email || "" });
-    });
-    if (role === "vendor") {
-      getMyVendorProfile().then((res) => setShop(res.data)).catch(() => {});
-    }
+    Promise.allSettled([
+      api.get("/auth/me").then((res) => {
+        setProfile({ name: res.data.name || "", email: res.data.email || "" });
+      }).catch(() => toast.error("Couldn't load your profile.")),
+      role === "vendor"
+        ? getMyVendorProfile().then((res) => setShop(res.data)).catch(() => toast.error("Couldn't load your shop profile."))
+        : Promise.resolve(),
+    ]).then(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
   async function saveProfile() {
@@ -101,6 +108,8 @@ export default function Settings() {
           <p>Manage your account</p>
         </div>
 
+        {loading ? <LoadingState label="Loading settings..." /> : (
+        <>
         <Card sx={{ mb: 3 }}>
           <CardContent>
             <h3 style={{ marginTop: 0 }}>Profile</h3>
@@ -175,6 +184,8 @@ export default function Settings() {
               </Button>
             </CardContent>
           </Card>
+        )}
+        </>
         )}
 
         <Divider sx={{ my: 4 }} />
