@@ -185,7 +185,10 @@ export default function NegotiationChat() {
                             <LocalOfferIcon fontSize="small" /> {session.product.currency} {m.amount?.toLocaleString()}
                           </Box>
                         )}
-                        {m.text_content && <p>{m.text_content}</p>}
+                        {/* Offer/counter-offer messages carry an auto-generated sentence
+                            that just restates the amount above ("I can offer X instead.") --
+                            skip it so the bubble shows only the exact amount, once. */}
+                        {!isOffer && m.text_content && <p>{m.text_content}</p>}
                         {m.message_type === "accept" && <p className="chat-accept-label">Offer accepted</p>}
                         {m.message_type === "reject" && <p className="chat-reject-label">Offer declined</p>}
 
