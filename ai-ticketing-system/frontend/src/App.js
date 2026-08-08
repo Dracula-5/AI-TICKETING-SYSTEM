@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
+import SplashIntro from "./components/SplashIntro";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Tickets from "./pages/Tickets";
@@ -34,8 +36,12 @@ import NotFound from "./pages/NotFound";
 
 
 export default function App(){
+  const [showSplash, setShowSplash] = useState(true);
+
   return(
-    
+    <>
+      {showSplash && <SplashIntro onDone={() => setShowSplash(false)} />}
+
       <Routes>
         <Route path="/" element={<Login/>}/>
         <Route path="/register" element={<Register/>}/>
@@ -71,6 +77,6 @@ export default function App(){
         <Route path="*" element={<NotFound/>} />
 
       </Routes>
-    
+    </>
   )
 }
