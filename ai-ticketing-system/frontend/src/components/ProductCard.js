@@ -5,6 +5,7 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import TiltCard from "./TiltCard";
 import "../styles/marketplace.css";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/400x300?text=No+Image";
@@ -14,6 +15,7 @@ export default function ProductCard({ product }) {
   const { addItem } = useCart();
 
   return (
+    <TiltCard maxTilt={4} style={{ borderRadius: 14, height: "100%" }}>
     <Card className="product-card">
       <CardMedia
         component="img"
@@ -75,5 +77,6 @@ export default function ProductCard({ product }) {
         )}
       </CardActions>
     </Card>
+    </TiltCard>
   );
 }

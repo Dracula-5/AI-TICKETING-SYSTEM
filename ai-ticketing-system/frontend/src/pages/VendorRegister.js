@@ -8,6 +8,7 @@ import { registerVendor, getCategoryCounts } from "../api/vendors";
 import { MARKETPLACE_CATEGORIES } from "../constants/marketplaceCategories";
 import { setAuthSession } from "../utils/authSession";
 import api from "../api/axios";
+import TiltCard from "../components/TiltCard";
 import "../styles/login.css";
 
 export default function VendorRegister() {
@@ -66,9 +67,13 @@ export default function VendorRegister() {
 
   return (
     <div className="login-container">
+      <div className="login-orb login-orb-1"></div>
+      <div className="login-orb login-orb-2"></div>
+      <div className="login-orb login-orb-3"></div>
       <div className="login-gradient"></div>
 
       <div className="login-content">
+        <TiltCard maxTilt={5} style={{ borderRadius: 22 }}>
         <Card className="login-card">
           <div className="login-header">
             <div className="login-icon-wrapper">
@@ -143,6 +148,7 @@ export default function VendorRegister() {
             <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
           </p>
         </Card>
+        </TiltCard>
       </div>
     </div>
   );

@@ -88,33 +88,48 @@ body.dark ::selection {
   }
 }
 
-/* Material UI Overrides for better styling */
+/* Material UI Overrides for better styling -- a layered "elevated surface"
+   system: every raised element gets a tight contact shadow plus a soft
+   ambient one underneath (like a physical card catching light), and lifts
+   further on hover/focus rather than just darkening. */
 .MuiCard-root {
   background-color: var(--surface);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body.dark .MuiCard-root {
   background-color: var(--surface);
   color: var(--text);
+  border-color: rgba(148, 163, 184, 0.08);
 }
 
 .MuiButton-contained {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 18px -4px rgba(var(--accent-rgb), 0.35);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .MuiButton-contained:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12), 0 14px 28px -6px rgba(var(--accent-rgb), 0.45);
   transform: translateY(-2px);
 }
 
+.MuiButton-contained:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 10px -4px rgba(var(--accent-rgb), 0.4);
+}
+
 .MuiTextField-root .MuiOutlinedInput-root {
-  transition: all 0.3s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .MuiTextField-root .MuiOutlinedInput-root:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.MuiTextField-root .MuiOutlinedInput-root.Mui-focused {
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.14);
 }
 
 .MuiChip-root {
@@ -143,13 +158,86 @@ body.dark .MuiTableRow-root:hover {
   background-color: var(--surface-muted);
 }
 
-/* Drawer and AppBar */
+/* Drawer and AppBar -- treated as floating panels above the page surface */
 .MuiDrawer-paper {
   transition: all 0.3s ease;
+  box-shadow: 12px 0 32px -12px rgba(15, 23, 42, 0.12);
+}
+
+body.dark .MuiDrawer-paper {
+  box-shadow: 12px 0 40px -12px rgba(0, 0, 0, 0.5);
 }
 
 .MuiAppBar-root {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.MuiDialog-paper {
+  box-shadow: var(--shadow-float) !important;
+}
+
+/* ---------------------------------------------------------------------
+   3D-leaning depth utilities -- glass panels, ambient glow orbs, and a
+   perspective wrapper for tilt-on-hover cards (see TiltCard.js).
+--------------------------------------------------------------------- */
+.glass-panel {
+  background: var(--surface-glass);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glass-border);
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: 0.55;
+  animation: orbDrift 16s ease-in-out infinite;
+}
+
+@keyframes orbDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(4%, -6%) scale(1.08); }
+}
+
+.perspective-wrap {
+  perspective: 1400px;
+  height: 100%;
+}
+
+.tilt-card {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+/* Cursor-following sheen -- driven by --glare-x/--glare-y/--glare-opacity,
+   set from TiltCard.js on pointer move. */
+.tilt-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    rgba(255, 255, 255, 0.35),
+    transparent 55%
+  );
+  opacity: var(--glare-opacity, 0);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+
+body.dark .tilt-card::after {
+  background: radial-gradient(
+    circle at var(--glare-x, 50%) var(--glare-y, 50%),
+    rgba(255, 255, 255, 0.18),
+    transparent 55%
+  );
 }
 
 /* Responsive padding adjustments */

@@ -12,12 +12,19 @@ body {
   --page-bg: radial-gradient(circle at 20% -10%, #f3f5ff 0%, #f7f8fc 40%, #f4f5f7 100%);
   --surface: #ffffff;
   --surface-muted: #f8fafc;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
   --text: #0f172a;
   --muted: #64748b;
   --accent: #4f46e5;
   --accent-strong: #4338ca;
-  --card-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
-  --card-shadow-hover: 0 16px 36px rgba(15, 23, 42, 0.09);
+  --accent-rgb: 79, 70, 229;
+  /* Layered "elevated surface" shadows: a tight contact shadow + a soft
+     ambient one underneath, the way a raised physical card actually reads. */
+  --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 24px -8px rgba(15, 23, 42, 0.10), 0 24px 48px -20px rgba(15, 23, 42, 0.12);
+  --card-shadow-hover: 0 2px 4px rgba(15, 23, 42, 0.06), 0 18px 34px -8px rgba(15, 23, 42, 0.16), 0 34px 64px -18px rgba(15, 23, 42, 0.20);
+  --shadow-float: 0 30px 70px -24px rgba(15, 23, 42, 0.35);
+  --shadow-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   margin: 0;
   font-family: "Plus Jakarta Sans", "Poppins", "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -32,18 +39,21 @@ body[data-palette="indigo"] {
   --page-bg: radial-gradient(circle at 20% -10%, #f3f5ff 0%, #f7f8fc 40%, #f4f5f7 100%);
   --accent: #4f46e5;
   --accent-strong: #4338ca;
+  --accent-rgb: 79, 70, 229;
 }
 
 body[data-palette="ocean"] {
   --page-bg: radial-gradient(circle at 15% -20%, #e9f6ff 0%, #f4fbff 38%, #f4f8fb 100%);
   --accent: #0f766e;
   --accent-strong: #0b5f59;
+  --accent-rgb: 15, 118, 110;
 }
 
 body[data-palette="sunset"] {
   --page-bg: radial-gradient(circle at 20% -20%, #fff1ea 0%, #fff8f4 42%, #f8f4f2 100%);
   --accent: #ea580c;
   --accent-strong: #c2410c;
+  --accent-rgb: 234, 88, 12;
 }
 
 code {
@@ -57,12 +67,17 @@ body.dark {
   --page-bg: radial-gradient(circle at 20% -10%, #111a31 0%, #0f172a 38%, #0a1222 100%);
   --surface: #111827;
   --surface-muted: #1f2937;
+  --surface-glass: rgba(17, 24, 39, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --text: #e2e8f0;
   --muted: #9aa4b2;
   --accent: #a5b4fc;
   --accent-strong: #818cf8;
-  --card-shadow: 0 10px 24px rgba(2, 6, 23, 0.45);
-  --card-shadow-hover: 0 16px 38px rgba(2, 6, 23, 0.6);
+  --accent-rgb: 165, 180, 252;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 14px 28px -8px rgba(2, 6, 23, 0.55), 0 30px 60px -20px rgba(2, 6, 23, 0.65);
+  --card-shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 20px 40px -8px rgba(2, 6, 23, 0.65), 0 40px 80px -18px rgba(2, 6, 23, 0.75);
+  --shadow-float: 0 30px 80px -20px rgba(0, 0, 0, 0.7);
+  --shadow-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   background: var(--page-bg);
   color: var(--text);
 }
@@ -70,16 +85,19 @@ body.dark {
 body.dark[data-palette="indigo"] {
   --accent: #a5b4fc;
   --accent-strong: #818cf8;
+  --accent-rgb: 165, 180, 252;
 }
 
 body.dark[data-palette="ocean"] {
   --accent: #5eead4;
   --accent-strong: #2dd4bf;
+  --accent-rgb: 94, 234, 212;
 }
 
 body.dark[data-palette="sunset"] {
   --accent: #fdba74;
   --accent-strong: #fb923c;
+  --accent-rgb: 253, 186, 116;
 }
 
 body.dark code {
@@ -105,9 +123,10 @@ body.dark code {
   border-radius: 16px;
   color: white;
   text-align: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 10px 24px -6px rgba(0, 0, 0, 0.28), 0 24px 48px -20px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: perspective(800px) translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
@@ -126,8 +145,8 @@ body.dark code {
 }
 
 .stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  transform: perspective(800px) translateZ(20px) translateY(-8px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 20px 40px -8px rgba(0, 0, 0, 0.3), 0 36px 70px -20px rgba(0, 0, 0, 0.4);
 }
 
 .stat-card:hover::before {

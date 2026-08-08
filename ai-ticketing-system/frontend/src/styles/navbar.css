@@ -1,9 +1,11 @@
 .app-navbar {
   left: 270px !important;
   width: calc(100% - 270px) !important;
-  background: rgba(249, 250, 252, 0.92) !important;
-  backdrop-filter: blur(10px);
+  background: rgba(249, 250, 252, 0.86) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
   border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.25);
   color: #111827;
 }
 

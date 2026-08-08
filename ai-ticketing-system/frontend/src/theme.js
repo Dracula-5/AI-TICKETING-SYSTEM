@@ -30,6 +30,9 @@ const theme = createTheme({
         root: {
           borderRadius: 10,
         },
+        containedPrimary: {
+          backgroundImage: "linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%)",
+        },
       },
     },
     MuiChip: {
@@ -43,6 +46,9 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 14,
+        },
+        elevation1: {
+          boxShadow: "var(--card-shadow)",
         },
       },
     },
@@ -62,6 +68,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 10,
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 18,
         },
       },
     },

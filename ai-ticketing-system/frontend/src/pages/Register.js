@@ -3,6 +3,7 @@ import { Button, TextField, Card, CircularProgress, Alert } from "@mui/material"
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import api from "../api/axios";
 import { setAuthSession } from "../utils/authSession";
+import TiltCard from "../components/TiltCard";
 import "../styles/login.css";
 
 export default function Register() {
@@ -52,9 +53,13 @@ export default function Register() {
 
   return (
     <div className="login-container">
+      <div className="login-orb login-orb-1"></div>
+      <div className="login-orb login-orb-2"></div>
+      <div className="login-orb login-orb-3"></div>
       <div className="login-gradient"></div>
-      
+
       <div className="login-content">
+        <TiltCard maxTilt={6} style={{ borderRadius: 22 }}>
         <Card className="login-card">
           <div className="login-header">
             <div className="login-icon-wrapper">
@@ -136,6 +141,7 @@ export default function Register() {
             <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
           </p>
         </Card>
+        </TiltCard>
       </div>
     </div>
   );
