@@ -14,6 +14,18 @@ class TestCreateOrder:
         assert data["total_price"] == product.price * 2
         assert data["status"] == "pending"
 
+    def test_delivery_address_persisted(self, client, customer_user, product):
+        resp = client.post("/orders/", json={
+            "product_id": product.id, "quantity": 1, "delivery_address": "221B Baker Street, London",
+        }, headers=auth_headers(customer_user))
+        assert resp.status_code == 201
+        assert resp.json()["delivery_address"] == "221B Baker Street, London"
+
+    def test_delivery_address_optional(self, client, customer_user, product):
+        resp = client.post("/orders/", json={"product_id": product.id, "quantity": 1}, headers=auth_headers(customer_user))
+        assert resp.status_code == 201
+        assert resp.json()["delivery_address"] is None
+
     def test_stock_decrements(self, client, db, customer_user, product):
         initial_stock = product.stock_quantity
         client.post("/orders/", json={"product_id": product.id, "quantity": 3}, headers=auth_headers(customer_user))

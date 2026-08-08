@@ -6,6 +6,7 @@ import {
 import ChatIcon from "@mui/icons-material/Chat";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { listVendorInbox } from "../api/negotiations";
 import "../styles/vendorDashboard.css";
 
@@ -76,6 +77,7 @@ export default function VendorInbox() {
           </Table>
         </TableContainer>
       </div>
+      <Footer />
     </>
   );
 }

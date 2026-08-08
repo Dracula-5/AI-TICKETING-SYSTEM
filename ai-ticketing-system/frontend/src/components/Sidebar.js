@@ -41,16 +41,20 @@ export default function Sidebar({ role }) {
       icon: <ConfirmationNumberIcon />,
       path: "/tickets"
     },
-    {
-      label: "Create Ticket",
-      icon: <AddCircleIcon />,
-      path: "/create-ticket"
-    },
-    {
-      label: "AI Create",
-      icon: <SmartToyIcon />,
-      path: "/ai-ticket"
-    },
+    ...(effectiveRole !== "admin"
+      ? [
+          {
+            label: "Create Ticket",
+            icon: <AddCircleIcon />,
+            path: "/create-ticket"
+          },
+          {
+            label: "AI Create",
+            icon: <SmartToyIcon />,
+            path: "/ai-ticket"
+          }
+        ]
+      : []),
     {
       label: "Marketplace",
       icon: <StorefrontIcon />,
@@ -204,7 +208,12 @@ export default function Sidebar({ role }) {
           );
         })}
 
-        <ListItemButton className="sidebar-menu-item sidebar-muted-item">
+        <ListItemButton
+          component={Link}
+          to="/settings"
+          onClick={() => setMobileNavOpen(false)}
+          className={`sidebar-menu-item sidebar-muted-item${location.pathname === "/settings" ? " active" : ""}`}
+        >
           <ListItemIcon>
             <SettingsIcon />
           </ListItemIcon>

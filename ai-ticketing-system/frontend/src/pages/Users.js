@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { Table, TableRow, TableHead, TableCell, TableBody, Card, CardContent, Paper, TableContainer, Chip, Box } from "@mui/material";
@@ -138,6 +139,7 @@ export default function Users() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

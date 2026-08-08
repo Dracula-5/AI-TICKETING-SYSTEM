@@ -5,6 +5,7 @@ import {
 } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { listAllProductsAdmin, setProductStatus } from "../api/products";
 import "../styles/vendorDashboard.css";
 
@@ -110,6 +111,7 @@ export default function ProductModeration() {
           </Table>
         </TableContainer>
       </div>
+      <Footer />
     </>
   );
 }

@@ -6,6 +6,7 @@ import {
 import VerifiedIcon from "@mui/icons-material/Verified";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { listVendors, verifyVendor } from "../api/vendors";
 import "../styles/vendorDashboard.css";
 
@@ -109,6 +110,7 @@ export default function VendorVerification() {
           </Table>
         </TableContainer>
       </div>
+      <Footer />
     </>
   );
 }

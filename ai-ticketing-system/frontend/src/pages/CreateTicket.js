@@ -18,6 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/createTicket.css";
 
@@ -221,6 +222,7 @@ export default function CreateTicket() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

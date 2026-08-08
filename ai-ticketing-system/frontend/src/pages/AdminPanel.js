@@ -3,6 +3,7 @@ import { Button, Table, TableHead, TableRow, TableCell, TableBody, Card, CardCon
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import "../styles/adminPanel.css";
 
@@ -212,6 +213,7 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

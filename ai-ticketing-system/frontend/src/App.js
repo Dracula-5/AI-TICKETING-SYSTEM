@@ -23,6 +23,12 @@ import VendorVerification from "./pages/VendorVerification";
 import ProductModeration from "./pages/ProductModeration";
 import AdminAnalytics from "./pages/AdminAnalytics";
 import ProviderPreferences from "./pages/ProviderPreferences";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import Settings from "./pages/Settings";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import SecurityPolicy from "./pages/SecurityPolicy";
 import NotFound from "./pages/NotFound";
 
 
@@ -55,6 +61,12 @@ export default function App(){
         <Route path="/admin/products" element={<ProtectedRoute><ProductModeration/></ProtectedRoute>} />
         <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalytics/></ProtectedRoute>} />
         <Route path="/provider/preferences" element={<ProtectedRoute><ProviderPreferences/></ProtectedRoute>} />
+        <Route path="/cart" element={<ProtectedRoute><Cart/></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute><Checkout/></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><Settings/></ProtectedRoute>} />
+        <Route path="/privacy" element={<PrivacyPolicy/>} />
+        <Route path="/terms" element={<TermsOfService/>} />
+        <Route path="/security" element={<SecurityPolicy/>} />
 
         <Route path="*" element={<NotFound/>} />
 

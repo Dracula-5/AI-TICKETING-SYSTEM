@@ -37,6 +37,10 @@ export default function NotFound() {
           >
             {loggedIn ? "Back to Dashboard" : "Back to Login"}
           </Button>
+
+          <p className="login-footer">
+            <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
+          </p>
         </Card>
       </div>
     </div>

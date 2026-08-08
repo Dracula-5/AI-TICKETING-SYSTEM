@@ -4,7 +4,7 @@ export function registerVendor(payload) {
   return api.post("/vendors/register", payload);
 }
 
-export function getCategoryAvailability(tenantId = 1) {
+export function getCategoryCounts(tenantId = 1) {
   return api.get("/vendors/categories", { params: { tenant_id: tenantId } });
 }
 

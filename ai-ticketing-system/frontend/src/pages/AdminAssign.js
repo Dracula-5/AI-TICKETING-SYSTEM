@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { 
   Select, MenuItem, Button, Card, CardContent, Typography, FormControl, InputLabel, Box, Alert
 } from "@mui/material";
@@ -134,6 +135,7 @@ export default function AdminAssign() {
           )}
         </div>
       </div>
+      <Footer />
     </>
   );
 }

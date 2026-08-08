@@ -43,15 +43,35 @@ def _ensure_vendor_columns():
         # Add missing columns for older SQLite files.
         if "category" not in existing:
             conn.execute(text("ALTER TABLE vendors ADD COLUMN category VARCHAR"))
-        conn.execute(text(
-            "CREATE UNIQUE INDEX IF NOT EXISTS ux_vendors_tenant_category "
-            "ON vendors (tenant_id, category)"
-        ))
+
+        # Earlier iteration capped registration to one vendor per category
+        # via a unique index; that cap was removed (see migration 0007) so
+        # any number of vendors can share a category. Drop the old unique
+        # index if a pre-0007 SQLite file still has it, and ensure a plain
+        # (non-unique) index exists for lookup performance instead.
+        indexes = {r["name"] for r in conn.execute(text("PRAGMA index_list(vendors)")).mappings().all()}
+        if "ux_vendors_tenant_category" in indexes:
+            conn.execute(text("DROP INDEX ux_vendors_tenant_category"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_vendors_category ON vendors (category)"))
+
+
+def _ensure_order_columns():
+    if not engine.url.drivername.startswith("sqlite"):
+        return
+
+    with engine.connect() as conn:
+        rows = conn.execute(text("PRAGMA table_info(orders)")).mappings().all()
+        existing = {r["name"] for r in rows}
+
+        if "delivery_address" not in existing:
+            conn.execute(text("ALTER TABLE orders ADD COLUMN delivery_address VARCHAR"))
+
 
 def init_db():
     models.Base.metadata.create_all(bind=engine)
     _ensure_ticket_columns()
     _ensure_vendor_columns()
+    _ensure_order_columns()
     db = SessionLocal()
     try:
         create_default_users(db)

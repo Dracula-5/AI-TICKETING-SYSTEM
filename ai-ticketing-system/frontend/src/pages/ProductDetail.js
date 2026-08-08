@@ -2,16 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Card, CardContent, Grid, Box, Chip, Button, CircularProgress, Alert,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField, IconButton,
 } from "@mui/material";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import AddIcon from "@mui/icons-material/Add";
+import RemoveIcon from "@mui/icons-material/Remove";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import VendorInfoCard from "../components/VendorInfoCard";
 import { getProduct } from "../api/products";
 import { startNegotiation } from "../api/negotiations";
-import { createOrder } from "../api/orders";
+import { useCart } from "../context/CartContext";
 import "../styles/productDetail.css";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/600x450?text=No+Image";
@@ -19,9 +23,12 @@ const PLACEHOLDER_IMAGE = "https://placehold.co/600x450?text=No+Image";
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem } = useCart();
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [addedMsg, setAddedMsg] = useState("");
 
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
@@ -59,17 +66,15 @@ export default function ProductDetail() {
     }
   }
 
-  async function buyNow() {
-    setSubmitting(true);
-    setError("");
-    try {
-      await createOrder({ product_id: product.id, quantity: 1 });
-      navigate("/orders");
-    } catch (err) {
-      setError(err.response?.data?.detail || "Checkout failed");
-    } finally {
-      setSubmitting(false);
-    }
+  function addToCart() {
+    addItem(product, quantity);
+    setAddedMsg(`Added ${quantity} to cart`);
+    setTimeout(() => setAddedMsg(""), 2000);
+  }
+
+  function buyNow() {
+    addItem(product, quantity);
+    navigate("/checkout");
   }
 
   return (
@@ -124,6 +129,27 @@ export default function ProductDetail() {
                   />
                 </Box>
 
+                {product.stock_quantity > 0 && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                    <span style={{ fontSize: 14, color: "#64748b" }}>Quantity</span>
+                    <IconButton size="small" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                      <RemoveIcon fontSize="small" />
+                    </IconButton>
+                    <TextField
+                      size="small"
+                      value={quantity}
+                      sx={{ width: 56 }}
+                      inputProps={{ style: { textAlign: "center" } }}
+                      onChange={(e) => setQuantity(Math.max(1, Math.min(Number(e.target.value) || 1, product.stock_quantity)))}
+                    />
+                    <IconButton size="small" onClick={() => setQuantity((q) => Math.min(product.stock_quantity, q + 1))} disabled={quantity >= product.stock_quantity}>
+                      <AddIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                )}
+
+                {addedMsg && <Alert severity="success" sx={{ mb: 2 }}>{addedMsg}</Alert>}
+
                 <Box className="product-detail-actions">
                   <Button
                     variant="contained"
@@ -133,6 +159,15 @@ export default function ProductDetail() {
                     onClick={() => setNegotiateOpen(true)}
                   >
                     Negotiate Price
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    startIcon={<AddShoppingCartIcon />}
+                    disabled={product.stock_quantity === 0}
+                    onClick={addToCart}
+                  >
+                    Add to Cart
                   </Button>
                   <Button
                     variant="outlined"
@@ -181,6 +216,7 @@ export default function ProductDetail() {
           </DialogActions>
         </Dialog>
       </div>
+      <Footer />
     </>
   );
 }

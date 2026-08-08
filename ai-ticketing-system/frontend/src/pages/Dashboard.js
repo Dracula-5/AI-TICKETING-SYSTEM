@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import { Card, CardContent, Grid, Box, LinearProgress } from "@mui/material";
@@ -175,6 +176,7 @@ export default function Dashboard() {
           </Grid>
         </Grid>
       </div>
+      <Footer />
     </>
   );
 }

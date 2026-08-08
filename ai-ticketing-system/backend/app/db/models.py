@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean, Float, Index
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, Boolean, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.database import Base
@@ -150,9 +150,11 @@ class Vendor(Base):
     description = Column(Text, nullable=True)
     # One of MARKETPLACE_CATEGORIES (app/core/constants.py); nullable at the DB
     # level for legacy/ad-hoc rows, required by VendorRegister for every new
-    # self-registration. The unique index makes "one vendor per category per
-    # tenant" a hard guarantee, not just an app-side convention.
-    category = Column(String, nullable=True)
+    # self-registration. Any number of vendors may share a category -- an
+    # earlier iteration hard-capped this to one vendor per category, but a
+    # real marketplace has many sellers per category, so that constraint was
+    # removed (see migration 0007).
+    category = Column(String, nullable=True, index=True)
 
     is_verified = Column(Boolean, default=False)
     rating_avg = Column(Float, default=0.0)
@@ -161,10 +163,6 @@ class Vendor(Base):
     user = relationship("User", back_populates="vendor_profile")
     tenant = relationship("Tenant", back_populates="vendors")
     products = relationship("Product", back_populates="vendor", cascade="all, delete")
-
-    __table_args__ = (
-        Index("ux_vendors_tenant_category", "tenant_id", "category", unique=True),
-    )
 
 
 class Product(Base):
@@ -267,6 +265,7 @@ class Order(Base):
     unit_price = Column(Float, nullable=False)
     total_price = Column(Float, nullable=False)
     status = Column(String, default="pending")  # pending / confirmed / shipped / completed / cancelled
+    delivery_address = Column(String, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

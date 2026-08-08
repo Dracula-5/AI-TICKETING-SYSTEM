@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 class UserCreate(BaseModel):
     name: str
@@ -15,3 +15,15 @@ class UserOut(BaseModel):
     email: EmailStr
     role: str
     tenant_id: int
+
+
+class UserUpdate(BaseModel):
+    """Self-service profile edit. No role/tenant_id -- those must never be
+    user-editable (privilege escalation / tenant-isolation risk)."""
+    name: str | None = None
+    email: EmailStr | None = None
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=6)

@@ -6,6 +6,7 @@ import {
 import SendIcon from "@mui/icons-material/Send";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/ticketDetails.css";
@@ -390,6 +391,7 @@ export default function TicketDetails() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

@@ -7,6 +7,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import "../styles/providerActions.css";
 
@@ -176,6 +177,7 @@ export default function ProviderActions() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

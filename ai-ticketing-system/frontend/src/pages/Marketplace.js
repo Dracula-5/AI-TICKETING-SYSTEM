@@ -14,6 +14,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import SearchOffRoundedIcon from "@mui/icons-material/SearchOffRounded";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import ProductCard from "../components/ProductCard";
 import ProductCardSkeleton from "../components/ProductCardSkeleton";
 import { listProducts } from "../api/products";
@@ -162,6 +163,7 @@ export default function Marketplace() {
           </>
         )}
       </div>
+      <Footer />
     </>
   );
 }

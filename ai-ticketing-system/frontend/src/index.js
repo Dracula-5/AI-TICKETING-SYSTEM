@@ -6,6 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import { UIProvider } from "./context/UIContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { CartProvider } from "./context/CartContext";
 import "./index.css";
 import "./App.css";
 import "./styles/globals.css";
@@ -15,9 +16,11 @@ root.render(
   <ThemeProvider theme={theme}>
     <UIProvider>
       <NotificationProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <CartProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </CartProvider>
       </NotificationProvider>
     </UIProvider>
   </ThemeProvider>

@@ -4,7 +4,7 @@ import {
   FormControl, InputLabel, Select, MenuItem,
 } from "@mui/material";
 import StorefrontIcon from "@mui/icons-material/Storefront";
-import { registerVendor, getCategoryAvailability } from "../api/vendors";
+import { registerVendor, getCategoryCounts } from "../api/vendors";
 import { MARKETPLACE_CATEGORIES } from "../constants/marketplaceCategories";
 import { setAuthSession } from "../utils/authSession";
 import api from "../api/axios";
@@ -17,16 +17,18 @@ export default function VendorRegister() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [availability, setAvailability] = useState({});
+  const [counts, setCounts] = useState({});
 
   useEffect(() => {
-    getCategoryAvailability()
+    // Informational only -- any number of vendors can share a category, so
+    // this is just a "N sellers already here" hint, never disables anything.
+    getCategoryCounts()
       .then((res) => {
         const map = {};
-        (res.data || []).forEach((c) => { map[c.category] = c; });
-        setAvailability(map);
+        (res.data || []).forEach((c) => { map[c.category] = c.vendor_count; });
+        setCounts(map);
       })
-      .catch(() => {}); // fail open -- all categories stay selectable, server still enforces uniqueness
+      .catch(() => {});
   }, []);
 
   function set(field) {
@@ -96,10 +98,10 @@ export default function VendorRegister() {
               onChange={set("category")}
             >
               {MARKETPLACE_CATEGORIES.map((category) => {
-                const taken = availability[category] && !availability[category].available;
+                const count = counts[category] || 0;
                 return (
-                  <MenuItem key={category} value={category} disabled={taken}>
-                    {category}{taken ? ` (taken by ${availability[category].shop_name})` : ""}
+                  <MenuItem key={category} value={category}>
+                    {category}{count > 0 ? ` (${count} seller${count === 1 ? "" : "s"} already here)` : ""}
                   </MenuItem>
                 );
               })}
@@ -135,6 +137,10 @@ export default function VendorRegister() {
 
           <p className="login-footer">
             Just want to shop? <a href="/register">Sign up as a customer</a>
+          </p>
+
+          <p className="login-footer">
+            <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
           </p>
         </Card>
       </div>

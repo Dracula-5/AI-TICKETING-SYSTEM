@@ -9,6 +9,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { listMyProducts, createProduct, updateProduct, deleteProduct } from "../api/products";
 import { getMyVendorProfile } from "../api/vendors";
 import { listVendorOrders, updateOrderStatus } from "../api/orders";
@@ -248,7 +249,14 @@ export default function VendorDashboard() {
               ) : (
                 orders.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell>{o.product.title}</TableCell>
+                    <TableCell>
+                      {o.product.title}
+                      {o.delivery_address && (
+                        <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>
+                          Ship to: {o.delivery_address}
+                        </p>
+                      )}
+                    </TableCell>
                     <TableCell>{o.quantity}</TableCell>
                     <TableCell>{o.product.currency} {o.total_price.toLocaleString()}</TableCell>
                     <TableCell>
@@ -323,6 +331,7 @@ export default function VendorDashboard() {
           </DialogActions>
         </Dialog>
       </div>
+      <Footer />
     </>
   );
 }

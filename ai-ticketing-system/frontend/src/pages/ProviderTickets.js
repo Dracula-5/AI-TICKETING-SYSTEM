@@ -9,6 +9,7 @@ import DoneAllIcon from "@mui/icons-material/DoneAll";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import api from "../api/axios";
 import "../styles/providerTickets.css";
@@ -339,6 +340,7 @@ export default function ProviderTickets() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

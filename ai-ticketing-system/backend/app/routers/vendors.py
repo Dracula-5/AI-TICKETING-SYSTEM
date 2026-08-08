@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.constants import MARKETPLACE_CATEGORIES
@@ -10,7 +10,7 @@ from app.schemas.vendors import (
     VendorUpdate,
     VendorOut,
     VendorPublicOut,
-    CategoryAvailabilityOut,
+    CategoryCountOut,
 )
 from app.schemas.auth import Token
 from app.core.limiter import limiter
@@ -24,22 +24,12 @@ from app.core.security import (
 router = APIRouter(prefix="/vendors", tags=["vendors"])
 
 
-def _category_taken_error(category: str) -> HTTPException:
-    return HTTPException(status_code=400, detail=f"'{category}' already has an assigned vendor")
-
-
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/minute")
 def register_vendor(request: Request, payload: VendorRegister, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-
-    taken = db.query(Vendor).filter(
-        Vendor.tenant_id == payload.tenant_id, Vendor.category == payload.category,
-    ).first()
-    if taken:
-        raise _category_taken_error(payload.category)
 
     new_user = User(
         name=payload.name,
@@ -61,37 +51,33 @@ def register_vendor(request: Request, payload: VendorRegister, db: Session = Dep
         category=payload.category,
     )
     db.add(vendor)
-    try:
-        db.commit()
-    except IntegrityError:
-        # Race: two concurrent registrations for the same tenant+category.
-        # The pre-check above closes the common case; this closes the gap.
-        db.rollback()
-        raise _category_taken_error(payload.category)
+    db.commit()
     db.refresh(new_user)
 
     token = create_access_token({"sub": str(new_user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
 
-@router.get("/categories", response_model=list[CategoryAvailabilityOut])
-def list_category_availability(tenant_id: int = 1, db: Session = Depends(get_db)):
+@router.get("/categories", response_model=list[CategoryCountOut])
+def list_category_counts(tenant_id: int = 1, db: Session = Depends(get_db)):
     """
     Unauthenticated on purpose -- powers the category dropdown on the vendor
     signup page, before the visitor has an account. Must stay registered
     before GET /{vendor_id} or FastAPI's path matching would swallow
     "categories" as a vendor_id and 422 instead of reaching this handler.
+
+    Any number of vendors can share a category (no cap) -- this just reports
+    how many are already in each one, as a hint on the signup form, not a
+    restriction.
     """
-    taken_rows = (
-        db.query(Vendor.category, Vendor.shop_name)
+    rows = (
+        db.query(Vendor.category, func.count(Vendor.id))
         .filter(Vendor.tenant_id == tenant_id, Vendor.category.isnot(None))
+        .group_by(Vendor.category)
         .all()
     )
-    taken = {category: shop_name for category, shop_name in taken_rows}
-    return [
-        {"category": c, "available": c not in taken, "shop_name": taken.get(c)}
-        for c in MARKETPLACE_CATEGORIES
-    ]
+    counts = dict(rows)
+    return [{"category": c, "vendor_count": counts.get(c, 0)} for c in MARKETPLACE_CATEGORIES]
 
 
 def _load_own_vendor(db: Session, current_user: User) -> Vendor:

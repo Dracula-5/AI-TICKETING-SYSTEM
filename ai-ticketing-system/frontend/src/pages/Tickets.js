@@ -20,6 +20,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import "../styles/tickets.css";
 
@@ -199,6 +200,7 @@ export default function Tickets() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }

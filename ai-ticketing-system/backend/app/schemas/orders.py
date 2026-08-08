@@ -6,6 +6,7 @@ class OrderCreate(BaseModel):
     product_id: int
     quantity: int = Field(1, ge=1)
     negotiation_session_id: int | None = None
+    delivery_address: str | None = None
 
 
 class OrderProductSummary(BaseModel):
@@ -29,6 +30,7 @@ class OrderOut(BaseModel):
     unit_price: float
     total_price: float
     status: str
+    delivery_address: str | None = None
     created_at: datetime
     updated_at: datetime | None = None
     product: OrderProductSummary

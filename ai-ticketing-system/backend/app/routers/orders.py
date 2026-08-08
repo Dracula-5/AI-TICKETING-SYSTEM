@@ -57,6 +57,7 @@ async def create_order(
         unit_price=unit_price,
         total_price=round(unit_price * payload.quantity, 2),
         status="pending",
+        delivery_address=payload.delivery_address,
     )
     db.add(order)
     db.commit()

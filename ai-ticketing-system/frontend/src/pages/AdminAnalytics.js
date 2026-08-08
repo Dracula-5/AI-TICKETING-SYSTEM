@@ -4,6 +4,7 @@ import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { getAdminAnalytics } from "../api/analytics";
 import "../styles/dashboard.css";
 
@@ -101,6 +102,7 @@ export default function AdminAnalytics() {
           </>
         )}
       </div>
+      <Footer />
     </>
   );
 }

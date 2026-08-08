@@ -1,14 +1,17 @@
-import { Card, CardMedia, CardContent, CardActions, Button, Chip, Box } from "@mui/material";
+import { Card, CardMedia, CardContent, CardActions, Button, Chip, Box, IconButton, Tooltip } from "@mui/material";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 import "../styles/marketplace.css";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/400x300?text=No+Image";
 
 export default function ProductCard({ product }) {
   const image = product.images?.[0]?.url || PLACEHOLDER_IMAGE;
+  const { addItem } = useCart();
 
   return (
     <Card className="product-card">
@@ -56,6 +59,20 @@ export default function ProductCard({ product }) {
         >
           View Details
         </Button>
+        {product.stock_quantity > 0 && (
+          <Tooltip title="Add to Cart">
+            <IconButton
+              color="primary"
+              onClick={(e) => {
+                e.preventDefault();
+                addItem(product, 1);
+              }}
+              aria-label="Add to cart"
+            >
+              <AddShoppingCartIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
       </CardActions>
     </Card>
   );

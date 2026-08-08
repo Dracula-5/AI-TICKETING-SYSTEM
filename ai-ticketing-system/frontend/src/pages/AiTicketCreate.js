@@ -3,6 +3,7 @@ import { Card, CardContent, TextField, Button, Box, Alert, Chip } from "@mui/mat
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import api from "../api/axios";
 import "../styles/aiTicketCreate.css";
 
@@ -146,6 +147,7 @@ export default function AiTicketCreate() {
           </Card>
         )}
       </div>
+      <Footer />
     </>
   );
 }

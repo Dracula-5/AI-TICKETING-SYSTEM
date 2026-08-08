@@ -60,7 +60,6 @@ class VendorPublicOut(BaseModel):
     rating_avg: float
 
 
-class CategoryAvailabilityOut(BaseModel):
+class CategoryCountOut(BaseModel):
     category: str
-    available: bool
-    shop_name: str | None = None
+    vendor_count: int

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Box, Card, CardContent, TextField, Button, Chip, CircularProgress, Alert, IconButton,
+  Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -9,10 +10,12 @@ import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { getNegotiation } from "../api/negotiations";
 import { createOrder } from "../api/orders";
 import useNegotiationSocket from "../hooks/useNegotiationSocket";
 import { getAuthItem } from "../utils/authSession";
+import { getSavedAddress, saveAddress } from "../utils/deliveryAddress";
 import "../styles/negotiationChat.css";
 
 export default function NegotiationChat() {
@@ -27,6 +30,8 @@ export default function NegotiationChat() {
   const [text, setText] = useState("");
   const [offerAmount, setOfferAmount] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [addressInput, setAddressInput] = useState("");
   const bottomRef = useRef(null);
 
   const { liveMessages, connected, send } = useNegotiationSocket(id);
@@ -82,7 +87,17 @@ export default function NegotiationChat() {
     send({ type });
   }
 
-  async function checkout() {
+  function checkout() {
+    const saved = getSavedAddress();
+    if (!saved) {
+      setAddressInput("");
+      setAddressDialogOpen(true);
+      return;
+    }
+    placeOrder(saved);
+  }
+
+  async function placeOrder(address) {
     if (!session) return;
     setCheckoutLoading(true);
     try {
@@ -90,6 +105,7 @@ export default function NegotiationChat() {
         product_id: session.product_id,
         quantity: 1,
         negotiation_session_id: session.id,
+        delivery_address: address,
       });
       navigate("/orders");
     } catch (err) {
@@ -97,6 +113,13 @@ export default function NegotiationChat() {
     } finally {
       setCheckoutLoading(false);
     }
+  }
+
+  function confirmAddressAndCheckout() {
+    if (!addressInput.trim()) return;
+    saveAddress(addressInput.trim());
+    setAddressDialogOpen(false);
+    placeOrder(addressInput.trim());
   }
 
   return (
@@ -217,7 +240,30 @@ export default function NegotiationChat() {
             )}
           </>
         )}
+
+        <Dialog open={addressDialogOpen} onClose={() => setAddressDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>Delivery Address</DialogTitle>
+          <DialogContent>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              autoFocus
+              placeholder="Flat/House no., street, city, state, PIN code"
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              sx={{ mt: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setAddressDialogOpen(false)}>Cancel</Button>
+            <Button variant="contained" onClick={confirmAddressAndCheckout} disabled={!addressInput.trim() || checkoutLoading}>
+              Confirm & Place Order
+            </Button>
+          </DialogActions>
+        </Dialog>
       </div>
+      <Footer />
     </>
   );
 }

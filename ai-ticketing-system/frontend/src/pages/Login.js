@@ -128,6 +128,10 @@ export default function Login() {
           <p className="login-footer">
             New user? <a href="/register">Create an account</a>
           </p>
+
+          <p className="login-footer">
+            <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
+          </p>
         </Card>
       </div>
     </div>

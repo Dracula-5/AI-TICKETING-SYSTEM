@@ -1,0 +1,31 @@
+.settings-main {
+  margin-left: 270px;
+  padding: 100px 40px 40px;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.settings-header {
+  margin-bottom: 24px;
+}
+
+.settings-header h1 {
+  margin: 0 0 10px 0;
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.settings-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+@media (max-width: 768px) {
+  .settings-main {
+    margin-left: 0;
+    padding: 20px;
+  }
+}

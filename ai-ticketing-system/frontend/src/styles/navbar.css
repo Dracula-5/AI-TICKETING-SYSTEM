@@ -48,9 +48,17 @@
   background: #f8fafc !important;
 }
 
+.app-navbar.navbar-marketplace {
+  border-bottom: 2px solid #f59e0b;
+}
+
 body.dark .app-navbar {
   background: rgba(15, 23, 42, 0.9) !important;
   border-bottom-color: #1e293b;
+}
+
+body.dark .app-navbar.navbar-marketplace {
+  border-bottom-color: #f59e0b;
 }
 
 body.dark .navbar-title-wrap h3 {

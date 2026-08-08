@@ -2,8 +2,6 @@
 Tests for vendor registration, profile management, and admin verification.
 """
 
-import pytest
-
 from tests.conftest import auth_headers
 
 
@@ -51,7 +49,8 @@ class TestVendorRegister:
         me = client.get("/vendors/me", headers={"Authorization": f"Bearer {token}"})
         assert me.json()["category"] == "Books"
 
-    def test_second_vendor_same_category_rejected(self, client, db, tenant):
+    def test_second_vendor_same_category_allowed(self, client, db, tenant):
+        """Any number of vendors may share a category -- there's no cap."""
         first = client.post("/vendors/register", json=_register_payload(
             tenant.id, email="first@shop.com", category="Sports",
         ))
@@ -60,10 +59,30 @@ class TestVendorRegister:
         second = client.post("/vendors/register", json=_register_payload(
             tenant.id, email="second@shop.com", category="Sports",
         ))
-        assert second.status_code == 400
+        assert second.status_code == 201
 
         from app.db.models import User
-        assert db.query(User).filter(User.email == "second@shop.com").first() is None
+        assert db.query(User).filter(User.email == "second@shop.com").first() is not None
+
+    def test_many_vendors_same_category_no_db_error(self, db, tenant, vendor_user):
+        """Regression test for the removed unique constraint: inserting a
+        third+ vendor into an already-occupied category must not raise
+        IntegrityError anymore."""
+        from app.db.models import User, Vendor
+        from app.core.security import get_password_hash
+
+        other_user = User(name="Other", email="other-category@test.com",
+                           hashed_password=get_password_hash("x"), role="vendor", tenant_id=tenant.id)
+        db.add(other_user)
+        db.flush()
+
+        db.add(Vendor(user_id=vendor_user.id, tenant_id=tenant.id, shop_name="A",
+                       phone_number="+91-1", shop_address="X", category="Fashion"))
+        db.add(Vendor(user_id=other_user.id, tenant_id=tenant.id, shop_name="B",
+                       phone_number="+91-2", shop_address="Y", category="Fashion"))
+        db.commit()  # no IntegrityError
+
+        assert db.query(Vendor).filter(Vendor.category == "Fashion").count() == 2
 
     def test_same_category_different_tenant_allowed(self, client, db, tenant):
         from app.db.models import Tenant
@@ -81,44 +100,20 @@ class TestVendorRegister:
         assert first.status_code == 201
         assert second.status_code == 201
 
-    def test_category_uniqueness_enforced_at_db_level(self, db, tenant, vendor_user):
-        from app.db.models import User, Vendor
-        from app.core.security import get_password_hash
-        from sqlalchemy.exc import IntegrityError
 
-        other_user = User(name="Other", email="other-category@test.com",
-                           hashed_password=get_password_hash("x"), role="vendor", tenant_id=tenant.id)
-        db.add(other_user)
-        db.flush()
-
-        db.add(Vendor(user_id=vendor_user.id, tenant_id=tenant.id, shop_name="A",
-                       phone_number="+91-1", shop_address="X", category="Fashion"))
-        db.flush()
-
-        # A SAVEPOINT (begin_nested) scopes the expected failure to itself,
-        # leaving the outer connection-level transaction that conftest's
-        # `db` fixture manages untouched -- a plain db.commit() here would
-        # desync the fixture's own teardown rollback (SAWarning).
-        with pytest.raises(IntegrityError):
-            with db.begin_nested():
-                db.add(Vendor(user_id=other_user.id, tenant_id=tenant.id, shop_name="B",
-                               phone_number="+91-2", shop_address="Y", category="Fashion"))
-                db.flush()
-
-
-class TestCategoryAvailability:
-    def test_all_available_when_empty(self, client, tenant):
+class TestCategoryCounts:
+    def test_all_zero_when_empty(self, client, tenant):
         resp = client.get(f"/vendors/categories?tenant_id={tenant.id}")
         assert resp.status_code == 200
-        assert all(c["available"] for c in resp.json())
+        assert all(c["vendor_count"] == 0 for c in resp.json())
 
-    def test_taken_after_registration(self, client, tenant):
-        client.post("/vendors/register", json=_register_payload(tenant.id, category="Electronics"))
+    def test_count_increments_after_registration(self, client, tenant):
+        client.post("/vendors/register", json=_register_payload(tenant.id, email="a@shop.com", category="Electronics"))
+        client.post("/vendors/register", json=_register_payload(tenant.id, email="b@shop.com", category="Electronics"))
         resp = client.get(f"/vendors/categories?tenant_id={tenant.id}")
         rows = {c["category"]: c for c in resp.json()}
-        assert rows["Electronics"]["available"] is False
-        assert rows["Electronics"]["shop_name"] == "Owner's Electronics"
-        assert rows["Books"]["available"] is True
+        assert rows["Electronics"]["vendor_count"] == 2
+        assert rows["Books"]["vendor_count"] == 0
 
     def test_tenant_scoped(self, client, db, tenant):
         from app.db.models import Tenant
@@ -130,7 +125,7 @@ class TestCategoryAvailability:
         client.post("/vendors/register", json=_register_payload(tenant.id, category="Electronics"))
         resp = client.get(f"/vendors/categories?tenant_id={other_tenant.id}")
         rows = {c["category"]: c for c in resp.json()}
-        assert rows["Electronics"]["available"] is True
+        assert rows["Electronics"]["vendor_count"] == 0
 
     def test_callable_without_auth(self, client):
         resp = client.get("/vendors/categories")

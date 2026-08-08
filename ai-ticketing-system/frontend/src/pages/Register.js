@@ -131,6 +131,10 @@ export default function Register() {
           <p className="login-footer">
             Want to sell products? <a href="/vendor/register">Register as a vendor</a>
           </p>
+
+          <p className="login-footer">
+            <a href="/privacy">Privacy Policy</a> &middot; <a href="/terms">Terms of Service</a> &middot; <a href="/security">Security</a>
+          </p>
         </Card>
       </div>
     </div>

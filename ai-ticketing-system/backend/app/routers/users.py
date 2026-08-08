@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import ProviderCategory, User, Tenant
-from app.schemas.users import UserCreate, UserOut
+from app.schemas.users import UserCreate, UserOut, UserUpdate, PasswordChange
 from app.schemas.notifications import ProviderCategoriesIn, ProviderCategoriesOut
-from app.core.security import get_password_hash, get_current_user
+from app.core.security import get_password_hash, get_current_user, verify_password
 from app.services.seed_users import create_default_users
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -58,6 +58,41 @@ def get_provider_users(
         User.tenant_id == current_user.tenant_id,
         User.role.in_(["provider", "service_provider"])
     ).all()
+
+@router.put("/me", response_model=UserOut)
+def update_my_profile(
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if payload.email and payload.email != current_user.email:
+        existing = db.query(User).filter(
+            User.email == payload.email, User.id != current_user.id
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+@router.put("/me/password")
+def change_my_password(
+    payload: PasswordChange,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not verify_password(payload.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    current_user.hashed_password = get_password_hash(payload.new_password)
+    db.commit()
+    return {"message": "Password updated"}
+
 
 @router.get("/me/categories", response_model=ProviderCategoriesOut)
 def get_my_categories(

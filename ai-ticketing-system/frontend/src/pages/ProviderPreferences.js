@@ -4,6 +4,7 @@ import {
 } from "@mui/material";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
 import { getMyCategories, setMyCategories } from "../api/notifications";
 import { getAuthItem } from "../utils/authSession";
 
@@ -94,6 +95,7 @@ export default function ProviderPreferences() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </>
   );
 }
