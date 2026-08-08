@@ -273,7 +273,7 @@ sequenceDiagram
             LLM-->>Eng: accept | counter_offer | reject
             Note over Eng: any exception falls back to rule_based_response
         else no key
-            Eng->>Eng: rule_based_response() -- anchors on floor_price,<br/>converges over MAX_COUNTER_ROUNDS
+            Eng->>Eng: rule_based_response() -- accept if offer >= floor_price,<br/>else counter with floor_price exactly
         end
         Eng-->>WS: NegotiationMessage(sender_role="ai_assistant")
         WS-->>Cu: broadcast

@@ -2,9 +2,11 @@
 Vendor-side negotiation engine.
 
 Two response strategies:
-  - rule_based_response: always available, no external dependency. Anchors on
-    product.price (starting ask) and product.floor_price (hard floor) and
-    converges toward the floor over a bounded number of rounds.
+  - rule_based_response: always available, no external dependency. A single
+    threshold check against product.floor_price -- the customer's exact
+    offer is accepted outright once it clears the floor, and any offer below
+    it gets countered with the exact floor price, never a computed number
+    neither side actually proposed.
   - llm_assisted_response: opt-in per product (auto_negotiate_enabled) and
     only runs when ANTHROPIC_API_KEY is configured. Falls back to the
     rule-based response on any error (timeout, refusal, malformed output) so
@@ -13,6 +15,9 @@ Two response strategies:
 generate_vendor_response() is the single entry point the negotiations router
 calls after a customer message — it picks a strategy, persists the resulting
 NegotiationMessage, and applies session-state side effects (accept/reject).
+A human vendor's own manually-typed counter-offer goes through the same
+NegotiationMessage/message_type path as this module's output, so it renders
+identically in the chat -- there's no separate AI-only treatment.
 """
 import logging
 from datetime import datetime, timezone
@@ -25,8 +30,6 @@ from app.core.config import settings
 from app.db.models import NegotiationMessage
 
 logger = logging.getLogger(__name__)
-
-MAX_COUNTER_ROUNDS = 5
 
 
 class NegotiationDecision(BaseModel):
@@ -50,21 +53,10 @@ def rule_based_response(product, messages: list[NegotiationMessage], latest_offe
             "text_content": f"Deal! I can do {currency} {latest_offer_amount:.2f}.",
         }
 
-    vendor_offers = [m for m in messages if m.sender_role in ("vendor", "ai_assistant") and m.amount is not None]
-    last_vendor_price = vendor_offers[-1].amount if vendor_offers else product.price
-
-    if len(vendor_offers) >= MAX_COUNTER_ROUNDS:
-        return {
-            "message_type": "counter_offer",
-            "amount": floor,
-            "text_content": f"That's the best I can do — {currency} {floor:.2f} is my final offer.",
-        }
-
-    counter = max(floor, round((last_vendor_price + latest_offer_amount) / 2, 2))
     return {
         "message_type": "counter_offer",
-        "amount": counter,
-        "text_content": f"I can offer {currency} {counter:.2f} instead.",
+        "amount": floor,
+        "text_content": f"The lowest I can go is {currency} {floor:.2f}.",
     }
 
 

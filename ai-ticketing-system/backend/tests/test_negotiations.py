@@ -28,20 +28,18 @@ class TestRuleBasedEngine:
         result = rule_based_response(product, [], 850.0)
         assert result["message_type"] == "accept"
 
-    def test_counters_below_floor(self, product):
-        # no prior vendor offers -> anchors on listed price (1000); midpoint with 500 = 750
+    def test_counters_below_floor_with_exact_floor_price(self, product):
+        # Below floor -> counter is the vendor's exact floor price, never a
+        # computed number neither side proposed (previously this averaged
+        # the listed price and the customer's offer, e.g. 500 -> 750).
         result = rule_based_response(product, [], 500.0)
         assert result["message_type"] == "counter_offer"
-        assert result["amount"] == 750.0
-        assert result["amount"] >= product.floor_price
+        assert result["amount"] == product.floor_price == 700.0
 
-    def test_counter_converges_toward_floor(self, product):
-        history = [_msg("ai_assistant", "counter_offer", amount=750.0), _msg("ai_assistant", "counter_offer", amount=625.0)]
-        result = rule_based_response(product, history, 500.0)
-        # midpoint(625, 500) = 562.5, floored at 700
-        assert result["amount"] == 700.0
-
-    def test_holds_firm_after_max_rounds(self, product):
+    def test_counter_ignores_prior_round_history(self, product):
+        # No multi-round convergence: however many rounds have already
+        # happened, a still-below-floor offer always gets the same floor
+        # counter, not a gradually-shrinking one.
         history = [_msg("ai_assistant", "counter_offer", amount=750.0) for _ in range(5)]
         result = rule_based_response(product, history, 500.0)
         assert result["message_type"] == "counter_offer"
