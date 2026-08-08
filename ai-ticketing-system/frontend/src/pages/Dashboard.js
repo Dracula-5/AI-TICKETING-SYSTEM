@@ -78,13 +78,8 @@ export default function Dashboard() {
         <>
         {/* ====== STAT CARDS ====== */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={4}>
-            <Box
-              className="stat-card"
-              style={{
-                background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)"
-              }}
-            >
+          <Grid item xs={12} sm={6} md={3}>
+            <Box className="stat-card stat-grad-violet" style={{ animationDelay: "0.05s" }}>
               <CardContent>
                 <p>Total Tickets</p>
                 <h2>{tickets.length}</h2>
@@ -92,18 +87,13 @@ export default function Dashboard() {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Box
-              className="stat-card"
-              style={{
-                background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)"
-              }}
-            >
+          <Grid item xs={12} sm={6} md={3}>
+            <Box className="stat-card stat-grad-blue" style={{ animationDelay: "0.15s" }}>
               <CardContent>
                 <p>Open Tickets</p>
                 <h2>{open}</h2>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={openPercentage}
                   sx={{ mt: 1, height: 6, borderRadius: 3 }}
                 />
@@ -111,14 +101,19 @@ export default function Dashboard() {
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box className="stat-card stat-grad-emerald" style={{ animationDelay: "0.25s" }}>
+              <CardContent>
+                <p>Resolved</p>
+                <h2>{closed}</h2>
+              </CardContent>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
             <Box
-              className="stat-card"
-              style={{
-                background: sla_breach > 0 
-                  ? "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)"
-                  : "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)"
-              }}
+              className={`stat-card ${sla_breach > 0 ? "stat-grad-rose" : "stat-grad-teal"}`}
+              style={{ animationDelay: "0.35s" }}
             >
               <CardContent>
                 <p>SLA Breached</p>
@@ -132,7 +127,7 @@ export default function Dashboard() {
         <Grid container spacing={3}>
           {/* Pie Chart */}
           <Grid item xs={12} md={6}>
-            <Card className="chart-card">
+            <Card className="chart-card" style={{ animationDelay: "0.4s" }}>
               <CardContent>
                 <h3>Status Distribution</h3>
                 <Pie
@@ -141,7 +136,7 @@ export default function Dashboard() {
                     datasets: [
                       {
                         data: [open, closed],
-                        backgroundColor: ["#7aa1b3", "#556a7c"],
+                        backgroundColor: ["#6366f1", "#10b981"],
                         borderColor: "#fff",
                         borderWidth: 2
                       },
@@ -163,7 +158,7 @@ export default function Dashboard() {
 
           {/* Bar Chart */}
           <Grid item xs={12} md={6}>
-            <Card className="chart-card">
+            <Card className="chart-card" style={{ animationDelay: "0.5s" }}>
               <CardContent>
                 <h3>Priority Distribution</h3>
                 <Bar
@@ -173,8 +168,8 @@ export default function Dashboard() {
                       {
                         label: "Tickets",
                         data: [priorities.high, priorities.medium, priorities.low],
-                        backgroundColor: ["#7b4f4f", "#8a6f4e", "#4f6f5b"],
-                        borderColor: ["#6a4040", "#725a3f", "#405c4a"],
+                        backgroundColor: ["#f43f5e", "#f59e0b", "#10b981"],
+                        borderColor: ["#e11d48", "#ea580c", "#059669"],
                         borderWidth: 1,
                         borderRadius: 8
                       },

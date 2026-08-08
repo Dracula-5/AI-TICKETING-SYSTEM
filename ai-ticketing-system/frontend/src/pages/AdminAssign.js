@@ -65,19 +65,19 @@ export default function AdminAssign() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
+          <Card className="stat-card stat-grad-violet" style={{ animationDelay: "0.05s" }}>
             <CardContent>
               <p>Total Tickets</p>
               <h2>{tickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
+          <Card className="stat-card stat-grad-amber" style={{ animationDelay: "0.15s" }}>
             <CardContent>
               <p>Unassigned</p>
               <h2>{unassignedTickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
+          <Card className="stat-card stat-grad-blue" style={{ animationDelay: "0.25s" }}>
             <CardContent>
               <p>Providers</p>
               <h2>{providers.length}</h2>
@@ -125,11 +125,7 @@ export default function AdminAssign() {
                     onClick={() => assign(t.id)}
                     disabled={loading || !selected[t.id]}
                     startIcon={<AssignmentIcon />}
-                    sx={{
-                      background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                      textTransform: "none",
-                      fontWeight: 600
-                    }}
+                    sx={{ textTransform: "none", fontWeight: 600 }}
                   >
                     Assign Now
                   </Button>

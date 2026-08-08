@@ -80,16 +80,7 @@ export default function AiTicketCreate() {
               onClick={submit}
               disabled={loading}
               startIcon={<AutoAwesomeIcon />}
-              sx={{
-                height: 48,
-                fontSize: "1rem",
-                fontWeight: 600,
-                textTransform: "none",
-                background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                "&:hover": {
-                  background: "linear-gradient(135deg, #243146 0%, #344059 100%)"
-                }
-              }}
+              sx={{ height: 48, fontSize: "1rem", fontWeight: 600, textTransform: "none" }}
             >
               {loading ? "Creating Ticket..." : "Generate Ticket"}
             </Button>
@@ -134,11 +125,7 @@ export default function AiTicketCreate() {
                 <Button
                   variant="contained"
                   onClick={() => setResult(null)}
-                  sx={{
-                    background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                    textTransform: "none",
-                    fontWeight: 600
-                  }}
+                  sx={{ textTransform: "none", fontWeight: 600 }}
                 >
                   Create Another
                 </Button>

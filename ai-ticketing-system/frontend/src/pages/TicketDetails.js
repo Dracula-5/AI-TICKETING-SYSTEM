@@ -386,11 +386,7 @@ export default function TicketDetails() {
                   variant="contained"
                   onClick={addComment}
                   endIcon={<SendIcon />}
-                  sx={{
-                    background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                    textTransform: "none",
-                    fontWeight: 600
-                  }}
+                  sx={{ textTransform: "none", fontWeight: 600 }}
                 >
                   Post Comment
                 </Button>

@@ -71,25 +71,25 @@ export default function AdminPanel() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
+          <Card className="stat-card stat-grad-violet" style={{ animationDelay: "0.05s" }}>
             <CardContent>
               <p>Total Tickets</p>
               <h2>{tickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" }}>
+          <Card className="stat-card stat-grad-amber" style={{ animationDelay: "0.15s" }}>
             <CardContent>
               <p>Pending</p>
               <h2>{pendingTickets.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)" }}>
+          <Card className={`stat-card ${slaBreach > 0 ? "stat-grad-rose" : "stat-grad-teal"}`} style={{ animationDelay: "0.25s" }}>
             <CardContent>
               <p>SLA Breached</p>
               <h2>{slaBreach}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
+          <Card className="stat-card stat-grad-blue" style={{ animationDelay: "0.35s" }}>
             <CardContent>
               <p>Providers</p>
               <h2>{providers.length}</h2>
@@ -110,11 +110,7 @@ export default function AdminPanel() {
                 onClick={runSla}
                 disabled={slaRunning}
                 startIcon={slaRunning ? <CircularProgress size={20} color="inherit" /> : <PlayArrowIcon />}
-                sx={{
-                  background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)",
-                  textTransform: "none",
-                  fontWeight: 600
-                }}
+                sx={{ textTransform: "none", fontWeight: 600 }}
               >
                 {slaRunning ? "Running..." : "Run Now"}
               </Button>

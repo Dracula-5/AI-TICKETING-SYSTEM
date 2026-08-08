@@ -11,10 +11,10 @@ import "../styles/dashboard.css";
 import { useToast } from "../context/ToastContext";
 
 const STAT_CARDS = [
-  { key: "total_vendors", label: "Vendors", gradient: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" },
-  { key: "total_products", label: "Products", gradient: "linear-gradient(135deg, #24435a 0%, #1f6f8b 100%)" },
-  { key: "total_views", label: "Product Views", gradient: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" },
-  { key: "total_orders", label: "Orders", gradient: "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)" },
+  { key: "total_vendors", label: "Vendors", grad: "stat-grad-violet" },
+  { key: "total_products", label: "Products", grad: "stat-grad-blue" },
+  { key: "total_views", label: "Product Views", grad: "stat-grad-teal" },
+  { key: "total_orders", label: "Orders", grad: "stat-grad-amber" },
 ];
 
 export default function AdminAnalytics() {
@@ -60,9 +60,9 @@ export default function AdminAnalytics() {
         {!loading && data && (
           <>
             <Grid container spacing={3} sx={{ mb: 4 }}>
-              {STAT_CARDS.map((c) => (
+              {STAT_CARDS.map((c, i) => (
                 <Grid item xs={12} sm={6} md={3} key={c.key}>
-                  <Box className="stat-card" style={{ background: c.gradient }}>
+                  <Box className={`stat-card ${c.grad}`} style={{ animationDelay: `${0.05 + i * 0.1}s` }}>
                     <CardContent>
                       <p>{c.label}</p>
                       <h2>{data[c.key]?.toLocaleString?.() ?? data[c.key]}</h2>
@@ -98,7 +98,7 @@ export default function AdminAnalytics() {
                           datasets: [{
                             label: "Revenue",
                             data: data.top_vendors.map((v) => v.revenue),
-                            backgroundColor: "#4f6f8b",
+                            backgroundColor: "#6366f1",
                             borderRadius: 8,
                           }],
                         }}

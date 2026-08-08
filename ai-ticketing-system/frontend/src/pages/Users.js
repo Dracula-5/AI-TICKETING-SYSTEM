@@ -56,19 +56,19 @@ export default function Users() {
 
         {/* Stats */}
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2, mb: 4 }}>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #2b3a55 0%, #3f4c6b 100%)" }}>
+          <Card className="stat-card stat-grad-violet" style={{ animationDelay: "0.05s" }}>
             <CardContent>
               <p>Total Users</p>
               <h2>{users.length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #5b4b6b 0%, #7a5c7e 100%)" }}>
+          <Card className="stat-card stat-grad-fuchsia" style={{ animationDelay: "0.15s" }}>
             <CardContent>
               <p>Admins</p>
               <h2>{users.filter(u => u.role === "admin").length}</h2>
             </CardContent>
           </Card>
-          <Card className="stat-card" style={{ background: "linear-gradient(135deg, #1f3c4d 0%, #2c6975 100%)" }}>
+          <Card className="stat-card stat-grad-blue" style={{ animationDelay: "0.25s" }}>
             <CardContent>
               <p>Providers</p>
               <h2>{users.filter(u => u.role === "provider").length}</h2>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "../styles/splashIntro.css";
 
-const HOLD_MS = 1500;
+const HOLD_MS = 1800;
 const EXIT_MS = 550;
 
 /**
@@ -59,6 +59,13 @@ export default function SplashIntro({ onDone }) {
             <span>T</span>
           </div>
           <div className="splash-mark-ring"></div>
+          <div className="splash-splash-ring"></div>
+          <span className="splash-droplet splash-droplet-1"></span>
+          <span className="splash-droplet splash-droplet-2"></span>
+          <span className="splash-droplet splash-droplet-3"></span>
+          <span className="splash-droplet splash-droplet-4"></span>
+          <span className="splash-droplet splash-droplet-5"></span>
+          <span className="splash-droplet splash-droplet-6"></span>
         </div>
         <h1 className="splash-wordmark">TicketMind</h1>
         <p className="splash-tagline">AI ticketing &amp; a marketplace, in one workspace</p>

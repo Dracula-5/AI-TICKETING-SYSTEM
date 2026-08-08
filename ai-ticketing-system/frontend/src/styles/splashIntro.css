@@ -106,6 +106,10 @@
   margin-bottom: 22px;
 }
 
+/* Drop: falls from above with gravity-style acceleration, lands, then
+   squashes and rebounds like it just hit liquid -- the "splash" is this
+   impact deformation plus the ring/droplets below, all timed to the same
+   ~0.47s landing moment. */
 .splash-mark {
   width: 88px;
   height: 88px;
@@ -117,8 +121,7 @@
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.4) inset,
     0 20px 44px -8px rgba(30, 15, 80, 0.6);
-  transform-style: preserve-3d;
-  animation: markFlipIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: markDrop 0.85s both;
 }
 
 .splash-mark span {
@@ -128,27 +131,90 @@
   font-family: "Plus Jakarta Sans", "Poppins", "Segoe UI", sans-serif;
 }
 
-@keyframes markFlipIn {
+@keyframes markDrop {
   0% {
     opacity: 0;
-    transform: rotateY(-100deg) scale(0.6);
+    transform: translateY(-280px) scale(0.85);
+    animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); /* accelerating fall */
   }
-  60% {
+  55% {
     opacity: 1;
+    transform: translateY(0) scale(1);
+    animation-timing-function: ease-out;
+  }
+  68% {
+    transform: scaleX(1.28) scaleY(0.68); /* impact squash */
+    animation-timing-function: ease-in-out;
+  }
+  80% {
+    transform: scaleX(0.9) scaleY(1.14); /* rebound stretch */
+    animation-timing-function: ease-in-out;
+  }
+  90% {
+    transform: scaleX(1.05) scaleY(0.97);
   }
   100% {
-    opacity: 1;
-    transform: rotateY(0deg) scale(1);
+    transform: scale(1);
   }
 }
 
+/* One-shot splash ring at the moment of impact -- a flat, wide ellipse at
+   the mark's base, like a ripple spreading across a struck surface. */
+.splash-splash-ring {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 100%;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.6) 0%, transparent 72%);
+  transform: translateX(-50%) scale(0.3);
+  opacity: 0;
+  animation: splashRingBurst 0.55s ease-out 0.47s both;
+  pointer-events: none;
+}
+
+@keyframes splashRingBurst {
+  0% { opacity: 0.9; transform: translateX(-50%) scale(0.3); }
+  100% { opacity: 0; transform: translateX(-50%) scale(3.4); }
+}
+
+/* Droplets flung outward from the impact point, each on its own arc via
+   --dx/--dy, fading as they go. */
+.splash-droplet {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transform: translateX(-50%);
+  animation: dropletBurst 0.6s ease-out 0.47s both;
+}
+
+@keyframes dropletBurst {
+  0% { opacity: 1; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(0.4); }
+}
+
+.splash-droplet-1 { --dx: -36px; --dy: -20px; }
+.splash-droplet-2 { --dx: -20px; --dy: 12px; }
+.splash-droplet-3 { --dx: -7px; --dy: -28px; }
+.splash-droplet-4 { --dx: 7px; --dy: -26px; }
+.splash-droplet-5 { --dx: 22px; --dy: 10px; }
+.splash-droplet-6 { --dx: 38px; --dy: -18px; }
+
+/* Ambient pulsing ring -- picks up once the impact settles and loops
+   for as long as the intro is on screen. */
 .splash-mark-ring {
   position: absolute;
   inset: 0;
   border-radius: 24px;
   border: 2px solid rgba(255, 255, 255, 0.55);
   opacity: 0;
-  animation: ringPulse 1.8s ease-out 0.5s infinite;
+  animation: ringPulse 1.8s ease-out 0.9s infinite;
 }
 
 @keyframes ringPulse {
@@ -169,7 +235,7 @@
   font-weight: 800;
   letter-spacing: 0.02em;
   opacity: 0;
-  animation: wordReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+  animation: wordReveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.62s both;
 }
 
 @keyframes wordReveal {
@@ -192,7 +258,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   opacity: 0;
-  animation: fadeUp 0.5s ease-out 0.75s both;
+  animation: fadeUp 0.5s ease-out 0.92s both;
 }
 
 @keyframes fadeUp {
@@ -205,7 +271,7 @@
   gap: 7px;
   margin-top: 30px;
   opacity: 0;
-  animation: fadeUp 0.4s ease-out 0.95s both;
+  animation: fadeUp 0.4s ease-out 1.12s both;
 }
 
 .splash-loader span {
@@ -242,7 +308,10 @@
   opacity: 0;
   backdrop-filter: blur(8px);
   transition: background 0.2s ease, transform 0.2s ease;
-  animation: fadeUp 0.4s ease-out 1.1s both;
+  /* backwards, not both -- see the .stat-card note in index.css: keeps
+     the pre-animation state held through the delay without permanently
+     outranking the :hover lift below once the entrance finishes. */
+  animation: fadeUp 0.4s ease-out 1.28s backwards;
 }
 
 .splash-skip:hover {

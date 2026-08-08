@@ -125,12 +125,39 @@ body.dark code {
   text-align: center;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, 0 10px 24px -6px rgba(0, 0, 0, 0.28), 0 24px 48px -20px rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
-  transform: perspective(800px) translateZ(0);
   transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
+  /* backwards (not both/forwards): holds the 0% state during any
+     animation-delay so staggered cards don't flash visible-then-hide, but
+     hands transform back to the normal cascade once the entrance finishes
+     -- otherwise the animation's held end value would outrank and break
+     the :hover lift below (animation-origin styles beat author :hover). */
+  animation: statCardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
+
+@keyframes statCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Vivid, distinct gradients for stat cards -- swap out for the old
+   near-identical muted navy set. Pass one via className; combine with an
+   inline animationDelay (staggered per-card, set from JS) for entrance. */
+.stat-grad-violet { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+.stat-grad-blue { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); }
+.stat-grad-emerald { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+.stat-grad-teal { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); }
+.stat-grad-rose { background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%); }
+.stat-grad-amber { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
+.stat-grad-fuchsia { background: linear-gradient(135deg, #d946ef 0%, #a21caf 100%); }
 
 .stat-card::before {
   content: "";
