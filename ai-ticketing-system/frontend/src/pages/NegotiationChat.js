@@ -5,7 +5,6 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../components/Navbar";
@@ -175,16 +174,12 @@ export default function NegotiationChat() {
               <CardContent className="negotiation-chat-scroll">
                 {messages.map((m) => {
                   const mine = m.sender_role === role;
-                  const isAi = m.sender_role === "ai_assistant";
                   const isOffer = m.message_type === "offer" || m.message_type === "counter_offer";
                   const isLatestOpenOffer = isOffer && latestOffer?.id === m.id && !isAccepted;
 
                   return (
                     <Box key={m.id} className={`chat-bubble-row ${mine ? "mine" : "theirs"}`}>
                       <Box className={`chat-bubble ${mine ? "mine" : "theirs"} ${isOffer ? "offer" : ""}`}>
-                        {isAi && (
-                          <Chip icon={<SmartToyIcon />} label="AI Assistant" size="small" className="chat-ai-chip" />
-                        )}
                         {isOffer && (
                           <Box className="chat-offer-amount">
                             <LocalOfferIcon fontSize="small" /> {session.product.currency} {m.amount?.toLocaleString()}
