@@ -7,6 +7,7 @@ import SendIcon from "@mui/icons-material/Send";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import TicketStatusStepper from "../components/TicketStatusStepper";
 import api from "../api/axios";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/ticketDetails.css";
@@ -206,6 +207,8 @@ export default function TicketDetails() {
                 />
                 {ticket.category && <Chip label={ticket.category} variant="outlined" />}
               </Box>
+
+              <TicketStatusStepper status={ticket.status} />
 
               {/* Details Grid */}
               <div className="ticket-details-grid">

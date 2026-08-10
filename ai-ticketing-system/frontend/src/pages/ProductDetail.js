@@ -33,7 +33,6 @@ export default function ProductDetail() {
 
   const [negotiateOpen, setNegotiateOpen] = useState(false);
   const [offerAmount, setOfferAmount] = useState("");
-  const [offerMessage, setOfferMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -57,7 +56,6 @@ export default function ProductDetail() {
       const res = await startNegotiation({
         product_id: product.id,
         amount,
-        message: offerMessage || undefined,
       });
       navigate(`/negotiation/${res.data.id}`);
     } catch (err) {
@@ -203,16 +201,9 @@ export default function ProductDetail() {
               label={`Your offer (${product?.currency || ""})`}
               value={offerAmount}
               onChange={(e) => setOfferAmount(e.target.value)}
-              sx={{ mb: 2, mt: 1 }}
+              sx={{ mt: 1 }}
+              onKeyDown={(e) => e.key === "Enter" && submitNegotiation()}
               autoFocus
-            />
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              label="Message (optional)"
-              value={offerMessage}
-              onChange={(e) => setOfferMessage(e.target.value)}
             />
           </DialogContent>
           <DialogActions>

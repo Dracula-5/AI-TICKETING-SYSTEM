@@ -11,6 +11,7 @@ import {
   Alert
 } from "@mui/material";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import AutorenewRoundedIcon from "@mui/icons-material/AutorenewRounded";
@@ -19,16 +20,18 @@ import api from "../api/axios";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import SuccessAnimation from "../components/SuccessAnimation";
 import { getAuthItem } from "../utils/authSession";
 import "../styles/createTicket.css";
 
 export default function CreateTicket() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDesc] = useState("");
   const [priority, setPriority] = useState("medium");
   const [category, setCategory] = useState("general");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
+  const [createdTicket, setCreatedTicket] = useState(null);
   const [error, setError] = useState("");
 
   function resetAll() {
@@ -37,7 +40,6 @@ export default function CreateTicket() {
     setPriority("medium");
     setCategory("general");
     setError("");
-    setSuccess("");
   }
 
   async function submit() {
@@ -48,10 +50,9 @@ export default function CreateTicket() {
 
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
-      await api.post("/tickets", {
+      const res = await api.post("/tickets", {
         title,
         description,
         priority,
@@ -59,7 +60,7 @@ export default function CreateTicket() {
         tenant_id: Number(getAuthItem("tenant_id"))
       });
 
-      setSuccess("Ticket created successfully.");
+      setCreatedTicket(res.data);
       setTitle("");
       setDesc("");
       setPriority("medium");
@@ -180,7 +181,6 @@ export default function CreateTicket() {
             </div>
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
               <TextField
@@ -222,6 +222,15 @@ export default function CreateTicket() {
           </CardContent>
         </Card>
       </div>
+
+      <SuccessAnimation
+        open={Boolean(createdTicket)}
+        title="Ticket Raised!"
+        message={createdTicket ? `#${createdTicket.id} — ${createdTicket.title}` : ""}
+        primaryLabel="View Ticket"
+        onPrimary={() => navigate(`/ticket/${createdTicket.id}`)}
+      />
+
       <Footer />
     </>
   );

@@ -4,6 +4,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import SuccessAnimation from "../components/SuccessAnimation";
 import api from "../api/axios";
 import "../styles/aiTicketCreate.css";
 
@@ -11,6 +12,7 @@ export default function AiTicketCreate() {
 
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
+  const [celebrating, setCelebrating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,6 +30,7 @@ export default function AiTicketCreate() {
     })
       .then(res => {
         setResult(res.data);
+        setCelebrating(true);
         setText("");
       })
       .catch(err => {
@@ -134,6 +137,16 @@ export default function AiTicketCreate() {
           </Card>
         )}
       </div>
+
+      <SuccessAnimation
+        open={celebrating}
+        title="Ticket Raised!"
+        message={result ? `#${result.id} — ${result.title}` : ""}
+        primaryLabel="Great"
+        onPrimary={() => setCelebrating(false)}
+        autoCloseMs={1800}
+      />
+
       <Footer />
     </>
   );

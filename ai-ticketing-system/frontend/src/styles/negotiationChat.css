@@ -128,7 +128,8 @@
 }
 
 .negotiation-offer-input {
-  width: 150px;
+  flex: 1;
+  max-width: 260px;
 }
 
 @media (max-width: 768px) {

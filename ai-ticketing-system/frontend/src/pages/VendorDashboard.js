@@ -11,6 +11,7 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import LoadingState from "../components/LoadingState";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { listMyProducts, createProduct, updateProduct, deleteProduct } from "../api/products";
 import { getMyVendorProfile } from "../api/vendors";
 import { listVendorOrders, updateOrderStatus } from "../api/orders";
@@ -44,6 +45,7 @@ export default function VendorDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const toast = useToast();
 
   function loadAll() {
@@ -129,6 +131,8 @@ export default function VendorDashboard() {
       loadAll();
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to delete product");
+    } finally {
+      setDeleteTarget(null);
     }
   }
 
@@ -225,7 +229,7 @@ export default function VendorDashboard() {
                       <Button size="small" startIcon={<EditIcon />} onClick={() => openEditDialog(p)}>
                         Edit
                       </Button>
-                      <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => handleDelete(p.id)}>
+                      <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setDeleteTarget(p)}>
                         Delete
                       </Button>
                     </TableCell>
@@ -345,6 +349,15 @@ export default function VendorDashboard() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <ConfirmDialog
+          open={Boolean(deleteTarget)}
+          title="Delete this product?"
+          message={deleteTarget ? `"${deleteTarget.title}" will be removed from your shop. This can't be undone.` : ""}
+          confirmLabel="Delete"
+          onConfirm={() => handleDelete(deleteTarget.id)}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
       <Footer />
     </>

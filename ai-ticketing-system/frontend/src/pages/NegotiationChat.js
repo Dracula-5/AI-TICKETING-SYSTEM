@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
-  Box, Card, CardContent, TextField, Button, Chip, CircularProgress, Alert, IconButton,
+  Box, Card, CardContent, TextField, Button, Chip, Alert, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import LoadingState from "../components/LoadingState";
 import { getNegotiation } from "../api/negotiations";
 import { createOrder } from "../api/orders";
 import useNegotiationSocket from "../hooks/useNegotiationSocket";
@@ -26,7 +26,6 @@ export default function NegotiationChat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [text, setText] = useState("");
   const [offerAmount, setOfferAmount] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
@@ -67,19 +66,18 @@ export default function NegotiationChat() {
     const accept = [...messages].reverse().find((m) => m.message_type === "accept");
     return accept?.amount;
   }, [messages]);
-
-  function sendText() {
-    if (!text.trim()) return;
-    send({ type: "text", text: text.trim() });
-    setText("");
-  }
+  // Numbers and accept/decline only -- no free-text chat, so nothing else
+  // ever needs a bubble on screen.
+  const visibleMessages = useMemo(
+    () => messages.filter((m) => m.amount != null || m.message_type === "accept" || m.message_type === "reject"),
+    [messages]
+  );
 
   function sendOffer() {
     const amount = Number(offerAmount);
     if (!amount || amount <= 0) return;
-    send({ type: "offer", amount, text: text.trim() || undefined });
+    send({ type: "offer", amount });
     setOfferAmount("");
-    setText("");
   }
 
   function respondToOffer(type) {
@@ -127,11 +125,7 @@ export default function NegotiationChat() {
       <Sidebar role={role} />
 
       <div className="negotiation-chat-main">
-        {loading && (
-          <Box className="negotiation-chat-loading">
-            <CircularProgress />
-          </Box>
-        )}
+        {loading && <LoadingState label="Loading negotiation..." />}
 
         {!loading && error && !session && (
           <Alert severity="error">{error}</Alert>
@@ -172,7 +166,7 @@ export default function NegotiationChat() {
 
             <Card className="negotiation-chat-window">
               <CardContent className="negotiation-chat-scroll">
-                {messages.map((m) => {
+                {visibleMessages.map((m) => {
                   const mine = m.sender_role === role;
                   const isOffer = m.message_type === "offer" || m.message_type === "counter_offer";
                   const isLatestOpenOffer = isOffer && latestOffer?.id === m.id && !isAccepted;
@@ -185,10 +179,6 @@ export default function NegotiationChat() {
                             <LocalOfferIcon fontSize="small" /> {session.product.currency} {m.amount?.toLocaleString()}
                           </Box>
                         )}
-                        {/* Offer/counter-offer messages carry an auto-generated sentence
-                            that just restates the amount above ("I can offer X instead.") --
-                            skip it so the bubble shows only the exact amount, once. */}
-                        {!isOffer && m.text_content && <p>{m.text_content}</p>}
                         {m.message_type === "accept" && <p className="chat-accept-label">Offer accepted</p>}
                         {m.message_type === "reject" && <p className="chat-reject-label">Offer declined</p>}
 
@@ -213,26 +203,17 @@ export default function NegotiationChat() {
             {!isAccepted && (
               <Box className="negotiation-chat-input-row">
                 <TextField
-                  fullWidth
-                  size="small"
-                  placeholder="Type a message..."
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendText()}
-                />
-                <TextField
                   size="small"
                   type="number"
-                  placeholder="Offer amount"
+                  placeholder="Enter amount"
                   className="negotiation-offer-input"
                   value={offerAmount}
                   onChange={(e) => setOfferAmount(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendOffer()}
+                  autoFocus
                 />
-                <Button variant="outlined" onClick={sendOffer} disabled={!offerAmount}>
+                <Button variant="contained" onClick={sendOffer} disabled={!offerAmount}>
                   Make Offer
-                </Button>
-                <Button variant="contained" endIcon={<SendIcon />} onClick={sendText} disabled={!text.trim()}>
-                  Send
                 </Button>
               </Box>
             )}

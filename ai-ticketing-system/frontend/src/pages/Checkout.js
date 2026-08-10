@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Box, Card, CardContent, TextField, Button, Divider, Alert, CircularProgress,
 } from "@mui/material";
+import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import Navbar from "../components/Navbar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
+import EmptyState from "../components/EmptyState";
+import SuccessAnimation from "../components/SuccessAnimation";
 import { useCart } from "../context/CartContext";
 import { createOrder } from "../api/orders";
 import { getSavedAddress, saveAddress } from "../utils/deliveryAddress";
@@ -18,6 +21,8 @@ export default function Checkout() {
   const [address, setAddress] = useState(getSavedAddress());
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
+  const [placedCount, setPlacedCount] = useState(0);
+  const [celebrating, setCelebrating] = useState(false);
   const currency = items[0]?.currency || "INR";
 
   async function placeOrder() {
@@ -45,24 +50,27 @@ export default function Checkout() {
 
     setPlacing(false);
     if (failures.length === 0) {
+      setPlacedCount(items.length);
       clearCart();
-      navigate("/orders", { state: { justPlaced: true, count: items.length } });
+      setCelebrating(true);
     } else {
       setError(`Some items could not be ordered: ${failures.join("; ")}`);
     }
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !celebrating) {
     return (
       <>
         <Navbar />
         <Sidebar role={getAuthItem("role")} />
         <div className="vendor-dashboard-main">
-          <Card>
-            <CardContent sx={{ textAlign: "center", py: 6, color: "#999" }}>
-              Your cart is empty. <Link to="/marketplace">Browse the marketplace</Link>.
-            </CardContent>
-          </Card>
+          <EmptyState
+            icon={<ShoppingCartOutlinedIcon sx={{ fontSize: 28, color: "text.disabled" }} />}
+            title="Your cart is empty"
+            description="Add products from the marketplace before checking out."
+            action="Browse the marketplace"
+            onAction={() => navigate("/marketplace")}
+          />
         </div>
         <Footer />
       </>
@@ -118,6 +126,16 @@ export default function Checkout() {
           </Card>
         </Box>
       </div>
+
+      <SuccessAnimation
+        open={celebrating}
+        title="Order Placed!"
+        message={`${placedCount} item${placedCount === 1 ? "" : "s"} on the way`}
+        primaryLabel="View Orders"
+        onPrimary={() => navigate("/orders", { state: { justPlaced: true, count: placedCount } })}
+        autoCloseMs={2200}
+      />
+
       <Footer />
     </>
   );

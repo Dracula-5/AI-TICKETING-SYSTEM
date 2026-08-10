@@ -4,6 +4,33 @@ body {
   overflow-x: hidden;
 }
 
+/* Every page's root content container is named "*-main" by convention
+   (dashboard-main, tickets-main, marketplace-main, ...) -- targeting that
+   suffix here gives every page a soft entrance without touching ~25 files
+   individually. None of these containers have their own :hover rules, so
+   there's no repeat of the fill-mode/:hover cascade conflict documented
+   on .stat-card in index.css. */
+[class$="-main"] {
+  animation: pageEnter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [class$="-main"] {
+    animation: none;
+  }
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 10px;
