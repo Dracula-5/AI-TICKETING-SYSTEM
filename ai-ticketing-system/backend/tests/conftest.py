@@ -170,7 +170,6 @@ def product(db, tenant, vendor):
         currency="INR",
         stock_quantity=10,
         status="active",
-        floor_price=700.0,
     )
     db.add(p)
     db.commit()

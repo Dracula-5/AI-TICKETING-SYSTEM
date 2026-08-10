@@ -1,5 +1,4 @@
 alembic==1.17.2
-anthropic==0.120.2
 Faker==34.0.2
 redis==8.1.0
 slowapi==0.1.9

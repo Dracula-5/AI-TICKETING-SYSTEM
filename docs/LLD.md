@@ -86,8 +86,6 @@ erDiagram
         int vendor_id FK
         string title
         float price
-        float floor_price
-        bool auto_negotiate_enabled
         int stock_quantity
         string status
     }
@@ -252,38 +250,32 @@ sequenceDiagram
 Category/priority classification is **100% local keyword matching** — no external API call, no
 network dependency, deterministic.
 
-### 3.2 Marketplace negotiation over WebSocket, with optional LLM assist
+### 3.2 Marketplace negotiation over WebSocket
 
 ```mermaid
 sequenceDiagram
     participant Cu as Customer (WS)
     participant WS as /negotiations/{id}/ws
-    participant Eng as negotiation_ai
-    participant LLM as Anthropic API (optional)
     participant Ve as Vendor (WS)
 
     Cu->>WS: {type: "offer", amount}
     WS->>WS: persist NegotiationMessage, update session.current_offer_price
     WS-->>Cu: broadcast to all session sockets
     WS-->>Ve: broadcast to all session sockets
-    alt product.auto_negotiate_enabled
-        WS->>Eng: generate_vendor_response()
-        alt ANTHROPIC_API_KEY set
-            Eng->>LLM: messages.parse(NegotiationDecision)
-            LLM-->>Eng: accept | counter_offer | reject
-            Note over Eng: any exception falls back to rule_based_response
-        else no key
-            Eng->>Eng: rule_based_response() -- accept if offer >= floor_price,<br/>else counter with floor_price exactly
-        end
-        Eng-->>WS: NegotiationMessage(sender_role="ai_assistant")
-        WS-->>Cu: broadcast
-        WS-->>Ve: broadcast
-    end
+    Ve->>WS: {type: "offer", amount} (counter) or {type: "accept" | "reject"}
+    WS->>WS: persist NegotiationMessage, update session state
+    WS-->>Cu: broadcast
+    WS-->>Ve: broadcast
 ```
 
-The LLM path never lets the model settle below `floor_price`, even if the model's own output
-claims otherwise (`amount = max(amount, floor)` in `negotiation_ai.py`) — the floor is enforced
-in code, not just in the prompt.
+Every message in this chat comes directly from the customer or the vendor typing a number and/or
+hitting accept/decline — there is no automated counterparty. (An earlier version of this system
+had a rule-based/LLM-assisted auto-negotiate engine that could stand in for the vendor; it was
+removed because it produced confusing computed numbers — e.g. a customer offer of 1100 could get
+countered with 1299.50, a value derived from averaging against the listing price that neither
+side had actually proposed. The chat is deliberately numbers-and-accept/decline-only now, with no
+free-text messaging either, so every value on screen is traceable to something a real person
+entered.)
 
 ### 3.3 Negotiated purchase → order
 

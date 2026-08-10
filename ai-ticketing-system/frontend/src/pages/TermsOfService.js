@@ -17,10 +17,9 @@ export default function TermsOfService() {
 
       <h2>Negotiated pricing</h2>
       <p>
-        Marketplace prices are negotiable through the built-in bargaining chat. A vendor's response in
-        that chat may come from a human, a rule-based pricing engine, or — only when a vendor has
-        explicitly enabled it for a specific product — an AI assistant. Messages from the assistant are
-        always labeled as such, so you can tell who or what you're negotiating with.
+        Marketplace prices are negotiable through the built-in bargaining chat. Every offer, counter-offer,
+        acceptance, and decline comes directly from the customer or the vendor — there's no automated or
+        AI-generated response in this flow.
       </p>
 
       <h2>Support tickets and SLA windows</h2>

@@ -183,9 +183,6 @@ class Product(Base):
     status = Column(String, default="active")  # active / inactive / out_of_stock
     views_count = Column(Integer, default=0)
 
-    floor_price = Column(Float, nullable=True)  # vendor's hidden minimum acceptable price
-    auto_negotiate_enabled = Column(Boolean, default=False)
-
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -241,7 +238,7 @@ class NegotiationMessage(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(Integer, ForeignKey("negotiation_sessions.id"), nullable=False, index=True)
-    sender_role = Column(String, nullable=False)  # customer / vendor / ai_assistant
+    sender_role = Column(String, nullable=False)  # customer / vendor
     sender_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     message_type = Column(String, nullable=False)  # text / offer / counter_offer / accept / reject
     amount = Column(Float, nullable=True)

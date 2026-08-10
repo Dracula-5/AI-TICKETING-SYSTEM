@@ -142,8 +142,6 @@ def seed_marketplace() -> dict:
                     stock_quantity=random.randint(5, 150),  # never 0 -- always buyable/negotiable
                     status="active",
                     views_count=random.randint(0, 500),
-                    floor_price=round(price * random.uniform(0.70, 0.85), 2),
-                    auto_negotiate_enabled=random.random() < 0.8,
                 )
                 db.add(product)
                 db.flush()

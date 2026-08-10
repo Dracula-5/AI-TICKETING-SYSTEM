@@ -34,7 +34,6 @@ from app.db.models import (
 )
 from app.routers.ticket import _notify_ticket_providers
 from app.services.auto_router import predict_category
-from app.services.negotiation_ai import generate_vendor_response
 from app.services.notification_service import notify
 from app.services.seed_users import create_default_tenant
 
@@ -290,17 +289,39 @@ async def _seed_marketplace_activity(db, tenant_id: int, customers: list[User]):
                           message=f"{customer.name} offered {product.currency} {opening_amount:.2f} for '{product.title}'",
                           link=f"/negotiation/{session.id}")
 
-        if product.auto_negotiate_enabled:
-            messages = db.query(NegotiationMessage).filter(NegotiationMessage.session_id == session.id).all()
-            reply_time = base_time + timedelta(minutes=random.uniform(5, 90))
-            ai_entry = await generate_vendor_response(db, session, product, vendor, messages)
-            if ai_entry:
-                ai_entry.created_at = reply_time
-                db.commit()
-                await _notify_at(db, reply_time, tenant_id, customer.id, type_="negotiation_message",
-                                  title=f"Vendor responded on '{product.title}'",
-                                  message=ai_entry.text_content or f"Offer: {product.currency} {ai_entry.amount:.2f}",
-                                  link=f"/negotiation/{session.id}")
+        # No auto-negotiate engine anymore -- simulate a real vendor either
+        # accepting outright, countering with their own number, or not
+        # having replied yet (all three are realistic demo states).
+        reply_time = base_time + timedelta(minutes=random.uniform(5, 90))
+        reply_roll = random.random()
+        if reply_roll < 0.4:
+            accept_entry = NegotiationMessage(
+                session_id=session.id, sender_role="vendor", sender_user_id=vendor.user_id,
+                message_type="accept", amount=opening_amount, created_at=reply_time,
+            )
+            db.add(accept_entry)
+            session.status = "accepted"
+            session.current_offer_price = opening_amount
+            session.closed_at = reply_time
+            db.commit()
+            await _notify_at(db, reply_time, tenant_id, customer.id, type_="negotiation_accepted",
+                              title="Deal accepted",
+                              message=f"Negotiation accepted at {product.currency} {opening_amount:.2f}",
+                              link=f"/negotiation/{session.id}")
+        elif reply_roll < 0.75:
+            counter_amount = round(random.uniform(opening_amount, product.price), 2)
+            counter_entry = NegotiationMessage(
+                session_id=session.id, sender_role="vendor", sender_user_id=vendor.user_id,
+                message_type="counter_offer", amount=counter_amount, created_at=reply_time,
+            )
+            db.add(counter_entry)
+            session.current_offer_price = counter_amount
+            db.commit()
+            await _notify_at(db, reply_time, tenant_id, customer.id, type_="negotiation_message",
+                              title=f"Vendor responded on '{product.title}'",
+                              message=f"Offer: {product.currency} {counter_amount:.2f}",
+                              link=f"/negotiation/{session.id}")
+        # else: leave the session open with just the customer's opening offer
 
         if session.status == "accepted":
             accepted_sessions.append(session)

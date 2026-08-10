@@ -26,8 +26,6 @@ class ProductCreate(BaseModel):
     currency: str = "INR"
     stock_quantity: int = Field(0, ge=0)
     image_urls: list[str] = Field(default_factory=list)
-    floor_price: float | None = Field(None, gt=0)
-    auto_negotiate_enabled: bool = False
 
     @field_validator("image_urls")
     @classmethod
@@ -42,8 +40,6 @@ class ProductUpdate(BaseModel):
     currency: str | None = None
     stock_quantity: int | None = Field(None, ge=0)
     image_urls: list[str] | None = None
-    floor_price: float | None = Field(None, gt=0)
-    auto_negotiate_enabled: bool | None = None
 
     @field_validator("image_urls")
     @classmethod
@@ -65,8 +61,6 @@ class ProductOut(BaseModel):
     stock_quantity: int
     status: str
     views_count: int
-    floor_price: float | None = None
-    auto_negotiate_enabled: bool = False
     created_at: datetime
     updated_at: datetime | None = None
     images: list[ProductImageOut] = Field(default_factory=list)

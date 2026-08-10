@@ -13,7 +13,6 @@ from app.schemas.negotiations import (
     NegotiationSessionSummaryOut,
 )
 from app.core.security import get_current_user, get_current_user_ws, require_role
-from app.services.negotiation_ai import generate_vendor_response
 from app.services.negotiation_ws import manager
 from app.services.notification_service import notify
 from app.db.models import Vendor
@@ -33,7 +32,7 @@ def _load_session_for_tenant(session_id: int, db: Session, current_user: User) -
 
 
 def _negotiation_counterpart(session: NegotiationSession, sender_role: str) -> int:
-    """The user who did NOT send this message -- customer for vendor/ai_assistant senders, vendor for customer senders."""
+    """The user who did NOT send this message -- customer for vendor senders, vendor for customer senders."""
     return session.vendor.user_id if sender_role == "customer" else session.customer_id
 
 
@@ -92,10 +91,6 @@ async def start_negotiation(
     ))
     db.commit()
     db.refresh(session)
-
-    if product.auto_negotiate_enabled:
-        await generate_vendor_response(db, session, product, product.vendor, _ordered_messages(db, session.id))
-        db.refresh(session)
 
     await notify(
         db, session.tenant_id, product.vendor.user_id,
@@ -201,11 +196,10 @@ async def negotiation_ws(websocket: WebSocket, session_id: int, db: Session = De
         return
 
     product = db.query(Product).filter(Product.id == session.product_id).first()
-    vendor = session.vendor
 
     await manager.connect(session_id, websocket)
     try:
-        await _negotiation_ws_loop(websocket, session_id, session, product, vendor, sender_role, user, db)
+        await _negotiation_ws_loop(websocket, session_id, session, product, sender_role, user, db)
     except WebSocketDisconnect:
         pass
     except Exception:
@@ -214,7 +208,7 @@ async def negotiation_ws(websocket: WebSocket, session_id: int, db: Session = De
         manager.disconnect(session_id, websocket)
 
 
-async def _negotiation_ws_loop(websocket, session_id, session, product, vendor, sender_role, user, db):
+async def _negotiation_ws_loop(websocket, session_id, session, product, sender_role, user, db):
     while True:
         data = await websocket.receive_json()
         msg_type = data.get("type")
@@ -258,24 +252,3 @@ async def _negotiation_ws_loop(websocket, session_id, session, product, vendor, 
             message=entry.text_content or (f"Offer: {product.currency} {entry.amount:.2f}" if entry.amount is not None else msg_type),
             link=f"/negotiation/{session.id}",
         )
-
-        if (
-            sender_role == "customer"
-            and product.auto_negotiate_enabled
-            and session.status == "open"
-            and msg_type in ("text", "offer")
-        ):
-            ai_entry = await generate_vendor_response(
-                db, session, product, vendor, _ordered_messages(db, session.id)
-            )
-            if ai_entry:
-                await manager.broadcast(
-                    session_id, NegotiationMessageOut.model_validate(ai_entry).model_dump(mode="json")
-                )
-                await notify(
-                    db, session.tenant_id, session.customer_id,
-                    type_="negotiation_message",
-                    title=f"Vendor responded on '{product.title}'",
-                    message=ai_entry.text_content or (f"Offer: {product.currency} {ai_entry.amount:.2f}" if ai_entry.amount is not None else ai_entry.message_type),
-                    link=f"/negotiation/{session.id}",
-                )

@@ -175,8 +175,6 @@ def create_product(
         price=payload.price,
         currency=payload.currency,
         stock_quantity=payload.stock_quantity,
-        floor_price=payload.floor_price,
-        auto_negotiate_enabled=payload.auto_negotiate_enabled,
     )
     db.add(product)
     db.flush()

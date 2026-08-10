@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Table, TableHead, TableCell, TableRow, TableBody, TableContainer, Paper,
   Card, CardContent, Box, Button, TextField, Chip, Alert, Dialog, DialogTitle,
-  DialogContent, DialogActions, Grid, FormControlLabel, Switch, MenuItem, Select, FormControl,
+  DialogContent, DialogActions, Grid, MenuItem, Select, FormControl,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -29,7 +29,6 @@ const ANALYTICS_CARDS = [
 
 const EMPTY_FORM = {
   title: "", description: "", price: "", stock_quantity: "", image_urls: "",
-  floor_price: "", auto_negotiate_enabled: false,
 };
 
 const ORDER_STATUSES = ["pending", "confirmed", "shipped", "completed", "cancelled"];
@@ -89,8 +88,6 @@ export default function VendorDashboard() {
       price: String(p.price),
       stock_quantity: String(p.stock_quantity),
       image_urls: (p.images || []).map((i) => i.url).join(", "),
-      floor_price: p.floor_price != null ? String(p.floor_price) : "",
-      auto_negotiate_enabled: !!p.auto_negotiate_enabled,
     });
     setDialogOpen(true);
   }
@@ -105,8 +102,6 @@ export default function VendorDashboard() {
       image_urls: form.image_urls
         ? form.image_urls.split(",").map((s) => s.trim()).filter(Boolean)
         : [],
-      floor_price: form.floor_price ? Number(form.floor_price) : undefined,
-      auto_negotiate_enabled: form.auto_negotiate_enabled,
     };
 
     try {
@@ -323,22 +318,6 @@ export default function VendorDashboard() {
               <Grid item xs={12}>
                 <TextField fullWidth label="Image URLs (comma-separated)" value={form.image_urls}
                   onChange={(e) => setForm({ ...form, image_urls: e.target.value })} />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField fullWidth type="number" label="Floor Price (bargaining minimum)" value={form.floor_price}
-                  helperText="Hidden from customers. Defaults to 80% of price if left blank."
-                  onChange={(e) => setForm({ ...form, floor_price: e.target.value })} />
-              </Grid>
-              <Grid item xs={6} sx={{ display: "flex", alignItems: "center" }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={form.auto_negotiate_enabled}
-                      onChange={(e) => setForm({ ...form, auto_negotiate_enabled: e.target.checked })}
-                    />
-                  }
-                  label="AI auto-negotiate"
-                />
               </Grid>
             </Grid>
           </DialogContent>

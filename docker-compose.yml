@@ -39,9 +39,6 @@ services:
       CORS_ORIGINS: "http://localhost:3000,http://frontend:8080"
       # Demo-only fake data (vendors/products/customers) — never enable against a real database.
       SEED_MARKETPLACE_DEMO_DATA: "true"
-      # Optional: enables LLM-assisted vendor auto-negotiation. Empty by default —
-      # the negotiation engine falls back to its rule-based mode with no key set.
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       REDIS_URL: redis://redis:6379/0
     depends_on:
       postgres:

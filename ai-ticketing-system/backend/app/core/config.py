@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 30
     cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
     seed_marketplace_demo_data: bool = False
-    anthropic_api_key: str | None = None
     redis_url: str = "redis://localhost:6379/0"
 
 

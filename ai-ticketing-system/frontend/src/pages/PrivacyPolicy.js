@@ -36,11 +36,9 @@ export default function PrivacyPolicy() {
       <h2>Third-party sharing</h2>
       <p>
         Ticket category and priority classification runs entirely on our own server using local keyword
-        matching — nothing is sent to a third party for that. Marketplace price negotiation can optionally
-        be assisted by Anthropic's Claude API, but only for a specific product a vendor has explicitly
-        enabled for it, and only when the deployment operator has configured an API key — this is off by
-        default. When active, negotiation messages for that conversation may be sent to Anthropic to
-        generate a response.
+        matching. Marketplace price negotiation is a direct conversation between customer and vendor —
+        no message is ever sent to a third-party service, and no automated system generates offers on
+        anyone's behalf.
       </p>
 
       <h2>Multi-tenant isolation</h2>

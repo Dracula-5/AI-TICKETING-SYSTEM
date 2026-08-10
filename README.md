@@ -109,7 +109,6 @@ Both functions are stateless and have a stable signature designed for drop-in re
 | Auth | JWT (HS256), bcrypt password hashing |
 | Rate limiting | slowapi 0.1.9 (global + per-route) |
 | Caching | Redis (marketplace listings, `/metrics`) |
-| AI negotiation | Anthropic API (`claude-opus-4-8`), optional |
 | Frontend | React 18, Material-UI 7, Axios, React Router 6, Chart.js |
 | Database | SQLite (dev), PostgreSQL (prod, via psycopg2) |
 | Migrations | Alembic |
@@ -182,9 +181,9 @@ Vendors register a shop (`/vendors/register`) and list products (`POST /products
 
 Customers negotiate a product's price with the vendor over a WebSocket-backed chat (`POST /negotiations/` to start, `GET /negotiations/{id}/ws` to connect — JWT passed as a `?token=` query param since browsers can't set custom WebSocket headers). Every chat event (`text`/`offer`/`accept`/`reject`) is persisted as a `NegotiationMessage` and broadcast to both participants in real time; a REST fallback (`GET /negotiations/{id}`, `POST /negotiations/{id}/accept`) covers page loads and non-WS clients.
 
-- **Rule-based engine** (`app/services/negotiation_ai.py`, always on): anchors on the product's listed price and a hidden `floor_price` (default: 80% of listed price), accepts any offer at/above the floor, otherwise counters at the midpoint between the last asking price and the customer's offer — converging toward the floor over a bounded number of rounds.
-- **LLM-assisted mode** (opt-in per product via `auto_negotiate_enabled`): when `ANTHROPIC_API_KEY` is set, a vendor can let Claude (`claude-opus-4-8`) negotiate on their behalf — it gets the product, listed price, and floor as constraints and returns a structured accept/counter/reject decision. Falls back to the rule-based engine automatically on any error (no key, timeout, refusal) so the chat never breaks.
-- Auto-generated responses are always attributed to `sender_role: "ai_assistant"` — customers can always tell they're negotiating with an assistant, not a human.
+- No automated counterparty: every offer, counter-offer, acceptance, and decline comes directly
+  from the customer or the vendor typing a number and/or clicking accept/decline — there's no
+  rule-based or LLM-assisted engine standing in for either side.
 - Accepting a negotiation (`status: "accepted"`) unlocks checkout: `POST /orders/` with a `negotiation_session_id` books the order at the agreed price and decrements stock; without one it's a direct buy at listed price.
 
 ### Orders
@@ -275,7 +274,6 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=1800
 CORS_ORIGINS=http://localhost:3000
 SEED_MARKETPLACE_DEMO_DATA=false             # dev/demo only, see Marketplace section
-ANTHROPIC_API_KEY=                           # optional, enables LLM-assisted negotiation
 REDIS_URL=redis://localhost:6379/0           # optional — caching degrades to a no-op if unset/unreachable
 ```
 
@@ -316,7 +314,6 @@ REACT_APP_API_BASE_URL=http://localhost:8000
     │   │   ├── ai/priority.py        # NLP priority predictor
     │   │   ├── services/auto_router.py  # Category classifier
     │   │   ├── services/sla_checker.py  # SLA escalation logic
-    │   │   ├── services/negotiation_ai.py  # Rule-based + LLM-assisted bargaining
     │   │   ├── scripts/seed_marketplace.py  # Faker-based demo data generator
     │   │   ├── routers/              # 11 router modules (incl. vendors, products, negotiations, orders)
     │   │   ├── db/                   # SQLAlchemy models + init

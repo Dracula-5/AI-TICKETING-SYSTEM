@@ -7,7 +7,8 @@ A multi-tenant web platform with two product surfaces sharing one auth/user mode
 - **Ticketing** — customers file support tickets, AI classifies category/priority, providers
   pick them up, prices are bargained per-ticket, an SLA monitor auto-escalates late tickets.
 - **Marketplace** — vendors (any number per category) list products, customers negotiate price
-  (rule-based or LLM-assisted) over a live WebSocket chat, then check out into orders.
+  directly with the vendor over a live WebSocket chat (numbers and accept/decline only, no
+  automated counterparty), then check out into orders.
 
 Both surfaces share: tenants, users/roles, JWT auth, and a real-time notification feed.
 
@@ -22,21 +23,19 @@ flowchart TB
     subgraph API["FastAPI backend (Render)"]
         MW["Middleware: CORS, request logging,\nsecurity headers, rate limiting"]
         Routers["Routers: auth, ticket, comments, users,\nproviders, sla, vendors, products,\nnegotiations, orders, analytics, notifications"]
-        Services["Services: auto_router (AI category),\nnegotiation_ai, notification_service,\nsla_monitor, seed scripts"]
+        Services["Services: auto_router (AI category),\nnotification_service,\nsla_monitor, seed scripts"]
         WS["WebSocket managers\n(in-process, per session/user)"]
         BG["Background thread:\nSLA sweep every 30s"]
     end
 
     DB[("PostgreSQL\n(SQLite for local dev)")]
     Cache[("Redis\n(optional — falls back\nto in-process cache)")]
-    LLM["Anthropic API\n(optional, opt-in per product)"]
 
     UI -- "HTTPS / JSON (Bearer JWT)" --> MW --> Routers
     UI -- "WSS" --> WS
     Routers --> Services
     Services --> DB
     Routers --> DB
-    Services -. "auto_negotiate_enabled\n+ ANTHROPIC_API_KEY set" .-> LLM
     Routers -. metrics/cache .-> Cache
     BG --> DB
     WS -. "notify() push" .-> UI
@@ -86,15 +85,17 @@ one tenant seeded by default; the schema supports more without code changes.
   not via a central policy table — acceptable at this scale, but means role logic is scattered
   across routers (see LLD "Known limitations").
 
-## 6. The two negotiation engines
+## 6. The two negotiation systems
 
-There are **two independent bargaining systems** that look similar but are not shared code:
+There are **two independent bargaining systems** that look similar but are not shared code.
+Both are strictly human-to-human — no automated counterparty on either side, only numbers and
+accept/decline ever appear in either chat:
 
 | | Ticket bargaining | Marketplace negotiation |
 |---|---|---|
 | Table | `price_negotiations` | `negotiation_sessions` + `negotiation_messages` |
 | Transport | HTTP POST per offer | WebSocket, live push |
-| Counterparty logic | Human provider only | Rule-based engine, or LLM-assisted (`negotiation_ai.py`) if the product opts in and `ANTHROPIC_API_KEY` is set |
+| Counterparty | Human provider | Human vendor |
 | Where | `routers/ticket.py` bargaining endpoints | `routers/negotiations.py` |
 
 This duplication is intentional-by-history rather than by design — the ticket bargaining flow
