@@ -1,0 +1,70 @@
+import sys
+from logging.config import fileConfig
+from pathlib import Path
+
+from alembic import context
+from sqlalchemy import engine_from_config, pool
+
+# Make "app" importable when alembic is invoked from the backend/ directory.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from app.core.config import settings  # noqa: E402
+from app.db import models  # noqa: E402, F401 -- registers all model classes on Base
+from app.db.database import Base, UTCDateTime  # noqa: E402
+
+config = context.config
+
+# Always migrate the same database the app itself is configured to use.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
+
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
+
+target_metadata = Base.metadata
+
+
+def render_item(type_, obj, autogen_context):
+    """Render app-specific column types as portable SQLAlchemy types so
+    migration files never import application code."""
+    if type_ == "type" and isinstance(obj, UTCDateTime):
+        return "sa.DateTime(timezone=True)"
+    if type_ == "type" and obj.__class__.__name__ == "JSON" and getattr(obj, "_variant_mapping", None):
+        autogen_context.imports.add("from sqlalchemy.dialects import postgresql")
+        return "sa.JSON().with_variant(postgresql.JSONB(), 'postgresql')"
+    return False
+
+
+def run_migrations_offline() -> None:
+    context.configure(
+        url=config.get_main_option("sqlalchemy.url"),
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+        render_item=render_item,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -> None:
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            render_item=render_item,
+            render_as_batch=connection.dialect.name == "sqlite",
+            compare_type=True,
+        )
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()

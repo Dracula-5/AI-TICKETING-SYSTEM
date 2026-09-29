@@ -1,0 +1,202 @@
+import asyncio
+import logging
+import re
+import time
+import uuid
+from contextlib import asynccontextmanager
+
+import anyio
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy import text
+
+from app.core.config import settings
+from app.core.limiter import limiter
+from app.core.logging import setup_logging
+from app.core.request_context import RequestContext, reset_request_context, set_request_context
+from app.db.database import SessionLocal
+from app.routers import (
+    analytics,
+    audit_logs,
+    auth,
+    dev,
+    notifications,
+    org_config,
+    organizations,
+    platform,
+    tickets,
+    users,
+)
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
+API_PREFIX = "/api/v1"
+_REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
+
+
+def _sla_sweep_once() -> None:
+    from app.services.sla import run_sla_sweep
+
+    db = SessionLocal()
+    try:
+        run_sla_sweep(db)
+    except Exception:
+        db.rollback()
+        logger.exception("sla_sweep_failed")
+    finally:
+        db.close()
+
+
+async def _sla_loop() -> None:
+    # Runs in every API process; run_sla_sweep is idempotent and uses
+    # SKIP LOCKED, so concurrent sweeps are safe. Moves to the worker in P2.
+    while True:
+        await anyio.to_thread.run_sync(_sla_sweep_once)
+        await asyncio.sleep(settings.sla_sweep_interval_seconds)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings.validate_for_environment()
+    task = asyncio.create_task(_sla_loop()) if settings.sla_sweep_enabled else None
+    logger.info("startup", extra={"environment": settings.environment, "sla_sweep": bool(task)})
+    yield
+    if task:
+        task.cancel()
+
+
+app = FastAPI(
+    title=f"{settings.app_name} API",
+    description=(
+        "Multi-tenant service-management API: organizations, RBAC, ticket lifecycle with SLA clocks, "
+        "comments and attachments, audit trail, and operational analytics."
+    ),
+    version="0.2.0",
+    lifespan=lifespan,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
+    swagger_ui_oauth2_redirect_url="/api/docs/oauth2-redirect",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origin_list,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Request-ID"],
+)
+
+
+@app.middleware("http")
+async def request_context_middleware(request: Request, call_next):
+    incoming = request.headers.get("x-request-id", "")
+    request_id = incoming if _REQUEST_ID_RE.match(incoming) else uuid.uuid4().hex
+    token = set_request_context(
+        RequestContext(
+            request_id=request_id,
+            ip=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+        )
+    )
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    finally:
+        reset_request_context(token)
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    response.headers["X-Request-ID"] = request_id
+
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if not request.url.path.startswith(("/api/docs", "/api/redoc")):
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    if settings.is_production:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    logger.info(
+        "request",
+        extra={
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "duration_ms": duration_ms,
+        },
+    )
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("unhandled_exception", extra={"method": request.method, "path": request.url.path})
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+for module in (auth, users, organizations, org_config, tickets, notifications, analytics, audit_logs, platform):
+    app.include_router(module.router, prefix=API_PREFIX)
+app.include_router(tickets.attachments_router, prefix=API_PREFIX)
+if settings.environment in ("development", "test"):
+    app.include_router(dev.router, prefix=API_PREFIX)
+
+
+# ---------------------------------------------------------------------------
+# Health
+# ---------------------------------------------------------------------------
+@app.get("/health", tags=["meta"])
+def health():
+    """Liveness: the process is up and serving requests."""
+    return {"status": "ok"}
+
+
+@app.get("/ready", tags=["meta"])
+def ready(response: Response):
+    """Readiness: the database answers and its schema is at the migration head."""
+    checks = {"database": "ok", "migrations": "unknown"}
+    db = SessionLocal()
+    try:
+        db.execute(text("SELECT 1"))
+        try:
+            current = db.execute(text("SELECT version_num FROM alembic_version")).scalar()
+            checks["migrations"] = "ok" if current == _alembic_head() else f"behind ({current})"
+        except Exception:
+            db.rollback()
+            checks["migrations"] = "not managed by alembic"
+    except Exception:
+        logger.exception("readiness_db_unreachable")
+        checks["database"] = "unreachable"
+    finally:
+        db.close()
+    healthy = checks["database"] == "ok" and checks["migrations"] in ("ok", "not managed by alembic")
+    if not healthy:
+        response.status_code = 503
+    return {"status": "ready" if healthy else "not_ready", **checks}
+
+
+_HEAD: str | None = None
+
+
+def _alembic_head() -> str | None:
+    global _HEAD
+    if _HEAD is None:
+        from pathlib import Path
+
+        from alembic.config import Config
+        from alembic.script import ScriptDirectory
+
+        backend_dir = Path(__file__).resolve().parents[1]
+        cfg = Config(str(backend_dir / "alembic.ini"))
+        cfg.set_main_option("script_location", str(backend_dir / "alembic"))
+        _HEAD = ScriptDirectory.from_config(cfg).get_current_head()
+    return _HEAD

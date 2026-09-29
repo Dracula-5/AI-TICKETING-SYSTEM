@@ -1,0 +1,40 @@
+[project]
+name = "nexadesk-backend"
+version = "0.2.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = [
+    "B008",   # FastAPI's Depends()/Query() in argument defaults is the framework idiom
+    "UP017",  # keep datetime.timezone.utc for readability
+    "S101",   # assert is how pytest works
+    "SIM108", # ternaries are not always clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "S311"]
+"app/scripts/*" = ["S311"]  # seeded demo data, not security-sensitive randomness
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_unused_ignores = true
+exclude = ["alembic/", "tests/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:sqlalchemy"]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/scripts/*"]

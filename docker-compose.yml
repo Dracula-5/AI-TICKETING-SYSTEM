@@ -1,18 +1,24 @@
+# Local full stack: PostgreSQL (with pgvector) + Redis + API + web.
+#   docker compose up --build
+#   docker compose exec backend python -m app.scripts.seed_demo   # optional demo data
+# Web: http://localhost:3000   API docs: http://localhost:8000/api/docs
+
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ticketing}
-      POSTGRES_USER: ${POSTGRES_USER:-ticketing}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-in-production}
+      POSTGRES_DB: ${POSTGRES_DB:-nexadesk}
+      POSTGRES_USER: ${POSTGRES_USER:-nexadesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexadesk-local-only}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ticketing}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexadesk}"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
     restart: unless-stopped
 
   redis:
@@ -22,43 +28,32 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 5s
     restart: unless-stopped
 
   backend:
-    build:
-      context: ./ai-ticketing-system/backend
-      dockerfile: Dockerfile
+    build: ./backend
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-ticketing}:${POSTGRES_PASSWORD:-change-me-in-production}@postgres:5432/${POSTGRES_DB:-ticketing}
-      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: "1800"
-      CORS_ORIGINS: "http://localhost:3000,http://frontend:8080"
-      # Demo-only fake data (vendors/products/customers) — never enable against a real database.
-      SEED_MARKETPLACE_DEMO_DATA: "true"
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexadesk}:${POSTGRES_PASSWORD:-nexadesk-local-only}@postgres:5432/${POSTGRES_DB:-nexadesk}
       REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-local-compose-secret-not-for-deployment}
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      FRONTEND_BASE_URL: http://localhost:3000
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    volumes:
+      - attachments:/app/var/attachments
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
     restart: unless-stopped
 
   frontend:
     build:
-      context: ./ai-ticketing-system/frontend
-      dockerfile: Dockerfile
-      args:
-        REACT_APP_API_BASE_URL: http://localhost:8000
+      context: ./frontend
     ports:
       - "3000:8080"
     depends_on:
@@ -68,3 +63,4 @@ services:
 
 volumes:
   postgres_data:
+  attachments:

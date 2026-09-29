@@ -91,3 +91,10 @@ build/
 .AppleDouble
 .LSOverride
 *.orig
+
+# NexaDesk local artefacts
+backend/var/
+backend/nexadesk.db
+*.db-journal
+.ruff_cache/
+.mypy_cache/
