@@ -1,0 +1,53 @@
+{
+  "python": "3.12.7",
+  "machine": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+  "db": "SQLite file",
+  "cache": "Redis unavailable (no-op)",
+  "results": [
+    {
+      "endpoint": "GET /health",
+      "n": 200,
+      "errors": 0,
+      "p50_ms": 7.05,
+      "p95_ms": 9.66,
+      "p99_ms": 10.82,
+      "mean_ms": 7.24
+    },
+    {
+      "endpoint": "POST /tickets/",
+      "n": 150,
+      "errors": 0,
+      "p50_ms": 55.23,
+      "p95_ms": 65.66,
+      "p99_ms": 79.78,
+      "mean_ms": 55.24
+    },
+    {
+      "endpoint": "GET /tickets/",
+      "n": 200,
+      "errors": 0,
+      "p50_ms": 28.49,
+      "p95_ms": 38.44,
+      "p99_ms": 47.06,
+      "mean_ms": 30.09
+    },
+    {
+      "endpoint": "GET /tickets/1",
+      "n": 200,
+      "errors": 0,
+      "p50_ms": 16.8,
+      "p95_ms": 21.05,
+      "p99_ms": 22.39,
+      "mean_ms": 16.8
+    },
+    {
+      "endpoint": "POST /auth/login",
+      "n": 15,
+      "errors": 0,
+      "p50_ms": 698.67,
+      "p95_ms": 750.93,
+      "p99_ms": 751.88,
+      "mean_ms": 690.64
+    }
+  ]
+}
