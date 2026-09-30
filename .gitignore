@@ -103,3 +103,12 @@ backend/nexadesk.db
 .deployed_tag
 .previous_tag
 backups/
+
+# ML: raw/processed data, embedding cache, experiment tracking, model artifacts
+data/raw/
+data/processed/
+data/synthetic/
+data/cache/
+mlflow.db
+mlruns/
+ml/artifacts/

@@ -1,0 +1,20 @@
+# ML/experiment environment (CPU). Install torch first:
+#   pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cpu
+# then: pip install -r ml/requirements.txt
+joblib==1.6.0
+lightgbm==4.7.0
+matplotlib==3.11.2
+mlflow-skinny==3.16.1
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==25.0.1
+pytest==9.1.1
+rank-bm25==0.2.2
+safetensors==0.8.0
+scikit-learn==1.9.1
+scipy==1.18.1
+sentence-transformers==6.1.0
+threadpoolctl==3.7.0
+tokenizers==0.23.2
+transformers==5.17.0
+huggingface_hub==1.33.0
