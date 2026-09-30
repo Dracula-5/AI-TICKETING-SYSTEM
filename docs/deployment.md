@@ -1,9 +1,10 @@
 # Deployment
 
 Target (owner decision D2): **one Linux VM running Docker Compose, with Caddy for automatic
-HTTPS.** Everything below is in the repository and was rehearsed end to end on a local machine
-(see "What has been verified"). The only steps that need you are creating the VM, pointing DNS,
-and adding three GitHub secrets.
+HTTPS.** The compose deployment and rollback were rehearsed locally; real DNS, public TLS and
+GitHub-to-VM deployment still require owner-managed infrastructure and credentials.
+For the actionable owner checklist, including private-repository setup and pilot onboarding, see
+[`external_setup_checklist.md`](external_setup_checklist.md).
 
 ```mermaid
 flowchart LR
@@ -36,35 +37,50 @@ development secret, insecure cookies, SQLite or a low bcrypt cost.
 
 ## First deployment (one time)
 
-1. **Create a VM**: Ubuntu 24.04, 2 vCPU / 4 GB RAM is enough for P1–P3 (the ML stages will
-   need more RAM — revisit at P4). Hetzner, DigitalOcean, or Oracle Cloud Always Free all work.
-2. **DNS**: create an `A` record (and `AAAA` if IPv6) for your domain → the VM's IP.
-3. **Bootstrap** (as root on the VM):
+1. **Create a VM**: Ubuntu 22.04 or 24.04, public IPv4, and enough CPU/RAM for the embedding
+   model and database. The old 2 vCPU / 4 GB suggestion predates the AI stages and is not a
+   measured capacity recommendation. Check current provider pricing and run load tests before
+   selecting a long-term size.
+2. **Make the repository available to the VM.** For a public repository, the HTTPS clone below
+   works directly. For a private repository, first SSH to the VM as root and create the `deploy`
+   account and its `.ssh` directory; generate a dedicated read-only GitHub repository deploy key
+   for that account; add its public half under the GitHub repository's **Settings → Deploy keys**;
+   and configure the VM's GitHub host key and SSH client to use it. Verify the GitHub host key
+   fingerprint from GitHub's official documentation before trusting it. Clone the private
+   repository as `deploy` into `/opt/nexadesk`. Keep this repository-read key separate from the
+   CI-to-VM SSH login key in step 6.
+3. **DNS**: create an `A` record for the domain pointing at the VM's public IPv4. Add an `AAAA`
+   record only if IPv6 is configured and reachable. Wait until DNS resolves correctly before
+   expecting Caddy to issue a public certificate.
+4. **Bootstrap** (as root on the VM):
    ```bash
+   # For a public repository, clone it here. A private repository should already
+   # have been cloned as deploy in step 3.
    git clone https://github.com/<you>/<repo>.git /opt/nexadesk
-   REPO_URL=https://github.com/<you>/<repo>.git \
-     /opt/nexadesk/deploy/bootstrap-vm.sh nexadesk.example.com you@example.com ghcr.io/<you>
+   /opt/nexadesk/deploy/bootstrap-vm.sh nexadesk.example.com you@example.com ghcr.io/<you>
    ```
    This installs Docker, enables the firewall (22/80/443 only) and automatic security updates,
    creates a `deploy` user, generates `/opt/nexadesk/.env` with random secrets, and schedules a
    nightly database backup.
-4. **Review `/opt/nexadesk/.env`** — optional: SMTP (without it, verification and reset emails
+5. **Review `/opt/nexadesk/.env`** — optional: SMTP (without it, verification and reset emails
    stay in the outbox table), S3 storage, `SENTRY_DSN`, `DEMO_PASSWORD`.
-5. **GitHub**:
+6. **GitHub**:
    * make the GHCR packages readable by the VM (public packages, or `docker login ghcr.io` on the
      VM with a read-only token);
-   * add repository secrets `DEPLOY_HOST` (VM IP/hostname), `DEPLOY_SSH_KEY` (private key whose
-     public half is in `/home/deploy/.ssh/authorized_keys`), optionally `DEPLOY_USER` and
-     `DEMO_PASSWORD`;
+   * add repository secrets `DEPLOY_HOST` (VM IP/hostname) and `DEPLOY_SSH_KEY` (private key whose
+     matching public key is in `/home/deploy/.ssh/authorized_keys`); `DEPLOY_USER` is optional and
+     defaults to `deploy`;
    * create an environment named `production` and add yourself as a required reviewer.
-6. **Deploy**: merge to `main` (CI → images → approval → deploy), or run the *Deploy* workflow
-   manually with a commit SHA.
-7. **Demo data** (optional, labelled as demo everywhere):
+7. **Deploy**: merge a CI-passing commit to `main`. CI builds and publishes SHA-tagged images;
+   the production environment reviewer approves the deploy job; the VM backs up, migrates,
+   starts the stack, and runs the smoke check. Avoid manual dispatch until that commit has a
+   successful CI run.
+8. **Demo data** (optional, labelled as demo everywhere):
    ```bash
    cd /opt/nexadesk && docker compose --env-file .env -f deploy/docker-compose.prod.yml \
      exec backend python -m app.scripts.seed_demo
    ```
-8. **Verify** from anywhere:
+9. **Verify** from anywhere:
    ```bash
    ./deploy/smoke.sh nexadesk.example.com
    python deploy/verify_realtime.py https://nexadesk.example.com   # ~2 min, creates a throwaway org

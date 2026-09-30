@@ -263,8 +263,9 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
   UCI ServiceNow incident log (real, CC BY 4.0) · public support-ticket texts (LLM-generated,
   CC BY-NC 4.0) · CQADupStack *unix* (real duplicates, CC BY-SA 4.0) · 3 synthetic organizations.
 * **Measured:** incidents 24,918 (time split 17,442 / 3,738 / 3,738; SLA-breach rate 42.3% train
-  vs 23.4% test — a real base-rate shift; resolution p50 22.1 h, p90 381.5 h; the human
-  dispatcher's first assignment was the resolving group for 65.1%); ticket texts 16,338 after
+  vs 23.4% test — a real base-rate shift; resolution p50 22.1 h, p90 381.5 h; on the test period
+  the dispatcher's first assignment was the resolving group for 67.3% and 37.1% of incidents were
+  reassigned); ticket texts 16,338 after
   exact-duplicate removal (11,433 / 2,450 / 2,455); CQADupStack 47,382 posts, 1,072 queries with
   1,693 duplicate links; synthetic 12,000 tickets (5,500 / 4,000 / 2,500), 480 planted duplicates.
 * **Known issues:** the ticket-text dataset is LLM-generated and non-commercial; no public dataset
@@ -301,3 +302,150 @@ environment) next to each `summary.md` under `reports/`.
 * **Known issues:** MLflow rejects some metric names with "·" (JSON records unaffected); CPU
   contention from parallel runs inflates some latency figures — latencies are indicative.
 * **Next:** P5.
+
+### P5 — AI-assisted operations ✅ (2026-09-30 → 10-01)
+* **Completed:** per-organization triage agent over MiniLM embeddings (FastEmbed ONNX, model baked
+  into the image) and pgvector: category, priority, team, assignee, duplicate candidates, SLA-risk
+  and resolution-time statistics, next steps — each a persisted recommendation with confidence,
+  evidence (similar tickets), model version and latency; durable PostgreSQL job queue; human
+  accept/edit/reject; opt-in auto-apply policy; history importer; optional LLM summaries and reply
+  drafts (off unless `LLM_PROVIDER` + `LLM_API_KEY`; call ledger, per-org token budget).
+* **Measured (SYNTHETIC replay, production code path on PostgreSQL 16 + pgvector,
+  `reports/pipeline/`):** 3 organizations, 9,216 history / 2,400 replayed tickets. Category
+  accuracy 0.46–0.53 vs majority 0.28–0.31; at confidence ≥ 0.7 coverage 6–10% at accuracy
+  0.90–0.97. Agent run p50 107–159 ms (first replay; second replay on a busier machine 154–314 ms).
+  **HNSW with pgvector defaults returned as few as 14 of 60 rows (recall 0.41) for a tenant in the
+  shared table; with NexaDesk's per-query settings (`ef_search`, iterative scan) 60 rows, recall
+  0.99–1.00.** Promotion-gate baseline recorded (`reports/pipeline/gate_baseline.json`).
+* **Changed because of the measurements:** the neighbour-weighted resolution estimate was worse
+  than a plain median → replaced by per-priority statistics (MAE now equal to the baseline, 130 vs
+  131 h; median error still worse — known limitation); escalation proposals fired on 39% of new
+  tickets (at creation the risk is just the base rate) → now require the ticket to be ≥ 25% into
+  its window and ≥ 15 points above the base rate (0 proposals at creation in the second replay).
+* **Known issues:** TF-IDF kNN beat the shipped MiniLM kNN on the public text benchmark (P4);
+  duplicate flags are low-recall on real data; generated text unevaluated (no provider).
+
+### P6 — Knowledge base and retrieval ✅
+* **Completed:** PDF/DOCX/Markdown/HTML/text ingestion in the worker, heading-aware chunks,
+  pgvector + PostgreSQL full-text, visibility (published vs internal) and tenant filters in SQL,
+  grounded answers with citation/support check and a no-answer path (only with an LLM provider),
+  article suggestions while writing a ticket, related articles for agents, KB telemetry.
+* **Measured (CQADupStack, `reports/rag/`):** dense MiniLM nDCG@10 0.407 · equal-weight RRF 0.372 ·
+  BM25 0.274 · dense + cross-encoder 0.408 at ~1.2 s/query. Lexical weight chosen on validation:
+  **0** → shipped **dense-first with full-text fallback** (exact error codes), reranker off.
+* **Known issues:** CQADupStack is a duplicate-retrieval proxy; no labelled KB answer set yet.
+
+### P7 — Agentic workflow ✅
+* **Completed:** deterministic playbook planner; typed tools (Pydantic) with per-organization
+  domain validation, risk levels, policy gate, SAVEPOINT execution through the same path as a
+  human accept, post-change verification with rollback, run/step log (`agent_runs`). No LLM
+  planner (it could not be evaluated without a provider).
+* **Measured — ablation (`reports/pipeline/agent_ablation.md`, SYNTHETIC):** no tools (static
+  majority category) error 0.69–0.73; tools without a gate automate 100% with error 0.47–0.54;
+  tools + gate 0.9 automate 5–6% (133 of 2,400 tickets) with no wrong change in that sample, the
+  rest to people; gate 0.7 automates 6–10% with error 0.03–0.10.
+
+### P8 — Human-in-the-loop ✅
+* **Completed:** risk levels (low/medium/high) per action, approval queue across tickets with
+  bulk decisions under each approver's own permissions, "how the AI decided" log, AI performance
+  (acceptance, override, automation false-positive rate, latency) and drift status on the dashboard.
+* **Not measured:** acceptance/override rates need real users (P9).
+
+### P9 — Real-user pilot ⏳ tooling ready, pilot not started
+* **Completed:** pilot plan with targets fixed before any data ([`pilot_plan.md`](pilot_plan.md)),
+  CSAT on resolved tickets, in-app product feedback, "How NexaDesk uses AI" notice, computed pilot
+  report (`/analytics/pilot`, `app.scripts.pilot_report`) that refuses rates below 5 observations
+  and labels demo/synthetic organizations, imported-history baseline.
+* **Blocked:** needs the live deployment and a consenting team (owner).
+
+### P10 — Load testing ✅ local · P11 — Scalability ✅
+* **Measured (`reports/load/README.md`, local laptop, 100k SYNTHETIC tickets, production compose):**
+  within target at 100 concurrent users (~30 req/s, p95 150 ms, 0 errors); error-free but slower at
+  250 users (~66 req/s, p95 970 ms → 540 ms with backpressure); saturation beyond ~65–70 successful
+  req/s. Application memory under load ≈ 1.2 GiB.
+* **Bottleneck → change → measured delta:** (1) connection-pool **deadlock** from a sync `yield`
+  session dependency → async teardown on a dedicated limiter: errors at 100–250 users 3–14% → 0%;
+  (2) dashboard aggregates (p50 530 ms at 250 users) → 30 s per-org Redis cache; (3) ticket search
+  full scan 75 ms → trigram GIN indexes 20 ms (`EXPLAIN ANALYZE`, 100k tickets); (4) overload
+  hangs (p95 43 s at 500 users) → `API_LIMIT_CONCURRENCY` backpressure: p95 0.82 s, successful
+  req/s 3.2 → 43.8; (5) first KB search per process paid ~3 s model load → warm-up at start.
+  More API processes (4 vs 2) did **not** add throughput on this machine.
+* **Database volume (`reports/scale/README.md`, 10k → 100k → 1M tickets in one org):** point
+  lookups flat; list views ≤ ~0.2 s p50 at 1M except "open by priority" (0.37 s); **ticket-number
+  search 5.1 s → 27 ms** after making `#123` an exact index lookup; common-word search ~0.5 s at 1M
+  (trigram indexes help at 100k, not for a term in 7% of tickets); uncached dashboard 2.2 s at 1M
+  (cached 30 s in the app). 1M tickets ≈ 596 MB (+118 MB trigram indexes).
+* **Known issues:** load generator shared the machine; no real-VM run; WebSockets not load-tested.
+
+### P12 — Observability ✅ · P13 — AI evaluation/monitoring ✅ · P14 — Security ✅ · P15 — CI/CD gates ✅
+See the detailed entries below. Verified under load: the provisioned Grafana dashboard shows the
+load test's real traffic (`docs/screenshots/grafana-load-test.png`); the run exposed that
+unhandled 500s were not counted → fixed and tested.
+
+### P16 — Business value ✅ framework · not measured
+[`business_value.md`](business_value.md): hypotheses mapped to evidence (routing automation at
+parity on a 16% slice; no support yet for "fewer misroutes"); pilot measurements; value
+calculator (`app.scripts.value_report`) that multiplies measured counts by the owner's stated
+assumptions and says it is not a measured saving. **No saving is claimed.**
+
+### P17 — Cost ✅ measured resources · no operating cost yet
+[`cost.md`](cost.md): images 839 MB / 83.6 MB, ≈ 1.2 GiB memory under load, ≈ 3.6 kB per ticket
+embedding, dated third-party VM prices (4 GB class from €4.97–€20.88/month excl. VAT), LLM cost =
+ledger × configured prices, built-in budgets. Suggested start: 4 GB / 2 vCPU VM.
+
+### P18 — Polish ✅
+README, architecture diagrams, security/AI-evaluation/cost/business docs, setup checklist, E2E
+screenshots (tickets, knowledge base, AI panel, approvals, Grafana).
+
+### P12 — Observability ✅ (2026-09-30)
+* **Completed:** Prometheus metrics from the API (`/metrics`, multi-process aggregation across
+  uvicorn workers) and the worker (`:9101`), both bearer-protected by `METRICS_TOKEN` (boot refuses
+  to start without it when deployed) and not routed by Caddy: request rate/latency by route
+  template, job outcomes/duration, agent run time and step outcomes, human decisions, LLM calls and
+  tokens, KB queries, plus backlog gauges read from PostgreSQL at scrape time. Opt-in
+  `observability` compose profile: Prometheus (30-day retention, 8 alert rules) and Grafana
+  (provisioned 19-panel dashboard generated by `deploy/observability/build_dashboard.py`, bound to
+  127.0.0.1). Request ids in logs and responses (P1).
+* **Verified:** metrics reflect real requests/jobs/backlog and never carry tenant data
+  (`test_metrics_endpoint.py`, `test_security.py::test_a5_…`); dashboard verified with the P10 load test's traffic; unhandled 500s were not counted → fixed.
+* **Known issues:** no Alertmanager receiver (needs the owner's channel); no Postgres/Redis exporters.
+
+### P13 — AI evaluation and monitoring ✅ (2026-09-30)
+* **Completed:** daily per-organization drift/agreement check (`app/ai/monitoring.py`: category PSI,
+  embedding-centroid drift, novelty rate, acceptance trend; "insufficient data" below 20 tickets),
+  exposed at `/analytics/ai-monitoring`, on the dashboard and as a Prometheus gauge/alert; model
+  promotion gate `experiments/regression_gate.py` (fixed 300-ticket replay; fails on quality drops
+  beyond tolerance) with a CI workflow (`ai-eval.yml`: AI code changes, weekly, on demand); process
+  in [`ai_evaluation.md`](ai_evaluation.md).
+* **Tests:** `test_ai_monitoring.py` (PSI, alerting, insufficient data, tenant scoping).
+
+### P14 — Security hardening ✅ (2026-09-30)
+* **Completed:** threat model with 16 threats mapped to controls and tests
+  ([`security.md`](security.md)); `test_threats.py` (injection, stored XSS, upload tricks,
+  cross-tenant access through every AI/KB endpoint, mass assignment, forged/expired/`alg=none`
+  tokens, role claims not trusted); frontend guard against raw-HTML sinks; `/metrics` token.
+* **Measured:** Bandit 1.9.4 — 0 medium/high findings after review (3 annotated false positives,
+  9 low); gitleaks 8.28 over full history — 3 findings, all reviewed: 2 test fixtures and 1 **real
+  legacy JWT default key in public history** (pre-rewrite code; unused by the current code, which
+  refuses weak keys when deployed) → must be treated as public; history rewrite is an owner decision.
+* **Known issues:** no WAF, no malware scanning of attachments, no external penetration test.
+
+### P15 — CI/CD gates ✅ (2026-09-30)
+* **Completed:** CI now gates on ruff, format, mypy, **Bandit**, backend tests on SQLite and
+  PostgreSQL with a **coverage floor of 88%** (current 91%), migration drift, **gitleaks** history
+  scan, `pip-audit`, `npm audit`, frontend lint/types/tests/build, Playwright (3 flows), Docker
+  build + compose smoke; separate **AI evaluation gate** workflow; deploy runs only after CI passes
+  on `main`, inside an approval environment (P2).
+* **Not verified:** the workflows have not run on GitHub from this branch (no push in this
+  session); each step was run locally.
+
+### Verification (2026-10-01, this workspace, Windows 11 + Docker Desktop)
+* Backend: ruff, format, mypy, Bandit (≥ medium) clean; **381 tests pass on SQLite (91.35% line
+  coverage) and on PostgreSQL 16 + pgvector** (incl. migration drift test through 0009).
+* Frontend: ESLint, TypeScript, **29 Vitest tests**, production build (initial JS 258 kB gzip),
+  `npm audit --omit=dev` 0 vulnerabilities.
+* Playwright: all 3 flows pass (AI assist, mobile, P1 acceptance + CSAT); the P1 flow failed once
+  in a full-suite run ("Test ended" during a fill) and passed on re-run — CI retries once.
+* gitleaks over full history: only the reviewed entries in `.gitleaksignore`.
+* Not verified here: GitHub Actions runs of this branch (until pushed), the public deployment,
+  real users.

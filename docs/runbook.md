@@ -55,8 +55,8 @@ alembic upgrade head
 Backend top-level dependencies live in `backend/requirements.in`; `requirements.txt` is the
 pinned resolution. To update: in a clean venv run
 `pip install --dry-run --ignore-installed --report r.json -r requirements.in`, write the
-`install` entries of `r.json` as `name==version` lines (dropping Windows-only `colorama` and
-`tzdata`), then run the full test suite on SQLite and PostgreSQL and `pip-audit -r requirements.txt`.
+`install` entries of `r.json` as `name==version` lines (dropping Windows-only `colorama`,
+`tzdata` and `win32_setctime`), then run the full test suite on SQLite and PostgreSQL and `pip-audit -r requirements.txt`.
 
 ## Demo organizations
 

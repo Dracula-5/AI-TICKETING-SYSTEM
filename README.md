@@ -1,10 +1,11 @@
 # NexaDesk AI — Enterprise AI Service Management Platform
 
-> **Project status: Priorities 1–2 of 18 complete.** The multi-tenant service-management core is
-> built and tested end to end, and the production deployment is rehearsed (awaiting the owner's
-> VM and domain). AI models and all performance/quality benchmarks are later stages — no model-quality, performance or business-impact numbers are
-> claimed below until the experiment that produced them is in this repository.
-> Roadmap and stage reports: [`docs/execution_plan.md`](docs/execution_plan.md).
+> **Status: public-demo-ready; not yet deployed, no real users yet.** Core workflow, AI-assisted
+> triage, knowledge base, triage agent with human approval, observability, security controls and
+> CI gates are implemented and measured on public benchmarks, synthetic replays and a local load
+> test. The public URL waits on the owner's VM, domain and deploy secrets
+> ([setup checklist](docs/external_setup_checklist.md)); generated-answer quality and real-user
+> outcomes are not measured yet. Every number below says which kind of evidence it is.
 
 ## The business problem
 
@@ -29,7 +30,7 @@ actions** (P8). Every automated decision is labelled as a *system rule*, *AI rec
 
 ![Agent working a ticket](docs/screenshots/04-agent-ticket.png)
 
-## What works today (Priority 1)
+## What works today
 
 | Capability | Details |
 |---|---|
@@ -40,12 +41,21 @@ actions** (P8). Every automated decision is labelled as a *system rule*, *AI rec
 | Collaboration | Public replies, internal notes, @mentions, validated attachments, live WebSocket notifications |
 | Oversight | Append-only audit log with request ids; operations dashboard computed live from the ticket record; demo data always labelled |
 | Security | Rotating refresh tokens with reuse detection, hashed single-use email tokens, rate limits, strict CSP, upload validation, production config guard — see [security architecture](docs/system_design.md#10-security-architecture-implemented-hardened-further-in-p14) |
+| AI-assisted operations | Per-organization recommendations for category, priority, team, assignee and possible duplicates from the org's own resolved tickets, with confidence and the similar tickets behind them; SLA-risk and resolution-time statistics; accept / edit / reject; optional auto-apply above a confidence threshold for low-risk fields only |
+| Knowledge base | PDF/DOCX/Markdown/HTML upload, published vs internal articles, search, article suggestions while a requester writes a ticket, related articles for agents; cited answers when a text-generation provider is enabled |
+| Triage agent + approvals | Typed tools with validation, risk levels, verification and rollback; every high-risk action (replies, requests for details, escalation, duplicate links) waits in an approval queue |
+| Operations | Prometheus metrics, Grafana dashboard and alert rules, daily AI drift checks, model-promotion regression gate, pilot/CSAT/feedback reporting |
 
-| Operations dashboard | Mobile |
+| AI recommendations on a ticket | Approval queue |
 |---|---|
-| ![Dashboard](docs/screenshots/06-dashboard.png) | ![Mobile ticket](docs/screenshots/08-mobile-ticket.png) |
+| ![AI panel](docs/screenshots/12-ai-panel.png) | ![Approval queue](docs/screenshots/13-approval-queue.png) |
 
-*Screenshots are captured by the Playwright end-to-end test; the data in them is test data.*
+| Operations dashboard | Grafana during the load test |
+|---|---|
+| ![Dashboard](docs/screenshots/06-dashboard.png) | ![Grafana](docs/screenshots/grafana-load-test.png) |
+
+*App screenshots are captured by the Playwright end-to-end tests (test data, deterministic test
+embedder); the Grafana screenshot shows the local load test's synthetic traffic.*
 
 ## Architecture
 
@@ -68,25 +78,37 @@ grew from: [`docs/current_architecture.md`](docs/current_architecture.md).
 | Layer | Technology |
 |---|---|
 | API | Python 3.12, FastAPI, SQLAlchemy 2 (typed), Pydantic 2, Alembic, PyJWT, bcrypt |
-| Data | PostgreSQL 16 (+pgvector, used from P4), Redis |
+| Data | PostgreSQL 16 + pgvector (HNSW) + full-text + pg_trgm, Redis |
 | Web | React 19, TypeScript, MUI 7, TanStack Query, React Router 7, Recharts, Vite |
 | Quality | pytest (SQLite + PostgreSQL), Vitest + Testing Library, Playwright, ruff, mypy, ESLint, pip-audit, npm audit |
-| Delivery | Docker (non-root images), Docker Compose, GitHub Actions |
+| AI | FastEmbed (ONNX) all-MiniLM-L6-v2, kNN over each org's history; offline: scikit-learn, LightGBM, sentence-transformers |
+| Operations | Prometheus, Grafana, Locust, Bandit, gitleaks |
+| Delivery | Docker (non-root images), Docker Compose, Caddy, GitHub Actions |
 
-## Verified quality (measured, reproducible)
+## Measured results (evidence type in brackets)
 
-| Check | Result | How to reproduce |
+| What | Result | Source |
 |---|---|---|
-| Backend tests | 253 passing on SQLite **and** PostgreSQL 16; 94% line coverage | `cd backend && pytest --cov` |
-| Tenant isolation | Every org-scoped endpoint probed with foreign-org tokens → 404 | `tests/test_tenant_isolation.py` |
-| Baseline-audit defects A1–A10 | Each has a regression test | `tests/test_security.py` |
-| End-to-end | Full acceptance workflow through the UI across three browser sessions; mobile flow with no horizontal scroll | `cd frontend && npx playwright test` |
-| Frontend | 24 unit tests; ESLint and TypeScript clean | `npm test` |
-| Types | mypy clean on `app/` | `mypy app` |
-| Dependencies | `pip-audit` and `npm audit`: no known vulnerabilities at the time of the P1 commit | CI `dependency-audit` job |
+| Ticket classification [public benchmark] | TF-IDF + LinearSVC macro-F1 0.676 queue · 0.892 type · 0.689 priority (majority 0.045 / 0.144 / 0.189) | `reports/classification/` |
+| Routing [real ServiceNow log] | model top-1 0.655, top-3 0.857 vs dispatcher's first assignment 0.673; at confidence ≥ 0.9: 16% of incidents at 0.937 (dispatcher 0.928 on the same) | `reports/routing/` |
+| Duplicate detection [real forum duplicates] | Recall@10 0.532; production flag threshold 0.75 → precision 0.47, recall 0.18 | `reports/duplicates/` |
+| SLA breach [real log] | ROC-AUC 0.769; recalibration fixes base-rate drift (Brier 0.190 → 0.151) | `reports/sla/` |
+| Knowledge retrieval [public benchmark] | dense nDCG@10 0.407 vs equal-weight hybrid 0.372 → ships dense-first with full-text fallback | `reports/rag/` |
+| Shipped pipeline [synthetic replay, 2,400 tickets] | category accuracy 0.46–0.53 vs majority 0.28–0.31; 0.90–0.97 accuracy on the 6–10% with confidence ≥ 0.7; agent run p50 107–314 ms | `reports/pipeline/` |
+| Agent ablation [synthetic replay] | no gate: 47–54% of automatic changes wrong; default gate 0.9: 5–6% automated, 0 of 133 wrong, rest to people | `reports/pipeline/agent_ablation.md` |
+| Vector index [synthetic replay] | pgvector defaults returned as few as 14/60 rows for a tenant (recall 0.41); NexaDesk settings 60/60, recall ≥ 0.99 | `reports/pipeline/` |
+| Load [local laptop, 100k synthetic tickets] | 100 users: ~30 req/s, p95 150 ms, 0 errors; 250 users: ~66 req/s, 0 errors; saturates ~65–70 req/s; ≈ 1.2 GiB memory. Found and fixed a connection-pool deadlock | `reports/load/README.md` |
+| Tests | backend 381 (SQLite and PostgreSQL 16 + pgvector, 91% coverage), frontend 29, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
+| Real users, business impact, generated-answer quality | **not measured yet** | `docs/pilot_plan.md`, `docs/business_value.md` |
 
-Performance, load, model-quality and business-impact results: **not yet measured** (P4, P6,
-P10–P11, P16). They will appear here only with the script and raw output that produced them.
+## Further documentation
+
+- [Benchmark results and gaps](reports/final_benchmark.md)
+- [Architecture diagrams](docs/architecture_diagrams.md)
+- [External deployment and pilot checklist](docs/external_setup_checklist.md)
+- [Business case](docs/business_case.md) and [transformation roadmap](docs/transformation_roadmap.md)
+- [Interview guide](docs/interview_guide.md)
+- [Dataset provenance](docs/datasets.md), [AI evaluation](docs/ai_evaluation.md), and [failure analysis](reports/error_analysis.md)
 
 ## Run it locally
 
@@ -107,14 +129,17 @@ real external users exist the URL is a *public demo deployment*, not production 
 
 ## Limitations (honest, current)
 
-* No machine-learning models yet — triage is the rules engine, and is labelled as such.
+* AI recommendations and retrieval are implemented; generated-answer quality is not benchmarked and external text generation remains opt-in.
 * The public URL is not live yet: it needs the owner-created VM, domain and deploy secrets.
 * Email delivery requires SMTP configuration; without it, emails stay in the outbox table.
-* No load or performance testing yet.
+* Load and scale were measured on a laptop, not on the target VM; re-run `loadtest/` there.
+* A pre-rewrite JWT default key exists in public git history; it is unused and must be treated as
+  public (see `docs/security.md`).
 
 ## Roadmap
 
-P2 deployment · P3 datasets · P4 baseline ML · P5 AI-assisted operations · P6 RAG · P7 agent ·
-P8 human-in-the-loop · P9 pilot · P10–P11 load & scale · P12–P13 observability & model
-monitoring · P14 security · P15 CI/CD gates · P16 business value · P17 cost · P18 polish.
-Details: [`docs/execution_plan.md`](docs/execution_plan.md).
+P0–P18 are implemented and measured where measurement is possible without users. Outstanding:
+external go-live (P2: owner's VM, DNS, secrets), the real-user pilot and its business evidence
+(P9/P16), and generated-answer evaluation once a text-generation provider is approved. See
+[`docs/transformation_roadmap.md`](docs/transformation_roadmap.md) and
+[`docs/execution_plan.md`](docs/execution_plan.md).
