@@ -1,0 +1,14 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET /tickets?q= (search),CatchResponseError('503'),1,2026-09-30T21:58:11Z,2026-09-30T21:58:11Z
+GET,GET /tickets/{id}/history,CatchResponseError('503'),8,2026-09-30T21:58:11Z,2026-09-30T21:59:11Z
+GET,GET /tickets/{id}/comments,CatchResponseError('503'),17,2026-09-30T21:58:05Z,2026-09-30T21:59:11Z
+GET,GET /kb/search,CatchResponseError('503'),9,2026-09-30T21:58:05Z,2026-09-30T21:59:10Z
+GET,GET /tickets/{id}/ai,CatchResponseError('503'),6,2026-09-30T21:58:11Z,2026-09-30T21:59:11Z
+GET,GET /tickets (my work),CatchResponseError('503'),9,2026-09-30T21:58:04Z,2026-09-30T21:59:11Z
+GET,GET /tickets/{id},CatchResponseError('503'),21,2026-09-30T21:58:04Z,2026-09-30T21:59:11Z
+GET,GET /analytics/overview,CatchResponseError('503'),1,2026-09-30T21:58:04Z,2026-09-30T21:58:04Z
+GET,GET /tickets (requester),CatchResponseError('503'),17,2026-09-30T21:58:04Z,2026-09-30T21:59:10Z
+GET,GET /analytics/ai-performance,CatchResponseError('503'),1,2026-09-30T21:59:10Z,2026-09-30T21:59:10Z
+GET,GET /tickets (SLA at risk),CatchResponseError('503'),2,2026-09-30T21:58:11Z,2026-09-30T21:58:11Z
+GET,GET /tickets (queue),CatchResponseError('503'),7,2026-09-30T21:58:11Z,2026-09-30T21:59:11Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=503),2,2026-09-30T21:58:11Z,2026-09-30T21:58:11Z

@@ -1,0 +1,42 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/98608/comments', 0, original=The read operation timed out)",1,2026-09-30T21:31:34Z,2026-09-30T21:31:34Z
+GET,GET /tickets (requester),CatchResponseError('500'),33,2026-09-30T21:31:06Z,2026-09-30T21:31:38Z
+GET,GET /tickets?q= (search),CatchResponseError('503'),164,2026-09-30T21:30:56Z,2026-09-30T21:32:29Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/100423/comments', 0, original=The read operation timed out)",1,2026-09-30T21:31:37Z,2026-09-30T21:31:37Z
+POST,POST /tickets,CatchResponseError('0'),29,2026-09-30T21:31:28Z,2026-09-30T21:32:39Z
+GET,GET /analytics/overview,CatchResponseError('500'),1,2026-09-30T21:31:07Z,2026-09-30T21:31:07Z
+GET,GET /tickets/{id}/history,CatchResponseError('503'),270,2026-09-30T21:31:07Z,2026-09-30T21:32:29Z
+GET,GET /tickets/{id}/comments,CatchResponseError('503'),513,2026-09-30T21:31:07Z,2026-09-30T21:32:29Z
+GET,GET /tickets/{id},CatchResponseError('500'),7,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /tickets (my work),CatchResponseError('500'),6,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /kb/search,CatchResponseError('503'),455,2026-09-30T21:30:49Z,2026-09-30T21:32:30Z
+GET,GET /tickets/{id}/ai,CatchResponseError('503'),270,2026-09-30T21:31:07Z,2026-09-30T21:32:29Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/100435/comments', 0, original=The read operation timed out)",1,2026-09-30T21:31:37Z,2026-09-30T21:31:37Z
+GET,GET /tickets/{id},CatchResponseError('0'),23,2026-09-30T21:31:28Z,2026-09-30T21:32:37Z
+GET,GET /tickets (SLA at risk),CatchResponseError('500'),4,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /tickets (my work),CatchResponseError('503'),487,2026-09-30T21:30:52Z,2026-09-30T21:32:29Z
+POST,POST /tickets,CatchResponseError('400'),1,2026-09-30T21:31:50Z,2026-09-30T21:31:50Z
+POST,POST /tickets,CatchResponseError('500'),8,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /tickets (queue),CatchResponseError('500'),8,2026-09-30T21:31:07Z,2026-09-30T21:31:37Z
+GET,GET /tickets/{id},CatchResponseError('503'),481,2026-09-30T21:31:09Z,2026-09-30T21:32:29Z
+GET,GET /tickets (requester),CatchResponseError('0'),120,2026-09-30T21:31:33Z,2026-09-30T21:32:39Z
+GET,GET /analytics/overview,CatchResponseError('503'),165,2026-09-30T21:31:13Z,2026-09-30T21:32:29Z
+GET,GET /tickets?q= (search),CatchResponseError('0'),12,2026-09-30T21:31:33Z,2026-09-30T21:31:42Z
+GET,GET /analytics/overview,CatchResponseError('0'),19,2026-09-30T21:31:33Z,2026-09-30T21:31:43Z
+POST,POST /tickets,CatchResponseError('503'),258,2026-09-30T21:30:51Z,2026-09-30T21:32:28Z
+GET,GET /tickets (SLA at risk),CatchResponseError('0'),14,2026-09-30T21:31:34Z,2026-09-30T21:31:47Z
+GET,GET /kb/search,CatchResponseError('500'),10,2026-09-30T21:31:06Z,2026-09-30T21:31:38Z
+GET,GET /tickets (queue),CatchResponseError('0'),41,2026-09-30T21:31:28Z,2026-09-30T21:31:41Z
+GET,GET /tickets (requester),CatchResponseError('503'),1203,2026-09-30T21:30:58Z,2026-09-30T21:32:30Z
+GET,GET /tickets/{id}/comments,CatchResponseError('0'),2,2026-09-30T21:31:36Z,2026-09-30T21:31:37Z
+GET,GET /analytics/ai-performance,CatchResponseError('503'),49,2026-09-30T21:31:27Z,2026-09-30T21:32:24Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/100411/comments', 0, original=The read operation timed out)",1,2026-09-30T21:31:35Z,2026-09-30T21:31:35Z
+GET,GET /tickets?q= (search),CatchResponseError('500'),5,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /tickets (my work),CatchResponseError('0'),41,2026-09-30T21:31:28Z,2026-09-30T21:31:40Z
+GET,GET /tickets (SLA at risk),CatchResponseError('503'),120,2026-09-30T21:31:15Z,2026-09-30T21:32:29Z
+GET,GET /tickets (queue),CatchResponseError('503'),494,2026-09-30T21:30:48Z,2026-09-30T21:32:29Z
+GET,GET /kb/search,CatchResponseError('0'),68,2026-09-30T21:31:28Z,2026-09-30T21:32:39Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=503),69,2026-09-30T21:31:15Z,2026-09-30T21:32:28Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/100417/comments', 0, original=The read operation timed out)",1,2026-09-30T21:31:39Z,2026-09-30T21:31:39Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=500),2,2026-09-30T21:31:07Z,2026-09-30T21:31:38Z
+GET,GET /analytics/ai-performance,CatchResponseError('0'),8,2026-09-30T21:31:35Z,2026-09-30T21:31:37Z

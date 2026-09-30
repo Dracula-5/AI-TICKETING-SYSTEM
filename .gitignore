@@ -112,3 +112,7 @@ data/cache/
 mlflow.db
 mlruns/
 ml/artifacts/
+
+# Load-test access tokens (minted locally)
+loadtest/tokens.json
+reports/load/*/step_*.log

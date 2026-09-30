@@ -1,0 +1,3 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET /kb/search,CatchResponseError('400'),566,2026-09-30T21:12:17Z,2026-09-30T21:14:18Z
+POST,POST /tickets,LocustBadStatusCode(code=429),244,2026-09-30T21:12:17Z,2026-09-30T21:14:18Z

@@ -1,0 +1,40 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET /tickets (requester),CatchResponseError('500'),42,2026-09-30T21:28:44Z,2026-09-30T21:29:48Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/100358/comments', 0, original=The read operation timed out)",1,2026-09-30T21:29:59Z,2026-09-30T21:29:59Z
+GET,GET /tickets?q= (search),CatchResponseError('503'),3,2026-09-30T21:28:50Z,2026-09-30T21:28:51Z
+GET,GET /tickets/{id}/history,CatchResponseError('500'),3,2026-09-30T21:29:48Z,2026-09-30T21:29:48Z
+POST,POST /tickets,CatchResponseError('0'),4,2026-09-30T21:29:15Z,2026-09-30T21:30:02Z
+GET,GET /analytics/overview,CatchResponseError('500'),5,2026-09-30T21:28:45Z,2026-09-30T21:29:48Z
+GET,GET /tickets/{id}/history,CatchResponseError('503'),9,2026-09-30T21:28:46Z,2026-09-30T21:28:51Z
+GET,GET /tickets/{id}/comments,CatchResponseError('503'),19,2026-09-30T21:28:45Z,2026-09-30T21:28:51Z
+GET,GET /tickets/{id},CatchResponseError('500'),15,2026-09-30T21:28:45Z,2026-09-30T21:29:48Z
+GET,GET /tickets (my work),CatchResponseError('500'),13,2026-09-30T21:28:44Z,2026-09-30T21:29:48Z
+GET,GET /tickets/{id}/comments,CatchResponseError('500'),1,2026-09-30T21:29:48Z,2026-09-30T21:29:48Z
+GET,GET /kb/search,CatchResponseError('503'),9,2026-09-30T21:28:28Z,2026-09-30T21:28:50Z
+GET,GET /tickets/{id}/ai,CatchResponseError('503'),9,2026-09-30T21:28:46Z,2026-09-30T21:28:51Z
+GET,GET /tickets/{id},CatchResponseError('0'),13,2026-09-30T21:29:14Z,2026-09-30T21:30:05Z
+GET,GET /tickets (SLA at risk),CatchResponseError('500'),6,2026-09-30T21:28:45Z,2026-09-30T21:29:48Z
+GET,GET /tickets (my work),CatchResponseError('503'),16,2026-09-30T21:28:47Z,2026-09-30T21:28:51Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/89196/comments', 0, original=The read operation timed out)",1,2026-09-30T21:29:13Z,2026-09-30T21:29:13Z
+POST,POST /tickets,CatchResponseError('500'),12,2026-09-30T21:28:46Z,2026-09-30T21:29:48Z
+GET,GET /tickets (queue),CatchResponseError('500'),12,2026-09-30T21:28:45Z,2026-09-30T21:29:48Z
+GET,GET /tickets/{id},CatchResponseError('503'),8,2026-09-30T21:28:48Z,2026-09-30T21:28:51Z
+GET,GET /tickets (requester),CatchResponseError('0'),17,2026-09-30T21:29:14Z,2026-09-30T21:30:12Z
+GET,GET /analytics/overview,CatchResponseError('503'),2,2026-09-30T21:28:49Z,2026-09-30T21:28:51Z
+GET,GET /tickets?q= (search),CatchResponseError('0'),1,2026-09-30T21:29:58Z,2026-09-30T21:29:58Z
+GET,GET /analytics/ai-performance,CatchResponseError('500'),1,2026-09-30T21:29:16Z,2026-09-30T21:29:16Z
+GET,GET /analytics/overview,CatchResponseError('0'),1,2026-09-30T21:29:24Z,2026-09-30T21:29:24Z
+POST,POST /tickets,CatchResponseError('503'),7,2026-09-30T21:28:41Z,2026-09-30T21:28:51Z
+GET,GET /kb/search,CatchResponseError('500'),17,2026-09-30T21:28:45Z,2026-09-30T21:29:48Z
+GET,GET /tickets (queue),CatchResponseError('0'),6,2026-09-30T21:29:14Z,2026-09-30T21:30:04Z
+GET,GET /tickets (requester),CatchResponseError('503'),30,2026-09-30T21:28:29Z,2026-09-30T21:28:51Z
+GET,GET /kb/search,CatchResponseError('429'),86,2026-09-30T21:28:10Z,2026-09-30T21:29:43Z
+GET,GET /tickets/{id}/comments,CatchResponseError('0'),3,2026-09-30T21:29:14Z,2026-09-30T21:30:12Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=502),1,2026-09-30T21:29:17Z,2026-09-30T21:29:17Z
+GET,GET /tickets?q= (search),CatchResponseError('500'),6,2026-09-30T21:28:46Z,2026-09-30T21:29:48Z
+GET,GET /tickets (my work),CatchResponseError('0'),6,2026-09-30T21:29:13Z,2026-09-30T21:30:12Z
+GET,GET /tickets (queue),CatchResponseError('503'),10,2026-09-30T21:28:39Z,2026-09-30T21:28:50Z
+GET,GET /tickets/{id}/history,CatchResponseError('0'),1,2026-09-30T21:30:02Z,2026-09-30T21:30:02Z
+GET,GET /kb/search,CatchResponseError('0'),13,2026-09-30T21:29:14Z,2026-09-30T21:30:07Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=503),2,2026-09-30T21:28:48Z,2026-09-30T21:28:50Z
+GET,GET /analytics/ai-performance,CatchResponseError('0'),2,2026-09-30T21:29:17Z,2026-09-30T21:29:23Z

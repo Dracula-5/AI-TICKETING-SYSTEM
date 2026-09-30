@@ -1,0 +1,39 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET /tickets (requester),CatchResponseError('500'),45,2026-09-30T21:15:13Z,2026-09-30T21:15:44Z
+GET,GET /kb/search,CatchResponseError('400'),604,2026-09-30T21:14:39Z,2026-09-30T21:16:33Z
+GET,GET /tickets?q= (search),CatchResponseError('503'),162,2026-09-30T21:15:18Z,2026-09-30T21:16:33Z
+POST,POST /tickets,LocustBadStatusCode(code=500),9,2026-09-30T21:15:13Z,2026-09-30T21:15:44Z
+GET,GET /analytics/overview,CatchResponseError('500'),8,2026-09-30T21:15:12Z,2026-09-30T21:15:44Z
+GET,GET /tickets/{id}/history,CatchResponseError('503'),407,2026-09-30T21:15:14Z,2026-09-30T21:16:33Z
+GET,GET /tickets/{id}/comments,CatchResponseError('503'),701,2026-09-30T21:14:58Z,2026-09-30T21:16:33Z
+GET,GET /tickets/{id},CatchResponseError('500'),9,2026-09-30T21:15:14Z,2026-09-30T21:15:44Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/44086/comments', 0, original=The read operation timed out)",1,2026-09-30T21:15:43Z,2026-09-30T21:15:43Z
+GET,GET /tickets (my work),CatchResponseError('500'),16,2026-09-30T21:15:13Z,2026-09-30T21:15:43Z
+GET,GET /tickets/{id}/comments,CatchResponseError('500'),2,2026-09-30T21:15:14Z,2026-09-30T21:15:14Z
+GET,GET /tickets/{id}/ai,CatchResponseError('503'),407,2026-09-30T21:15:14Z,2026-09-30T21:16:33Z
+GET,GET /tickets/{id},CatchResponseError('0'),53,2026-09-30T21:15:42Z,2026-09-30T21:15:55Z
+GET,GET /tickets (SLA at risk),CatchResponseError('500'),3,2026-09-30T21:15:13Z,2026-09-30T21:15:43Z
+POST,POST /tickets/{id}/comments,"RetriesExceeded('https://localhost/api/v1/tickets/11027/comments', 0, original=The read operation timed out)",1,2026-09-30T21:15:47Z,2026-09-30T21:15:47Z
+GET,GET /tickets (my work),CatchResponseError('503'),524,2026-09-30T21:15:15Z,2026-09-30T21:16:34Z
+GET,GET /tickets (queue),CatchResponseError('500'),14,2026-09-30T21:15:12Z,2026-09-30T21:15:44Z
+POST,POST /tickets,LocustBadStatusCode(code=503),216,2026-09-30T21:14:58Z,2026-09-30T21:16:33Z
+GET,GET /tickets/{id},CatchResponseError('503'),639,2026-09-30T21:14:58Z,2026-09-30T21:16:33Z
+GET,GET /tickets (requester),CatchResponseError('0'),143,2026-09-30T21:15:42Z,2026-09-30T21:15:57Z
+GET,GET /analytics/overview,CatchResponseError('503'),169,2026-09-30T21:15:18Z,2026-09-30T21:16:33Z
+GET,GET /tickets?q= (search),CatchResponseError('0'),6,2026-09-30T21:15:43Z,2026-09-30T21:15:56Z
+POST,POST /tickets,"RetriesExceeded('https://localhost/api/v1/tickets', 0, original=The read operation timed out)",34,2026-09-30T21:15:42Z,2026-09-30T21:15:56Z
+GET,GET /analytics/overview,CatchResponseError('0'),20,2026-09-30T21:15:43Z,2026-09-30T21:15:52Z
+POST,POST /tickets,LocustBadStatusCode(code=429),17,2026-09-30T21:14:39Z,2026-09-30T21:15:13Z
+GET,GET /tickets (SLA at risk),CatchResponseError('0'),12,2026-09-30T21:15:43Z,2026-09-30T21:15:51Z
+GET,GET /tickets (queue),CatchResponseError('0'),30,2026-09-30T21:15:42Z,2026-09-30T21:15:49Z
+GET,GET /tickets (requester),CatchResponseError('503'),1180,2026-09-30T21:14:57Z,2026-09-30T21:16:33Z
+GET,GET /analytics/ai-performance,CatchResponseError('503'),57,2026-09-30T21:15:19Z,2026-09-30T21:16:33Z
+GET,GET /tickets?q= (search),CatchResponseError('500'),7,2026-09-30T21:15:14Z,2026-09-30T21:15:44Z
+GET,GET /tickets (requester),CatchResponseError('400'),1,2026-09-30T21:15:55Z,2026-09-30T21:15:55Z
+GET,GET /tickets (my work),CatchResponseError('0'),25,2026-09-30T21:15:42Z,2026-09-30T21:15:51Z
+GET,GET /tickets (SLA at risk),CatchResponseError('503'),114,2026-09-30T21:15:19Z,2026-09-30T21:16:32Z
+GET,GET /tickets (queue),CatchResponseError('503'),537,2026-09-30T21:15:16Z,2026-09-30T21:16:33Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=503),111,2026-09-30T21:15:16Z,2026-09-30T21:16:33Z
+GET,GET /tickets/{id}/ai,CatchResponseError('0'),2,2026-09-30T21:15:42Z,2026-09-30T21:15:43Z
+POST,POST /tickets/{id}/comments,LocustBadStatusCode(code=500),1,2026-09-30T21:15:43Z,2026-09-30T21:15:43Z
+GET,GET /analytics/ai-performance,CatchResponseError('0'),1,2026-09-30T21:15:53Z,2026-09-30T21:15:53Z

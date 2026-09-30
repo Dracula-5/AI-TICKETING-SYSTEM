@@ -1,0 +1,2 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,GET /kb/search,CatchResponseError('429'),91,2026-09-30T21:26:06Z,2026-09-30T21:27:25Z

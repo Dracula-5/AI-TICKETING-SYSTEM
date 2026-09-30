@@ -1,0 +1,482 @@
+{
+  "timestamp": "20260930T215007Z",
+  "label": "same fixes, API_WORKERS=4, pool 10+10 per process (100k tickets)",
+  "host": "https://localhost",
+  "duration_seconds_per_step": 120,
+  "tickets_in_org": 100000,
+  "git": "80f1e0d4a126ee13c5971f57e3b689059edc2854",
+  "slo": {
+    "p95_ms": 500,
+    "error_rate": 0.01
+  },
+  "environment": {
+    "docker_cpus": "12",
+    "docker_mem_bytes": 8163368960,
+    "host": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "generator": "locust (same machine)"
+  },
+  "data_origin": "synthetic",
+  "steps": [
+    {
+      "users": 250,
+      "wall_seconds": 135.2,
+      "aggregate": {
+        "name": "Aggregated",
+        "requests": 7843,
+        "failures": 1,
+        "rps": 64.49476833249273,
+        "p50_ms": 100.0,
+        "p95_ms": 2200.0,
+        "p99_ms": 3800.0,
+        "max_ms": 12294.54469999473
+      },
+      "endpoints": [
+        {
+          "name": "GET /analytics/ai-performance",
+          "requests": 59,
+          "failures": 0,
+          "rps": 0.48517038526291867,
+          "p50_ms": 150.0,
+          "p95_ms": 2600.0,
+          "p99_ms": 3400.0,
+          "max_ms": 3432.1066999982577
+        },
+        {
+          "name": "GET /analytics/overview",
+          "requests": 183,
+          "failures": 0,
+          "rps": 1.5048505170019342,
+          "p50_ms": 68.0,
+          "p95_ms": 2500.0,
+          "p99_ms": 3400.0,
+          "max_ms": 3876.8599000031827
+        },
+        {
+          "name": "GET /kb/search",
+          "requests": 146,
+          "failures": 0,
+          "rps": 1.2005911228540023,
+          "p50_ms": 1700.0,
+          "p95_ms": 4100.0,
+          "p99_ms": 5200.0,
+          "max_ms": 5926.698399998713
+        },
+        {
+          "name": "GET /kb/search (429 per-IP limit, expected)",
+          "requests": 410,
+          "failures": 0,
+          "rps": 3.3715230162338417,
+          "p50_ms": 81.0,
+          "p95_ms": 840.0,
+          "p99_ms": 2000.0,
+          "max_ms": 2890.4091000003973
+        },
+        {
+          "name": "GET /tickets (SLA at risk)",
+          "requests": 135,
+          "failures": 0,
+          "rps": 1.1101356272965088,
+          "p50_ms": 130.0,
+          "p95_ms": 2300.0,
+          "p99_ms": 3400.0,
+          "max_ms": 3451.478999995743
+        },
+        {
+          "name": "GET /tickets (my work)",
+          "requests": 468,
+          "failures": 0,
+          "rps": 3.8484701746278973,
+          "p50_ms": 110.0,
+          "p95_ms": 2800.0,
+          "p99_ms": 4400.0,
+          "max_ms": 5683.202200001688
+        },
+        {
+          "name": "GET /tickets (queue)",
+          "requests": 476,
+          "failures": 0,
+          "rps": 3.9142559895788014,
+          "p50_ms": 110.0,
+          "p95_ms": 2400.0,
+          "p99_ms": 3600.0,
+          "max_ms": 4637.598100001924
+        },
+        {
+          "name": "GET /tickets (requester)",
+          "requests": 1340,
+          "failures": 0,
+          "rps": 11.019124004276458,
+          "p50_ms": 92.0,
+          "p95_ms": 2200.0,
+          "p99_ms": 3600.0,
+          "max_ms": 6025.65229999891
+        },
+        {
+          "name": "GET /tickets/{id}",
+          "requests": 1395,
+          "failures": 0,
+          "rps": 11.471401482063925,
+          "p50_ms": 100.0,
+          "p95_ms": 1900.0,
+          "p99_ms": 3000.0,
+          "max_ms": 5103.276300011203
+        },
+        {
+          "name": "GET /tickets/{id}/ai",
+          "requests": 614,
+          "failures": 0,
+          "rps": 5.0490612974819,
+          "p50_ms": 87.0,
+          "p95_ms": 1700.0,
+          "p99_ms": 3100.0,
+          "max_ms": 4613.816199998837
+        },
+        {
+          "name": "GET /tickets/{id}/comments",
+          "requests": 1393,
+          "failures": 0,
+          "rps": 11.454955028326198,
+          "p50_ms": 110.0,
+          "p95_ms": 1900.0,
+          "p99_ms": 2900.0,
+          "max_ms": 4898.860100001912
+        },
+        {
+          "name": "GET /tickets/{id}/history",
+          "requests": 615,
+          "failures": 0,
+          "rps": 5.057284524350763,
+          "p50_ms": 99.0,
+          "p95_ms": 1700.0,
+          "p99_ms": 3300.0,
+          "max_ms": 6369.294399992214
+        },
+        {
+          "name": "GET /tickets?q= (search)",
+          "requests": 161,
+          "failures": 0,
+          "rps": 1.3239395258869475,
+          "p50_ms": 240.0,
+          "p95_ms": 2200.0,
+          "p99_ms": 3100.0,
+          "max_ms": 4733.501700000488
+        },
+        {
+          "name": "POST /tickets",
+          "requests": 63,
+          "failures": 1,
+          "rps": 0.5180632927383708,
+          "p50_ms": 2600.0,
+          "p95_ms": 7800.0,
+          "p99_ms": 12000.0,
+          "max_ms": 12294.54469999473
+        },
+        {
+          "name": "POST /tickets (429 per-IP limit, expected)",
+          "requests": 222,
+          "failures": 0,
+          "rps": 1.8255563648875923,
+          "p50_ms": 83.0,
+          "p95_ms": 1700.0,
+          "p99_ms": 2900.0,
+          "max_ms": 3418.5290000023087
+        },
+        {
+          "name": "POST /tickets/{id}/comments",
+          "requests": 163,
+          "failures": 0,
+          "rps": 1.3403859796246735,
+          "p50_ms": 140.0,
+          "p95_ms": 2400.0,
+          "p99_ms": 3800.0,
+          "max_ms": 4029.468900000211
+        }
+      ],
+      "error_rate": 0.00012750223128904755,
+      "within_slo": false,
+      "container_stats_midrun": [
+        {
+          "name": "nexadesk-load-backend-1",
+          "cpu": "814.71%",
+          "mem": "1019MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-worker-1",
+          "cpu": "423.97%",
+          "mem": "228.2MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-caddy-1",
+          "cpu": "19.77%",
+          "mem": "63.95MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-grafana-1",
+          "cpu": "1.80%",
+          "mem": "135.6MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-prometheus-1",
+          "cpu": "0.03%",
+          "mem": "35.91MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-redis-1",
+          "cpu": "1.16%",
+          "mem": "6.84MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-postgres-1",
+          "cpu": "57.92%",
+          "mem": "465.5MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-web-1",
+          "cpu": "0.00%",
+          "mem": "9.805MiB / 7.603GiB"
+        },
+        {
+          "name": "procurax-postgres",
+          "cpu": "13.90%",
+          "mem": "54.75MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-pg-test",
+          "cpu": "0.00%",
+          "mem": "159.7MiB / 7.603GiB"
+        }
+      ]
+    },
+    {
+      "users": 500,
+      "wall_seconds": 146.0,
+      "aggregate": {
+        "name": "Aggregated",
+        "requests": 10703,
+        "failures": 4412,
+        "rps": 83.26286318690127,
+        "p50_ms": 120.0,
+        "p95_ms": 13000.0,
+        "p99_ms": 34000.0,
+        "max_ms": 60143.22209999955
+      },
+      "endpoints": [
+        {
+          "name": "GET /analytics/ai-performance",
+          "requests": 93,
+          "failures": 40,
+          "rps": 0.7234837219827915,
+          "p50_ms": 210.0,
+          "p95_ms": 18000.0,
+          "p99_ms": 60000.0,
+          "max_ms": 60008.4460000071
+        },
+        {
+          "name": "GET /analytics/overview",
+          "requests": 306,
+          "failures": 124,
+          "rps": 2.3804948271691853,
+          "p50_ms": 99.0,
+          "p95_ms": 11000.0,
+          "p99_ms": 27000.0,
+          "max_ms": 34322.35390000278
+        },
+        {
+          "name": "GET /kb/search",
+          "requests": 401,
+          "failures": 308,
+          "rps": 3.1195373388720364,
+          "p50_ms": 10.0,
+          "p95_ms": 27000.0,
+          "p99_ms": 43000.0,
+          "max_ms": 60067.2973000037
+        },
+        {
+          "name": "GET /kb/search (429 per-IP limit, expected)",
+          "requests": 391,
+          "failures": 0,
+          "rps": 3.0417433902717366,
+          "p50_ms": 190.0,
+          "p95_ms": 5200.0,
+          "p99_ms": 16000.0,
+          "max_ms": 51140.153100001044
+        },
+        {
+          "name": "GET /tickets (SLA at risk)",
+          "requests": 223,
+          "failures": 78,
+          "rps": 1.7348050537866937,
+          "p50_ms": 150.0,
+          "p95_ms": 15000.0,
+          "p99_ms": 31000.0,
+          "max_ms": 42455.61039999302
+        },
+        {
+          "name": "GET /tickets (my work)",
+          "requests": 648,
+          "failures": 272,
+          "rps": 5.041047869299451,
+          "p50_ms": 130.0,
+          "p95_ms": 16000.0,
+          "p99_ms": 34000.0,
+          "max_ms": 60051.03839999356
+        },
+        {
+          "name": "GET /tickets (queue)",
+          "requests": 639,
+          "failures": 246,
+          "rps": 4.971033315559181,
+          "p50_ms": 140.0,
+          "p95_ms": 18000.0,
+          "p99_ms": 34000.0,
+          "max_ms": 60008.8878999959
+        },
+        {
+          "name": "GET /tickets (requester)",
+          "requests": 1888,
+          "failures": 748,
+          "rps": 14.687497495736672,
+          "p50_ms": 130.0,
+          "p95_ms": 20000.0,
+          "p99_ms": 43000.0,
+          "max_ms": 60006.25029999355
+        },
+        {
+          "name": "GET /tickets/{id}",
+          "requests": 1830,
+          "failures": 771,
+          "rps": 14.23629259385493,
+          "p50_ms": 130.0,
+          "p95_ms": 17000.0,
+          "p99_ms": 36000.0,
+          "max_ms": 60004.76760001038
+        },
+        {
+          "name": "GET /tickets/{id}/ai",
+          "requests": 822,
+          "failures": 368,
+          "rps": 6.3946625749446735,
+          "p50_ms": 76.0,
+          "p95_ms": 1400.0,
+          "p99_ms": 10000.0,
+          "max_ms": 36607.8858999972
+        },
+        {
+          "name": "GET /tickets/{id}/comments",
+          "requests": 1828,
+          "failures": 777,
+          "rps": 14.22073380413487,
+          "p50_ms": 110.0,
+          "p95_ms": 2500.0,
+          "p99_ms": 23000.0,
+          "max_ms": 60013.13150000351
+        },
+        {
+          "name": "GET /tickets/{id}/history",
+          "requests": 820,
+          "failures": 360,
+          "rps": 6.379103785224613,
+          "p50_ms": 95.0,
+          "p95_ms": 1800.0,
+          "p99_ms": 17000.0,
+          "max_ms": 43529.458100005286
+        },
+        {
+          "name": "GET /tickets?q= (search)",
+          "requests": 218,
+          "failures": 84,
+          "rps": 1.6959080794865435,
+          "p50_ms": 190.0,
+          "p95_ms": 18000.0,
+          "p99_ms": 26000.0,
+          "max_ms": 42749.74600000132
+        },
+        {
+          "name": "POST /tickets",
+          "requests": 209,
+          "failures": 158,
+          "rps": 1.6258935257462734,
+          "p50_ms": 9.0,
+          "p95_ms": 23000.0,
+          "p99_ms": 60000.0,
+          "max_ms": 60143.22209999955
+        },
+        {
+          "name": "POST /tickets (429 per-IP limit, expected)",
+          "requests": 187,
+          "failures": 0,
+          "rps": 1.454746838825613,
+          "p50_ms": 190.0,
+          "p95_ms": 4800.0,
+          "p99_ms": 24000.0,
+          "max_ms": 24772.090500002378
+        },
+        {
+          "name": "POST /tickets/{id}/comments",
+          "requests": 200,
+          "failures": 78,
+          "rps": 1.5558789720060033,
+          "p50_ms": 220.0,
+          "p95_ms": 20000.0,
+          "p99_ms": 28000.0,
+          "max_ms": 43361.94439999235
+        }
+      ],
+      "error_rate": 0.4122208726525273,
+      "within_slo": false,
+      "container_stats_midrun": [
+        {
+          "name": "nexadesk-load-backend-1",
+          "cpu": "7.79%",
+          "mem": "1.079GiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-worker-1",
+          "cpu": "4.60%",
+          "mem": "229.1MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-caddy-1",
+          "cpu": "15.78%",
+          "mem": "100.1MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-grafana-1",
+          "cpu": "2.38%",
+          "mem": "135.6MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-prometheus-1",
+          "cpu": "0.00%",
+          "mem": "36.21MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-redis-1",
+          "cpu": "1.37%",
+          "mem": "7.047MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-postgres-1",
+          "cpu": "0.99%",
+          "mem": "356.3MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-load-web-1",
+          "cpu": "8.60%",
+          "mem": "10.04MiB / 7.603GiB"
+        },
+        {
+          "name": "procurax-postgres",
+          "cpu": "0.00%",
+          "mem": "55.17MiB / 7.603GiB"
+        },
+        {
+          "name": "nexadesk-pg-test",
+          "cpu": "0.00%",
+          "mem": "159.5MiB / 7.603GiB"
+        }
+      ]
+    }
+  ]
+}
