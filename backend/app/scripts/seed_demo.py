@@ -159,8 +159,8 @@ def _delete_org(db: Session, tenant: Tenant) -> None:
         db.query(model).filter(model.tenant_id == tid).delete(synchronize_session=False)
     db.query(Ticket).filter(Ticket.tenant_id == tid).delete(synchronize_session=False)
     if user_ids:
-        for model in (TeamMember, RefreshToken, UserToken):
-            db.query(model).filter(model.user_id.in_(user_ids)).delete(synchronize_session=False)
+        for user_model in (TeamMember, RefreshToken, UserToken):
+            db.query(user_model).filter(user_model.user_id.in_(user_ids)).delete(synchronize_session=False)
     db.query(Category).filter(Category.tenant_id == tid).delete(synchronize_session=False)
     db.query(SlaPolicy).filter(SlaPolicy.tenant_id == tid).delete(synchronize_session=False)
     db.query(Team).filter(Team.tenant_id == tid).delete(synchronize_session=False)
@@ -259,7 +259,7 @@ def _play_lifecycle(db: Session, ticket: Ticket, created: datetime, agents: list
         clock = min(clock + timedelta(minutes=rng.randint(minutes_low, minutes_high)), utcnow())
         return clock
 
-    agent = db.get(User, ticket.assigned_to_user_id) if ticket.assigned_to_user_id else rng.choice(agents)
+    agent = ticket.assignee or rng.choice(agents)
     if ticket.assigned_to_user_id is None:
         svc.assign(db, ticket, assignee_id=agent.id, actor=agents[-1], reason="Assigned from the team queue")
     _backdate_last_history(db, ticket, step(5, 90))

@@ -149,6 +149,7 @@ def register(
     if db.query(User.id).filter(User.email == email).first():
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
+    tenant: Tenant | None
     if payload.organization_name:
         tenant = create_organization(db, payload.organization_name)
         role = Role.ORG_ADMIN
@@ -310,6 +311,8 @@ def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
 def verify_email(request: Request, payload: TokenIn, db: Session = Depends(get_db)):
     token = _consume_user_token(db, payload.token, "email_verification")
     user = db.get(User, token.user_id)
+    if user is None:
+        raise HTTPException(status_code=400, detail="This link is invalid or has expired")
     if user.email_verified_at is None:
         user.email_verified_at = utcnow()
         audit.record(
@@ -374,6 +377,8 @@ def forgot_password(request: Request, payload: EmailIn, background: BackgroundTa
 def reset_password(request: Request, payload: ResetPasswordIn, db: Session = Depends(get_db)):
     token = _consume_user_token(db, payload.token, "password_reset")
     user = db.get(User, token.user_id)
+    if user is None:
+        raise HTTPException(status_code=400, detail="This link is invalid or has expired")
     user.hashed_password = get_password_hash(payload.new_password)
     # Sign out every existing session.
     db.query(RefreshToken).filter(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None)).update(
@@ -406,7 +411,7 @@ def accept_invitation(request: Request, response: Response, payload: AcceptInvit
     if db.query(User.id).filter(User.email == inv.email).first():
         raise HTTPException(status_code=409, detail="An account with this email already exists")
 
-    tenant = db.get(Tenant, inv.tenant_id)
+    tenant = inv.tenant
     user = User(
         name=payload.name.strip(),
         email=inv.email,

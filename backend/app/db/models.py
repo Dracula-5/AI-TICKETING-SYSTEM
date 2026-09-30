@@ -5,83 +5,84 @@ ORM models. A "tenant" is an organization: every org-owned row carries
 Timestamps use UTCDateTime (aware UTC everywhere). `data_origin` marks rows as
 `real`, `demo` or `synthetic` so analytics never mix demo data into
 production metrics without saying so.
+
+Declared with SQLAlchemy 2 typed mappings (Mapped[...]) so attribute types are
+checked statically; tests/test_migrations.py proves the Alembic chain builds
+exactly this schema.
 """
 
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-)
+from datetime import datetime
+from typing import Any
+
+from sqlalchemy import JSON, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base, UTCDateTime, utcnow
 
 JSONType = JSON().with_variant(JSONB(), "postgresql")
 
 
+def _fk(target: str, ondelete: str | None = None) -> ForeignKey:
+    return ForeignKey(target, ondelete=ondelete)
+
+
 class Tenant(Base):
     __tablename__ = "tenants"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(120), nullable=False)
-    slug = Column(String(80), nullable=False, unique=True, index=True)
-    domain = Column(String(255), nullable=True, unique=True, index=True)
-    is_demo = Column(Boolean, nullable=False, default=False)
-    settings = Column(JSONType, nullable=False, default=dict)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    slug: Mapped[str] = mapped_column(String(80), unique=True, index=True)
+    domain: Mapped[str | None] = mapped_column(String(255), unique=True, index=True)
+    is_demo: Mapped[bool] = mapped_column(default=False)
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     # Per-organization ticket counter backing Ticket.number (#1, #2, ...).
-    ticket_seq = Column(Integer, nullable=False, default=0)
-    data_origin = Column(String(16), nullable=False, default="real")
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    ticket_seq: Mapped[int] = mapped_column(default=0)
+    data_origin: Mapped[str] = mapped_column(String(16), default="real")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    users = relationship("User", back_populates="tenant")
+    users: Mapped[list["User"]] = relationship(back_populates="tenant")
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(120), nullable=False)
-    email = Column(String(255), nullable=False, unique=True, index=True)
-    hashed_password = Column(String(255), nullable=False)
-    role = Column(String(32), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(120))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[str] = mapped_column(String(32))
     # NULL only for platform administrators, who belong to no organization.
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
-    is_active = Column(Boolean, nullable=False, default=True)
-    email_verified_at = Column(UTCDateTime, nullable=True)
-    last_login_at = Column(UTCDateTime, nullable=True)
-    data_origin = Column(String(16), nullable=False, default="real")
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    tenant_id: Mapped[int | None] = mapped_column(_fk("tenants.id"), index=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    last_login_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    data_origin: Mapped[str] = mapped_column(String(16), default="real")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    tenant = relationship("Tenant", back_populates="users")
-    teams = relationship("Team", secondary="team_members", back_populates="members")
+    tenant: Mapped[Tenant | None] = relationship(back_populates="users")
+    teams: Mapped[list["Team"]] = relationship(secondary="team_members", back_populates="members")
 
 
 class Team(Base):
     __tablename__ = "teams"
     __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_teams_tenant_name"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    name = Column(String(80), nullable=False)
-    description = Column(Text, nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    members = relationship("User", secondary="team_members", back_populates="teams")
+    members: Mapped[list[User]] = relationship(secondary="team_members", back_populates="teams")
 
 
 class TeamMember(Base):
     __tablename__ = "team_members"
 
-    team_id = Column(Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    team_id: Mapped[int] = mapped_column(_fk("teams.id", "CASCADE"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(_fk("users.id", "CASCADE"), primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class Category(Base):
@@ -92,26 +93,26 @@ class Category(Base):
     __tablename__ = "categories"
     __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_categories_tenant_name"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    name = Column(String(80), nullable=False)
-    description = Column(Text, nullable=True)
-    keywords = Column(JSONType, nullable=False, default=list)
-    default_team_id = Column(Integer, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
-    is_active = Column(Boolean, nullable=False, default=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    name: Mapped[str] = mapped_column(String(80))
+    description: Mapped[str | None] = mapped_column(Text)
+    keywords: Mapped[list[str]] = mapped_column(JSONType, default=list)
+    default_team_id: Mapped[int | None] = mapped_column(_fk("teams.id", "SET NULL"))
+    is_active: Mapped[bool] = mapped_column(default=True)
 
-    default_team = relationship("Team")
+    default_team: Mapped[Team | None] = relationship()
 
 
 class SlaPolicy(Base):
     __tablename__ = "sla_policies"
     __table_args__ = (UniqueConstraint("tenant_id", "priority", name="uq_sla_policies_tenant_priority"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    priority = Column(String(16), nullable=False)
-    first_response_minutes = Column(Integer, nullable=False)
-    resolution_minutes = Column(Integer, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    priority: Mapped[str] = mapped_column(String(16))
+    first_response_minutes: Mapped[int]
+    resolution_minutes: Mapped[int]
 
 
 class Ticket(Base):
@@ -126,131 +127,132 @@ class Ticket(Base):
         Index("ix_tickets_resolution_due", "resolution_due"),
     )
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
-    number = Column(Integer, nullable=False)
-    title = Column(String(200), nullable=False)
-    description = Column(Text, nullable=False)
-    priority = Column(String(16), nullable=False)
-    category = Column(String(80), nullable=True)
-    status = Column(String(32), nullable=False)
-    channel = Column(String(16), nullable=False, default="web")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    number: Mapped[int]
+    title: Mapped[str] = mapped_column(String(200))
+    description: Mapped[str] = mapped_column(Text)
+    priority: Mapped[str] = mapped_column(String(16))
+    category: Mapped[str | None] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(32))
+    channel: Mapped[str] = mapped_column(String(16), default="web")
 
-    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    assigned_to_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    team_id = Column(Integer, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
+    created_by_user_id: Mapped[int] = mapped_column(_fk("users.id"))
+    assigned_to_user_id: Mapped[int | None] = mapped_column(_fk("users.id"))
+    team_id: Mapped[int | None] = mapped_column(_fk("teams.id", "SET NULL"))
     # Who produced the current category/priority/team: rules | manual | ai.
-    triage_source = Column(String(16), nullable=True)
+    triage_source: Mapped[str | None] = mapped_column(String(16))
 
-    first_response_due = Column(UTCDateTime, nullable=True)
-    first_responded_at = Column(UTCDateTime, nullable=True)
-    first_response_breached_at = Column(UTCDateTime, nullable=True)
-    resolution_due = Column(UTCDateTime, nullable=True)
-    resolution_breached_at = Column(UTCDateTime, nullable=True)
+    first_response_due: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    first_responded_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    first_response_breached_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    resolution_due: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    resolution_breached_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
     # Set while the ticket waits on the customer; the resolution clock is
     # shifted forward by the paused duration when work resumes.
-    sla_paused_at = Column(UTCDateTime, nullable=True)
+    sla_paused_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
 
-    acknowledged_at = Column(UTCDateTime, nullable=True)
-    resolved_at = Column(UTCDateTime, nullable=True)
-    closed_at = Column(UTCDateTime, nullable=True)
-    reopened_count = Column(Integer, nullable=False, default=0)
-    resolution_summary = Column(Text, nullable=True)
+    acknowledged_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    resolved_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    closed_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    reopened_count: Mapped[int] = mapped_column(default=0)
+    resolution_summary: Mapped[str | None] = mapped_column(Text)
 
-    data_origin = Column(String(16), nullable=False, default="real")
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
-    updated_at = Column(UTCDateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    data_origin: Mapped[str] = mapped_column(String(16), default="real")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, onupdate=utcnow)
 
-    requester = relationship("User", foreign_keys=[created_by_user_id])
-    assignee = relationship("User", foreign_keys=[assigned_to_user_id])
-    team = relationship("Team")
+    tenant: Mapped[Tenant] = relationship()
+    requester: Mapped[User] = relationship(foreign_keys=[created_by_user_id])
+    assignee: Mapped[User | None] = relationship(foreign_keys=[assigned_to_user_id])
+    team: Mapped[Team | None] = relationship()
 
 
 class TicketStatusHistory(Base):
     __tablename__ = "ticket_status_history"
     __table_args__ = (Index("ix_status_history_ticket_created", "ticket_id", "created_at"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    ticket_id = Column(Integer, ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False)
-    from_status = Column(String(32), nullable=True)
-    to_status = Column(String(32), nullable=False)
-    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"))
+    from_status: Mapped[str | None] = mapped_column(String(32))
+    to_status: Mapped[str] = mapped_column(String(32))
+    actor_user_id: Mapped[int | None] = mapped_column(_fk("users.id"))
     # user | system | ai
-    actor_type = Column(String(16), nullable=False)
-    reason = Column(Text, nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    actor_type: Mapped[str] = mapped_column(String(16))
+    reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    actor = relationship("User")
+    actor: Mapped[User | None] = relationship()
 
 
 class TicketComment(Base):
     __tablename__ = "ticket_comments"
     __table_args__ = (Index("ix_comments_ticket_created", "ticket_id", "created_at"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    ticket_id = Column(Integer, ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"))
     # Nullable only for rows written before comments had authors.
-    author_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    author_user_id: Mapped[int | None] = mapped_column(_fk("users.id"))
     # public: visible to the requester · internal: staff-only note
-    visibility = Column(String(16), nullable=False, default="public")
-    content = Column(Text, nullable=False)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    visibility: Mapped[str] = mapped_column(String(16), default="public")
+    content: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    author = relationship("User")
+    author: Mapped[User | None] = relationship()
 
 
 class Attachment(Base):
     __tablename__ = "attachments"
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    ticket_id = Column(Integer, ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False, index=True)
-    comment_id = Column(Integer, ForeignKey("ticket_comments.id", ondelete="CASCADE"), nullable=True)
-    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    filename = Column(String(255), nullable=False)
-    content_type = Column(String(100), nullable=False)
-    size_bytes = Column(Integer, nullable=False)
-    sha256 = Column(String(64), nullable=False)
-    storage_key = Column(String(255), nullable=False, unique=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"), index=True)
+    comment_id: Mapped[int | None] = mapped_column(_fk("ticket_comments.id", "CASCADE"))
+    uploaded_by_user_id: Mapped[int] = mapped_column(_fk("users.id"))
+    filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str] = mapped_column(String(100))
+    size_bytes: Mapped[int]
+    sha256: Mapped[str] = mapped_column(String(64))
+    storage_key: Mapped[str] = mapped_column(String(255), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    uploaded_by = relationship("User")
+    uploaded_by: Mapped[User] = relationship()
 
 
 class Notification(Base):
     __tablename__ = "notifications"
     __table_args__ = (Index("ix_notifications_user_read", "user_id", "is_read"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    type = Column(String(50), nullable=False)
-    title = Column(String(255), nullable=False)
-    message = Column(Text, nullable=True)
-    link = Column(String(255), nullable=True)
-    is_read = Column(Boolean, nullable=False, default=False)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    user_id: Mapped[int] = mapped_column(_fk("users.id"), index=True)
+    type: Mapped[str] = mapped_column(String(50))
+    title: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str | None] = mapped_column(Text)
+    link: Mapped[str | None] = mapped_column(String(255))
+    is_read: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class Invitation(Base):
     __tablename__ = "invitations"
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
-    email = Column(String(255), nullable=False, index=True)
-    role = Column(String(32), nullable=False)
-    team_id = Column(Integer, ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
-    token_hash = Column(String(64), nullable=False, unique=True)
-    invited_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    expires_at = Column(UTCDateTime, nullable=False)
-    accepted_at = Column(UTCDateTime, nullable=True)
-    revoked_at = Column(UTCDateTime, nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"), index=True)
+    email: Mapped[str] = mapped_column(String(255), index=True)
+    role: Mapped[str] = mapped_column(String(32))
+    team_id: Mapped[int | None] = mapped_column(_fk("teams.id", "SET NULL"))
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    invited_by_user_id: Mapped[int] = mapped_column(_fk("users.id"))
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    accepted_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    tenant = relationship("Tenant")
-    invited_by = relationship("User")
+    tenant: Mapped[Tenant] = relationship()
+    invited_by: Mapped[User] = relationship()
 
 
 class UserToken(Base):
@@ -259,13 +261,13 @@ class UserToken(Base):
 
     __tablename__ = "user_tokens"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    purpose = Column(String(32), nullable=False)  # email_verification | password_reset
-    token_hash = Column(String(64), nullable=False, unique=True)
-    expires_at = Column(UTCDateTime, nullable=False)
-    used_at = Column(UTCDateTime, nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(_fk("users.id", "CASCADE"), index=True)
+    purpose: Mapped[str] = mapped_column(String(32))  # email_verification | password_reset
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    used_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class RefreshToken(Base):
@@ -274,16 +276,16 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_tokens"
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    family_id = Column(String(36), nullable=False, index=True)
-    token_hash = Column(String(64), nullable=False, unique=True)
-    expires_at = Column(UTCDateTime, nullable=False)
-    rotated_at = Column(UTCDateTime, nullable=True)
-    revoked_at = Column(UTCDateTime, nullable=True)
-    user_agent = Column(String(255), nullable=True)
-    ip = Column(String(64), nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(_fk("users.id", "CASCADE"), index=True)
+    family_id: Mapped[str] = mapped_column(String(36), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    expires_at: Mapped[datetime] = mapped_column(UTCDateTime)
+    rotated_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    revoked_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    user_agent: Mapped[str | None] = mapped_column(String(255))
+    ip: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
 
 class AuditLog(Base):
@@ -295,20 +297,20 @@ class AuditLog(Base):
         Index("ix_audit_entity", "entity_type", "entity_id"),
     )
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
-    actor_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    actor_type = Column(String(16), nullable=False)  # user | system | ai | anonymous
-    action = Column(String(64), nullable=False)
-    entity_type = Column(String(32), nullable=True)
-    entity_id = Column(String(64), nullable=True)
-    changes = Column(JSONType, nullable=True)
-    ip = Column(String(64), nullable=True)
-    user_agent = Column(String(255), nullable=True)
-    request_id = Column(String(64), nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int | None] = mapped_column(_fk("tenants.id"))
+    actor_user_id: Mapped[int | None] = mapped_column(_fk("users.id"))
+    actor_type: Mapped[str] = mapped_column(String(16))  # user | system | ai | anonymous
+    action: Mapped[str] = mapped_column(String(64))
+    entity_type: Mapped[str | None] = mapped_column(String(32))
+    entity_id: Mapped[str | None] = mapped_column(String(64))
+    changes: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    ip: Mapped[str | None] = mapped_column(String(64))
+    user_agent: Mapped[str | None] = mapped_column(String(255))
+    request_id: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
 
-    actor = relationship("User")
+    actor: Mapped[User | None] = relationship()
 
 
 class EmailOutbox(Base):
@@ -319,14 +321,14 @@ class EmailOutbox(Base):
     __tablename__ = "email_outbox"
     __table_args__ = (Index("ix_email_outbox_status_created", "status", "created_at"),)
 
-    id = Column(Integer, primary_key=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True)
-    to_email = Column(String(255), nullable=False)
-    subject = Column(String(255), nullable=False)
-    body_text = Column(Text, nullable=False)
-    template = Column(String(64), nullable=False)
-    status = Column(String(16), nullable=False, default="queued")  # queued | sent | failed
-    attempts = Column(Integer, nullable=False, default=0)
-    last_error = Column(Text, nullable=True)
-    created_at = Column(UTCDateTime, nullable=False, default=utcnow)
-    sent_at = Column(UTCDateTime, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int | None] = mapped_column(_fk("tenants.id"))
+    to_email: Mapped[str] = mapped_column(String(255))
+    subject: Mapped[str] = mapped_column(String(255))
+    body_text: Mapped[str] = mapped_column(Text)
+    template: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(16), default="queued")  # queued | sent | failed
+    attempts: Mapped[int] = mapped_column(default=0)
+    last_error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime)

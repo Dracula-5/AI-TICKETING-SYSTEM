@@ -145,7 +145,7 @@ def check_transition(ticket: Ticket, to_status: TicketStatus, user: User | None,
     ):
         raise TicketError("Assign the ticket before working on it", 409)
     if to_status == S.REOPENED and current == S.CLOSED and ticket.closed_at is not None:
-        window = int(org_setting(ticket_tenant(ticket), "reopen_window_days"))
+        window = int(org_setting(ticket.tenant, "reopen_window_days"))
         if utcnow() - ticket.closed_at > timedelta(days=window):
             raise TicketError(f"Closed tickets can only be reopened within {window} days; open a new ticket", 409)
     return rule
@@ -160,12 +160,6 @@ def allowed_transitions(ticket: Ticket, user: User) -> list[str]:
         except TicketError:
             continue
     return result
-
-
-def ticket_tenant(ticket: Ticket) -> Tenant:
-    from sqlalchemy.orm import object_session
-
-    return object_session(ticket).get(Tenant, ticket.tenant_id)
 
 
 # ---------------------------------------------------------------------------
@@ -388,6 +382,8 @@ def create_ticket(
     data_origin: str = "real",
     created_at: datetime | None = None,
 ) -> Ticket:
+    if requester.tenant_id is None:
+        raise TicketError("Only organization members can create tickets", 403)
     now = created_at or utcnow()
     ticket = Ticket(
         tenant_id=requester.tenant_id,
@@ -453,13 +449,14 @@ def triage_with_rules(
         explanations.append(f"priority={requested_priority} (chosen by requester)")
     else:
         decision = classify_priority(text)
-        ticket.priority = decision.value
+        ticket.priority = decision.value or "low"
         explanations.append(decision.explain("priority"))
 
     category = next((c for c in categories if c.name == ticket.category), None)
     if category and category.default_team_id:
         ticket.team_id = category.default_team_id
-        explanations.append(f"team={category.default_team.name} (routing rule for {category.name})")
+        team_name = category.default_team.name if category.default_team else category.default_team_id
+        explanations.append(f"team={team_name} (routing rule for {category.name})")
 
     ticket.triage_source = "rules"
     transition(
@@ -472,8 +469,7 @@ def triage_with_rules(
         enforce=False,
     )
 
-    tenant = db.get(Tenant, ticket.tenant_id)
-    if ticket.team_id and org_setting(tenant, "auto_assign"):
+    if ticket.team_id and org_setting(ticket.tenant, "auto_assign"):
         agent_id = least_loaded_agent(db, ticket.tenant_id, ticket.team_id)
         if agent_id:
             assign(

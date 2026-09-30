@@ -16,3 +16,6 @@ tests/
 htmlcov/
 .coverage
 README.md
+var/
+.ruff_cache/
+.mypy_cache/

@@ -116,7 +116,10 @@ def run_sla_sweep(db: Session, now=None) -> dict:
     ).all()
     tenants: dict[int, Tenant] = {}
     for t in resolved:
-        tenant = tenants.setdefault(t.tenant_id, db.get(Tenant, t.tenant_id))
+        tenant = tenants.get(t.tenant_id) or db.get(Tenant, t.tenant_id)
+        if tenant is None or t.resolved_at is None:
+            continue
+        tenants[t.tenant_id] = tenant
         days = int(org_setting(tenant, "auto_close_days"))
         if now - t.resolved_at >= timedelta(days=days):
             transition(

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_org_user, require_permission
+from app.core.deps import get_org_user, org_id, require_permission
 from app.core.rbac import ASSIGNABLE_ROLES, P
 from app.db.database import get_db
 from app.db.models import Category, SlaPolicy, Team, TeamMember, User
@@ -39,7 +39,7 @@ def _load_team(db: Session, team_id: int, tenant_id: int) -> Team:
 
 @router.get("/teams", response_model=list[TeamOut])
 def list_teams(user: User = Depends(require_permission(P.TEAMS_READ)), db: Session = Depends(get_db)):
-    teams = db.query(Team).filter(Team.tenant_id == user.tenant_id).order_by(Team.name).all()
+    teams = db.query(Team).filter(Team.tenant_id == org_id(user)).order_by(Team.name).all()
     return [_team_out(db, t) for t in teams]
 
 
@@ -47,7 +47,7 @@ def list_teams(user: User = Depends(require_permission(P.TEAMS_READ)), db: Sessi
 def create_team(
     payload: TeamIn, user: User = Depends(require_permission(P.TEAMS_MANAGE)), db: Session = Depends(get_db)
 ):
-    team = Team(tenant_id=user.tenant_id, name=payload.name.strip(), description=payload.description)
+    team = Team(tenant_id=org_id(user), name=payload.name.strip(), description=payload.description)
     db.add(team)
     try:
         db.flush()
@@ -57,7 +57,7 @@ def create_team(
     audit.record(
         db,
         "team.create",
-        tenant_id=user.tenant_id,
+        tenant_id=org_id(user),
         actor=user,
         entity_type="team",
         entity_id=team.id,
@@ -74,7 +74,7 @@ def update_team(
     user: User = Depends(require_permission(P.TEAMS_MANAGE)),
     db: Session = Depends(get_db),
 ):
-    team = _load_team(db, team_id, user.tenant_id)
+    team = _load_team(db, team_id, org_id(user))
     changes = audit.diff(
         {"name": team.name, "description": team.description},
         {"name": payload.name.strip(), "description": payload.description},
@@ -89,7 +89,7 @@ def update_team(
         audit.record(
             db,
             "team.update",
-            tenant_id=user.tenant_id,
+            tenant_id=org_id(user),
             actor=user,
             entity_type="team",
             entity_id=team.id,
@@ -106,14 +106,14 @@ def set_team_members(
     user: User = Depends(require_permission(P.TEAMS_MANAGE)),
     db: Session = Depends(get_db),
 ):
-    team = _load_team(db, team_id, user.tenant_id)
+    team = _load_team(db, team_id, org_id(user))
     wanted = set(payload.user_ids)
     if wanted:
         valid = {
             uid
             for (uid,) in db.query(User.id).filter(
                 User.id.in_(wanted),
-                User.tenant_id == user.tenant_id,
+                User.tenant_id == org_id(user),
                 User.role.in_(list(ASSIGNABLE_ROLES)),
             )
         }
@@ -128,7 +128,7 @@ def set_team_members(
         audit.record(
             db,
             "team.members",
-            tenant_id=user.tenant_id,
+            tenant_id=org_id(user),
             actor=user,
             entity_type="team",
             entity_id=team.id,
@@ -141,11 +141,11 @@ def set_team_members(
 @router.delete("/teams/{team_id}", response_model=MessageOut)
 def delete_team(team_id: int, user: User = Depends(require_permission(P.TEAMS_MANAGE)), db: Session = Depends(get_db)):
     ensure_not_demo(db, user, "Deleting teams")
-    team = _load_team(db, team_id, user.tenant_id)
+    team = _load_team(db, team_id, org_id(user))
     audit.record(
         db,
         "team.delete",
-        tenant_id=user.tenant_id,
+        tenant_id=org_id(user),
         actor=user,
         entity_type="team",
         entity_id=team.id,
@@ -161,7 +161,7 @@ def delete_team(team_id: int, user: User = Depends(require_permission(P.TEAMS_MA
 # ---------------------------------------------------------------------------
 @router.get("/categories", response_model=list[CategoryOut])
 def list_categories(include_inactive: bool = False, user: User = Depends(get_org_user), db: Session = Depends(get_db)):
-    q = db.query(Category).filter(Category.tenant_id == user.tenant_id)
+    q = db.query(Category).filter(Category.tenant_id == org_id(user))
     if not include_inactive:
         q = q.filter(Category.is_active.is_(True))
     return q.order_by(Category.id).all()
@@ -176,8 +176,8 @@ def _check_team(db: Session, team_id: int | None, tenant_id: int) -> None:
 def create_category(
     payload: CategoryIn, user: User = Depends(require_permission(P.CATEGORIES_MANAGE)), db: Session = Depends(get_db)
 ):
-    _check_team(db, payload.default_team_id, user.tenant_id)
-    cat = Category(tenant_id=user.tenant_id, **payload.model_dump())
+    _check_team(db, payload.default_team_id, org_id(user))
+    cat = Category(tenant_id=org_id(user), **payload.model_dump())
     db.add(cat)
     try:
         db.flush()
@@ -187,7 +187,7 @@ def create_category(
     audit.record(
         db,
         "category.create",
-        tenant_id=user.tenant_id,
+        tenant_id=org_id(user),
         actor=user,
         entity_type="category",
         entity_id=cat.id,
@@ -204,10 +204,10 @@ def update_category(
     user: User = Depends(require_permission(P.CATEGORIES_MANAGE)),
     db: Session = Depends(get_db),
 ):
-    cat = db.query(Category).filter(Category.id == category_id, Category.tenant_id == user.tenant_id).first()
+    cat = db.query(Category).filter(Category.id == category_id, Category.tenant_id == org_id(user)).first()
     if cat is None:
         raise HTTPException(status_code=404, detail="Category not found")
-    _check_team(db, payload.default_team_id, user.tenant_id)
+    _check_team(db, payload.default_team_id, org_id(user))
     new = payload.model_dump()
     changes = audit.diff({k: getattr(cat, k) for k in new}, new)
     for k, v in new.items():
@@ -221,7 +221,7 @@ def update_category(
         audit.record(
             db,
             "category.update",
-            tenant_id=user.tenant_id,
+            tenant_id=org_id(user),
             actor=user,
             entity_type="category",
             entity_id=cat.id,
@@ -237,7 +237,7 @@ def update_category(
 @router.get("/sla-policies", response_model=list[SlaPolicyItem])
 def get_sla_policies(user: User = Depends(require_permission(P.ORG_READ)), db: Session = Depends(get_db)):
     order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    rows = db.query(SlaPolicy).filter(SlaPolicy.tenant_id == user.tenant_id).all()
+    rows = db.query(SlaPolicy).filter(SlaPolicy.tenant_id == org_id(user)).all()
     return sorted(rows, key=lambda r: order.get(r.priority, 9))
 
 
@@ -251,13 +251,13 @@ def set_sla_policies(
             raise HTTPException(
                 status_code=422, detail=f"{item.priority}: first response cannot exceed resolution time"
             )
-    existing = {p.priority: p for p in db.query(SlaPolicy).filter(SlaPolicy.tenant_id == user.tenant_id)}
+    existing = {p.priority: p for p in db.query(SlaPolicy).filter(SlaPolicy.tenant_id == org_id(user))}
     changes = {}
     for item in payload.policies:
         row = existing.get(item.priority)
         new = (item.first_response_minutes, item.resolution_minutes)
         if row is None:
-            db.add(SlaPolicy(tenant_id=user.tenant_id, **item.model_dump()))
+            db.add(SlaPolicy(tenant_id=org_id(user), **item.model_dump()))
             changes[item.priority] = [None, list(new)]
         elif (row.first_response_minutes, row.resolution_minutes) != new:
             changes[item.priority] = [[row.first_response_minutes, row.resolution_minutes], list(new)]
@@ -267,10 +267,10 @@ def set_sla_policies(
         audit.record(
             db,
             "sla_policy.update",
-            tenant_id=user.tenant_id,
+            tenant_id=org_id(user),
             actor=user,
             entity_type="sla_policy",
-            entity_id=user.tenant_id,
+            entity_id=org_id(user),
             changes=changes,
         )
     db.commit()

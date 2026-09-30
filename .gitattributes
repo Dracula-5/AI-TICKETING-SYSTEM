@@ -1,0 +1,6 @@
+# Shell scripts and container config must keep LF endings, even on Windows
+# checkouts — a CRLF shebang ("/bin/sh\r") makes the container fail to start.
+*.sh          text eol=lf
+Dockerfile    text eol=lf
+*.conf        text eol=lf
+Caddyfile     text eol=lf

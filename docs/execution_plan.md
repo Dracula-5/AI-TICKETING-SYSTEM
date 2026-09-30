@@ -207,3 +207,31 @@ A real user can use it → the business workflow works → AI provides measurabl
 system is benchmarked → load-tested → observable → documented → reproducibly deployable.
 Stages P9 (real pilot) and P16 (business value) depend on real users and cannot be completed
 by engineering work alone; they will be reported honestly as in-progress until data exists.
+
+---
+
+## 7. Progress log
+
+Stage reports, newest last. Numbers here are measured, with the command that produced them.
+
+### P0 — Repository audit ✅ (2026-09-30)
+See [`current_architecture.md`](current_architecture.md). Reproduced 13 authorization defects;
+baseline 163 backend tests / 70% coverage; live backend unreachable.
+
+### P1 — Core product ✅ (2026-09-30)
+* **Completed:** marketplace and bargaining removed (tag `legacy-marketplace`); organizations,
+  invitations, portal sign-up, six roles; ticket state machine with history, SLA clocks with
+  pause/breach/escalation/auto-close; comments (public/internal), mentions, attachments;
+  notifications (DB + WebSocket); email outbox; audit log; operations dashboard; new
+  Vite/TypeScript frontend; demo seed (3 labelled orgs, 27 users, 54 tickets).
+* **Measured:** backend 253 tests pass on SQLite and PostgreSQL 16, 94% line coverage
+  (`pytest --cov`); suite runtime 17–25 s locally (was 264 s); frontend 24 unit tests;
+  Playwright acceptance + mobile flows pass; production JS 250 kB gzip initial load
+  (`npx vite build`); `pip-audit`: 32 advisories found → 0 after upgrades and replacing
+  python-jose with PyJWT.
+* **Acceptance criteria:** register/login ✔ · create org ✔ · invite ✔ · customer creates ticket ✔ ·
+  agent processes ✔ · admin analytics ✔ · customer sees resolution ✔ · audit trail ✔ —
+  automated in `backend/tests/test_acceptance_p1.py` and `frontend/e2e/p1-acceptance.spec.ts`.
+* **Known issues:** SLA sweep and email delivery run in-process (worker in P2); WebSocket and
+  rate limiting are single-instance; no email provider configured; dark mode not implemented.
+* **Next:** P2 — deployment.

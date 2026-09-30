@@ -14,7 +14,8 @@ COPY app/ app/
 COPY alembic.ini .
 COPY alembic/ alembic/
 COPY docker-entrypoint.sh .
-RUN chmod +x docker-entrypoint.sh
+# Normalize line endings defensively (see .gitattributes) and make executable.
+RUN sed -i 's/\r$//' docker-entrypoint.sh && chmod +x docker-entrypoint.sh
 
 # Non-root runtime user; attachments live on a mounted volume.
 RUN adduser --disabled-password --gecos "" appuser \

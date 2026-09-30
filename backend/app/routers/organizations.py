@@ -5,7 +5,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.deps import require_permission
+from app.core.deps import current_org, org_id, require_permission
 from app.core.limiter import limiter
 from app.core.rbac import GRANTABLE_ROLES, P, Role
 from app.core.security import hash_token, new_opaque_token
@@ -47,7 +47,7 @@ def _org_out(tenant: Tenant) -> OrganizationOut:
 
 @router.get("/me", response_model=OrganizationOut)
 def get_my_org(user: User = Depends(require_permission(P.ORG_READ)), db: Session = Depends(get_db)):
-    return _org_out(db.get(Tenant, user.tenant_id))
+    return _org_out(current_org(db, user))
 
 
 @router.patch("/me", response_model=OrganizationOut)
@@ -57,7 +57,7 @@ def update_my_org(
     db: Session = Depends(get_db),
 ):
     ensure_not_demo(db, user, "Changing organization settings")
-    tenant = db.get(Tenant, user.tenant_id)
+    tenant = current_org(db, user)
     before = {"name": tenant.name, "settings": {**DEFAULT_ORG_SETTINGS, **(tenant.settings or {})}}
     if payload.name is not None:
         tenant.name = payload.name.strip()
@@ -152,7 +152,7 @@ def update_member(
     # Defense in depth: unreachable today (the acting admin is itself an active
     # admin and cannot modify itself), but keeps the invariant if USERS_MANAGE
     # is ever granted to a non-admin role.
-    if removing_admin and _active_admin_count(db, user.tenant_id) <= 1:
+    if removing_admin and _active_admin_count(db, org_id(user)) <= 1:
         raise HTTPException(status_code=409, detail="An organization must keep at least one active admin")
 
     if payload.role is not None:
@@ -239,7 +239,7 @@ def create_invitation(
     )
     db.add(inv)
     db.flush()
-    tenant = db.get(Tenant, user.tenant_id)
+    tenant = current_org(db, user)
     url = invite_url(raw)
     subject, body = invitation_email(tenant.name, user.name, payload.role, url)
     queue_email(db, to=email, subject=subject, body=body, template="invitation", tenant_id=user.tenant_id)

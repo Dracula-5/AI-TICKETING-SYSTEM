@@ -1,11 +1,12 @@
 from datetime import datetime
+from typing import NoReturn
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile, status
-from sqlalchemy import case, func, or_
+from sqlalchemy import ColumnElement, case, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
-from app.core.deps import get_org_user, require_permission
+from app.core.deps import get_org_user, org_id, require_permission
 from app.core.limiter import limiter
 from app.core.rbac import P, has_permission, is_staff
 from app.db.database import get_db, utcnow
@@ -36,7 +37,7 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 _PRIORITY_RANK = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 
-def _raise(err: TicketError):
+def _raise(err: TicketError) -> NoReturn:
     raise HTTPException(status_code=err.status_code, detail=err.message)
 
 
@@ -152,9 +153,7 @@ def create_ticket(
     user: User = Depends(require_permission(P.TICKETS_CREATE)),
     db: Session = Depends(get_db),
 ):
-    if payload.category is not None and payload.category not in {
-        c.name for c in svc.org_categories(db, user.tenant_id)
-    }:
+    if payload.category is not None and payload.category not in {c.name for c in svc.org_categories(db, org_id(user))}:
         raise HTTPException(status_code=422, detail="Unknown category for this organization")
     try:
         ticket = svc.create_ticket(
@@ -223,10 +222,13 @@ def list_tickets(
                 or_(Ticket.first_response_breached_at.isnot(None), Ticket.resolution_breached_at.isnot(None))
             )
         else:
-            query = query.filter(at_risk_clause(db, user.tenant_id, now))
+            query = query.filter(at_risk_clause(db, org_id(user), now))
     if q:
         like = f"%{q.lower()}%"
-        conditions = [func.lower(Ticket.title).like(like), func.lower(Ticket.description).like(like)]
+        conditions: list[ColumnElement[bool]] = [
+            func.lower(Ticket.title).like(like),
+            func.lower(Ticket.description).like(like),
+        ]
         if q.lstrip("#").isdigit():
             conditions.append(Ticket.number == int(q.lstrip("#")))
         query = query.filter(or_(*conditions))

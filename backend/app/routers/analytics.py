@@ -10,10 +10,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
-from app.core.deps import require_permission
+from app.core.deps import current_org, org_id, require_permission
 from app.core.rbac import P
 from app.db.database import get_db, utcnow
-from app.db.models import Team, Tenant, Ticket, User
+from app.db.models import Team, Ticket, User
 from app.schemas.analytics import CountItem, OverviewOut, TrendPoint, WorkloadItem
 from app.services.sla import at_risk_clause
 from app.services.tickets import OPEN_STATUSES
@@ -42,7 +42,7 @@ def overview(user: User = Depends(require_permission(P.ANALYTICS_READ)), db: Ses
     (or created, for first response) in the last 30 days. Resolution time is
     wall-clock time from creation to resolution, including time spent waiting
     on the customer."""
-    tid = user.tenant_id
+    tid = org_id(user)
     now = utcnow()
     day_start = datetime.combine(now.date(), time.min, tzinfo=timezone.utc)
     since_30 = now - timedelta(days=30)
@@ -107,7 +107,7 @@ def overview(user: User = Depends(require_permission(P.ANALYTICS_READ)), db: Ses
             )
         )
 
-    tenant = db.get(Tenant, tid)
+    tenant = current_org(db, user)
     return OverviewOut(
         generated_at=now,
         data_origin=tenant.data_origin,

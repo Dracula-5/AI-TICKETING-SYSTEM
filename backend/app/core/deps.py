@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.rbac import P, has_permission
 from app.core.security import decode_access_token
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import Tenant, User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
@@ -45,6 +45,21 @@ def get_org_user(user: User = Depends(get_current_user)) -> User:
     if user.tenant_id is None:
         raise HTTPException(status_code=403, detail="This action requires organization membership")
     return user
+
+
+def org_id(user: User) -> int:
+    """Tenant id of an organization member (typed non-optional). Endpoints that
+    call this depend on get_org_user, which already guarantees membership."""
+    if user.tenant_id is None:
+        raise HTTPException(status_code=403, detail="This action requires organization membership")
+    return user.tenant_id
+
+
+def current_org(db: Session, user: User) -> Tenant:
+    tenant = db.get(Tenant, org_id(user))
+    if tenant is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return tenant
 
 
 def require_permission(permission: P):

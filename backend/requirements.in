@@ -1,0 +1,16 @@
+# Top-level runtime dependencies. requirements.txt is the fully pinned
+# resolution of this file (regenerate: see docs/runbook.md "Updating dependencies").
+fastapi
+uvicorn
+websockets
+sqlalchemy
+alembic
+psycopg2-binary
+pydantic
+pydantic-settings
+email-validator
+pyjwt
+bcrypt
+python-multipart
+redis
+slowapi
