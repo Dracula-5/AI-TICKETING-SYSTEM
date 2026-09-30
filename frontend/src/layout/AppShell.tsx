@@ -5,7 +5,11 @@ import ConfirmationNumberOutlined from "@mui/icons-material/ConfirmationNumberOu
 import DashboardOutlined from "@mui/icons-material/DashboardOutlined";
 import GroupsOutlined from "@mui/icons-material/GroupsOutlined";
 import HistoryEduOutlined from "@mui/icons-material/HistoryEduOutlined";
+import FactCheckOutlined from "@mui/icons-material/FactCheckOutlined";
+import FeedbackOutlined from "@mui/icons-material/FeedbackOutlined";
+import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import InboxOutlined from "@mui/icons-material/InboxOutlined";
+import MenuBookOutlined from "@mui/icons-material/MenuBookOutlined";
 import MenuOutlined from "@mui/icons-material/MenuOutlined";
 import PeopleOutline from "@mui/icons-material/PeopleOutline";
 import SettingsOutlined from "@mui/icons-material/SettingsOutlined";
@@ -39,6 +43,7 @@ import { errorMessage } from "../api/client";
 import { authApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthProvider";
 import { Brand } from "../components/Brand";
+import { FeedbackDialog } from "../components/Feedback";
 import { NotificationBell } from "../components/NotificationBell";
 import { useToast } from "../components/Toast";
 import { useNotificationSocket } from "../hooks/useNotificationSocket";
@@ -60,6 +65,8 @@ const WORK: NavItem[] = [
   { to: "/tickets?view=queue", label: "Team queue", icon: <GroupsOutlined />, permission: "tickets:work" },
   { to: "/tickets", label: "All tickets", icon: <ConfirmationNumberOutlined />, permission: "tickets:read_all", end: true },
   { to: "/tickets?view=sla", label: "SLA monitor", icon: <TimerOutlined />, permission: "tickets:read_all" },
+  { to: "/ai/approvals", label: "AI approvals", icon: <FactCheckOutlined />, permission: "tickets:work" },
+  { to: "/kb", label: "Knowledge base", icon: <MenuBookOutlined />, permission: "kb:read" },
 ];
 
 const ADMIN: NavItem[] = [
@@ -98,6 +105,7 @@ export function AppShell() {
   const desktop = useMediaQuery(theme.breakpoints.up("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -120,7 +128,13 @@ export function AppShell() {
         )}
       </Box>
       {isRequester ? (
-        <NavSection items={[{ to: "/tickets", label: "My tickets", icon: <ConfirmationNumberOutlined />, end: true }]} onNavigate={() => setMobileOpen(false)} />
+        <NavSection
+          items={[
+            { to: "/tickets", label: "My tickets", icon: <ConfirmationNumberOutlined />, end: true },
+            { to: "/kb", label: "Help articles", icon: <MenuBookOutlined />, permission: "kb:read" },
+          ]}
+          onNavigate={() => setMobileOpen(false)}
+        />
       ) : (
         <NavSection items={WORK} onNavigate={() => setMobileOpen(false)} />
       )}
@@ -168,8 +182,17 @@ export function AppShell() {
               <ListItemIcon><SettingsOutlined fontSize="small" /></ListItemIcon>
               Profile & security
             </MenuItem>
+            <MenuItem onClick={() => { setMenuAnchor(null); setFeedbackOpen(true); }}>
+              <ListItemIcon><FeedbackOutlined fontSize="small" /></ListItemIcon>
+              Send feedback
+            </MenuItem>
+            <MenuItem component={NavLink} to="/ai-notice" onClick={() => setMenuAnchor(null)}>
+              <ListItemIcon><InfoOutlined fontSize="small" /></ListItemIcon>
+              How NexaDesk uses AI
+            </MenuItem>
             <MenuItem onClick={async () => { setMenuAnchor(null); await logout(); navigate("/login"); }}>Sign out</MenuItem>
           </Menu>
+          <FeedbackDialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
         </Toolbar>
       </AppBar>
 

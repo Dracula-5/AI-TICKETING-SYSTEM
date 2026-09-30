@@ -24,6 +24,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.ai.rules import PRIORITIES, classify_category, classify_priority
+from app.core.config import settings
 from app.core.rbac import ASSIGNABLE_ROLES, P, Role, can_read_all_tickets, has_permission, is_staff
 from app.db.database import utcnow
 from app.db.models import (
@@ -37,7 +38,7 @@ from app.db.models import (
     TicketStatusHistory,
     User,
 )
-from app.services import audit
+from app.services import audit, jobs
 from app.services.notification_service import notify, notify_many
 from app.services.organizations import org_setting
 
@@ -381,6 +382,7 @@ def create_ticket(
     channel: str = "web",
     data_origin: str = "real",
     created_at: datetime | None = None,
+    analyze: bool = True,
 ) -> Ticket:
     if requester.tenant_id is None:
         raise TicketError("Only organization members can create tickets", 403)
@@ -424,6 +426,12 @@ def create_ticket(
     )
     triage_with_rules(db, ticket, requested_priority=priority, requested_category=category)
     apply_sla_policy(db, ticket)
+    if settings.ai_enabled and analyze:
+        # AI triage runs in the background worker; enqueued in this transaction
+        # so it exists exactly when the ticket does.
+        jobs.enqueue(
+            db, "ai.triage", {"ticket_id": ticket.id}, tenant_id=ticket.tenant_id, dedupe_key=f"ai.triage:{ticket.id}"
+        )
     return ticket
 
 

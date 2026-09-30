@@ -18,7 +18,7 @@ from sqlalchemy import JSON, ForeignKey, Index, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.database import Base, UTCDateTime, utcnow
+from app.db.database import EMBEDDING_DIM, Base, EmbeddingVector, UTCDateTime, utcnow
 
 JSONType = JSON().with_variant(JSONB(), "postgresql")
 
@@ -334,3 +334,236 @@ class EmailOutbox(Base):
     last_error: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
     sent_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+
+
+class Job(Base):
+    """Background job queue (services/jobs.py): transactional enqueue, SKIP LOCKED
+    claiming, retry with backoff, lease-based recovery, dead letter."""
+
+    __tablename__ = "jobs"
+    __table_args__ = (
+        Index("ix_jobs_status_run_after", "status", "run_after"),
+        Index("ix_jobs_dedupe_key", "dedupe_key"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int | None] = mapped_column(_fk("tenants.id"))
+    kind: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+    dedupe_key: Mapped[str | None] = mapped_column(String(128))
+    # queued | running | done | failed (retry scheduled) | dead
+    status: Mapped[str] = mapped_column(String(16), default="queued")
+    attempts: Mapped[int] = mapped_column(default=0)
+    max_attempts: Mapped[int] = mapped_column(default=5)
+    run_after: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    duration_ms: Mapped[float | None]
+    result: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    last_error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class AIPrediction(Base):
+    """One AI (or rules) recommendation for a ticket and what a human did with
+    it. The source of every AI-performance metric: acceptance, edit and
+    rejection rates, auto-apply rate, latency and model versions."""
+
+    __tablename__ = "ai_predictions"
+    __table_args__ = (
+        Index("ix_ai_predictions_ticket_kind", "ticket_id", "kind"),
+        Index("ix_ai_predictions_tenant_created", "tenant_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"))
+    # category | priority | team | assignee | duplicate | sla_risk | summary | reply | next_action
+    kind: Mapped[str] = mapped_column(String(32))
+    source: Mapped[str] = mapped_column(String(16))  # ai | rules
+    model: Mapped[str] = mapped_column(String(128))
+    model_version: Mapped[str] = mapped_column(String(64))
+    value: Mapped[dict[str, Any]] = mapped_column(JSONType)
+    confidence: Mapped[float | None]
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    latency_ms: Mapped[float | None]
+    # proposed | auto_applied | accepted | edited | rejected | superseded | overridden
+    # | no_change (already true) | invalid (failed validation) | failed_verification
+    status: Mapped[str] = mapped_column(String(24), default="proposed")
+    final_value: Mapped[dict[str, Any] | None] = mapped_column(JSONType)
+    decided_by_user_id: Mapped[int | None] = mapped_column(_fk("users.id"))
+    decided_at: Mapped[datetime | None] = mapped_column(UTCDateTime)
+    input_sha256: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class LLMCall(Base):
+    """Ledger of every call to a text-generation provider: what feature, which
+    model, tokens, latency, outcome and (when prices are configured) cost."""
+
+    __tablename__ = "llm_calls"
+    __table_args__ = (Index("ix_llm_calls_tenant_created", "tenant_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    ticket_id: Mapped[int | None] = mapped_column(_fk("tickets.id", "SET NULL"))
+    user_id: Mapped[int | None] = mapped_column(_fk("users.id", "SET NULL"))
+    feature: Mapped[str] = mapped_column(String(32))  # summary | reply | ...
+    provider: Mapped[str] = mapped_column(String(32))
+    model: Mapped[str] = mapped_column(String(128))
+    status: Mapped[str] = mapped_column(String(16), default="ok")  # ok | empty | error
+    input_tokens: Mapped[int] = mapped_column(default=0)
+    output_tokens: Mapped[int] = mapped_column(default=0)
+    cost_usd: Mapped[float | None]
+    latency_ms: Mapped[float | None]
+    error: Mapped[str | None] = mapped_column(String(500))
+    prompt_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class TicketEmbedding(Base):
+    """Semantic vector of a ticket's text (pgvector on PostgreSQL). Queried
+    only with a tenant_id filter in the same SQL statement, so similarity
+    search can never cross organizations."""
+
+    __tablename__ = "ticket_embeddings"
+    __table_args__ = (Index("ix_ticket_embeddings_tenant", "tenant_id"),)
+
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"), primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    model: Mapped[str] = mapped_column(String(128))
+    embedding: Mapped[Any] = mapped_column(EmbeddingVector(EMBEDDING_DIM))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class KBDocument(Base):
+    """A knowledge-base document of one organization. `public` documents are
+    searchable by requesters in the portal; `internal` ones only by staff."""
+
+    __tablename__ = "kb_documents"
+    __table_args__ = (Index("ix_kb_documents_tenant", "tenant_id", "status"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    title: Mapped[str] = mapped_column(String(200))
+    filename: Mapped[str] = mapped_column(String(255))
+    content_type: Mapped[str] = mapped_column(String(100))
+    visibility: Mapped[str] = mapped_column(String(16), default="internal")  # internal | public
+    status: Mapped[str] = mapped_column(String(16), default="processing")  # processing | ready | failed
+    error: Mapped[str | None] = mapped_column(String(500))
+    sha256: Mapped[str] = mapped_column(String(64))
+    size_bytes: Mapped[int]
+    chunk_count: Mapped[int] = mapped_column(default=0)
+    # Extracted plain text (source for re-chunking / re-embedding without the file).
+    text: Mapped[str | None] = mapped_column(Text)
+    created_by_user_id: Mapped[int | None] = mapped_column(_fk("users.id", "SET NULL"))
+    data_origin: Mapped[str] = mapped_column(String(16), default="real")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, onupdate=utcnow)
+
+
+class KBChunk(Base):
+    """A retrievable passage. PostgreSQL adds a generated `tsv` column with a GIN
+    index and an HNSW index on `embedding` (migration 0005)."""
+
+    __tablename__ = "kb_chunks"
+    __table_args__ = (Index("ix_kb_chunks_tenant_doc", "tenant_id", "document_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    document_id: Mapped[int] = mapped_column(_fk("kb_documents.id", "CASCADE"))
+    ordinal: Mapped[int]
+    heading: Mapped[str | None] = mapped_column(String(300))
+    content: Mapped[str] = mapped_column(Text)
+    visibility: Mapped[str] = mapped_column(String(16), default="internal")
+    model: Mapped[str] = mapped_column(String(128))
+    embedding: Mapped[Any] = mapped_column(EmbeddingVector(EMBEDDING_DIM))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class KBQuery(Base):
+    """One knowledge-base search or question: what was asked, what came back,
+    whether an answer was given and whether the asker found it helpful. Source
+    of retrieval/answer telemetry and, with real users, deflection metrics."""
+
+    __tablename__ = "kb_queries"
+    __table_args__ = (Index("ix_kb_queries_tenant_created", "tenant_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    user_id: Mapped[int | None] = mapped_column(_fk("users.id", "SET NULL"))
+    mode: Mapped[str] = mapped_column(String(16))  # search | answer
+    query: Mapped[str] = mapped_column(Text)
+    retrieval_mode: Mapped[str] = mapped_column(String(32))
+    results: Mapped[int] = mapped_column(default=0)
+    top_score: Mapped[float | None]
+    outcome: Mapped[str] = mapped_column(String(16))  # results | no_results | answered | no_answer | error
+    cited_chunk_ids: Mapped[list[int] | None] = mapped_column(JSONType)
+    supported_ratio: Mapped[float | None]
+    latency_ms: Mapped[float | None]
+    llm_call_id: Mapped[int | None] = mapped_column(_fk("llm_calls.id", "SET NULL"))
+    helpful: Mapped[bool | None]
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class AgentRun(Base):
+    """One run of the triage agent on a ticket: which planner, what it proposed,
+    and what happened to each step (executed, proposed for approval, invalid,
+    no change, failed verification) with reasons and timings."""
+
+    __tablename__ = "agent_runs"
+    __table_args__ = (
+        Index("ix_agent_runs_ticket", "ticket_id"),
+        Index("ix_agent_runs_tenant_created", "tenant_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    ticket_id: Mapped[int] = mapped_column(_fk("tickets.id", "CASCADE"))
+    trigger: Mapped[str] = mapped_column(String(32))  # ticket_created | manual | reindex
+    planner: Mapped[str] = mapped_column(String(64))
+    model: Mapped[str] = mapped_column(String(128))
+    status: Mapped[str] = mapped_column(String(16))  # completed | failed
+    steps: Mapped[list[dict[str, Any]]] = mapped_column(JSONType)
+    latency_ms: Mapped[float | None]
+    error: Mapped[str | None] = mapped_column(String(500))
+    input_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class Feedback(Base):
+    """What people tell us: CSAT on a resolved ticket (kind="csat", rating 1–5)
+    or free-form product feedback (kind="product"). Real-user evidence for the
+    pilot; rows from demo organizations carry their data_origin."""
+
+    __tablename__ = "feedback"
+    __table_args__ = (
+        Index("ix_feedback_tenant_created", "tenant_id", "created_at"),
+        Index("ix_feedback_ticket", "ticket_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    user_id: Mapped[int | None] = mapped_column(_fk("users.id", "SET NULL"))
+    kind: Mapped[str] = mapped_column(String(16))  # csat | product
+    ticket_id: Mapped[int | None] = mapped_column(_fk("tickets.id", "CASCADE"))
+    rating: Mapped[int | None]
+    comment: Mapped[str | None] = mapped_column(Text)
+    page: Mapped[str | None] = mapped_column(String(200))
+    data_origin: Mapped[str] = mapped_column(String(16), default="real")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+
+class AIMonitoringRun(Base):
+    """One drift/agreement check for an organization (app/ai/monitoring.py)."""
+
+    __tablename__ = "ai_monitoring"
+    __table_args__ = (Index("ix_ai_monitoring_tenant_created", "tenant_id", "created_at"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    tenant_id: Mapped[int] = mapped_column(_fk("tenants.id"))
+    status: Mapped[str] = mapped_column(String(24))  # ok | alert | insufficient_data
+    metrics: Mapped[dict[str, Any]] = mapped_column(JSONType)
+    alerts: Mapped[list[str]] = mapped_column(JSONType)
+    engine_version: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)

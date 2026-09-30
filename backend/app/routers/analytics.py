@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from app.core.cache import cache_get, cache_set
+from app.core.config import settings
 from app.core.deps import current_org, org_id, require_permission
 from app.core.rbac import P
 from app.db.database import get_db, utcnow
@@ -35,6 +37,26 @@ def _counts(rows) -> list[CountItem]:
 
 @router.get("/overview", response_model=OverviewOut)
 def overview(user: User = Depends(require_permission(P.ANALYTICS_READ)), db: Session = Depends(get_db)):
+    """Dashboard figures, cached per organization for ANALYTICS_CACHE_SECONDS.
+
+    P10 load test: this was the slowest endpoint (p50 530 ms at 250 users on
+    100k tickets) and held database connections long enough to exhaust the pool
+    at 500 users. The dashboard already refreshes every 30 s, so a 30 s cache
+    changes nothing a person can see; `generated_at` still states when the
+    figures were computed. Redis down → computed on every request (fail open)."""
+    tid = org_id(user)
+    key = f"analytics:overview:v1:{tid}"
+    if settings.analytics_cache_seconds:
+        cached = cache_get(key)
+        if cached is not None:
+            return OverviewOut.model_validate(cached)
+    result = _compute_overview(db, user)
+    if settings.analytics_cache_seconds:
+        cache_set(key, result.model_dump(mode="json"), settings.analytics_cache_seconds)
+    return result
+
+
+def _compute_overview(db: Session, user: User) -> OverviewOut:
     """Counts and averages for the caller's organization.
 
     `by_status` covers every ticket; `by_priority`, `by_category`, `by_team`

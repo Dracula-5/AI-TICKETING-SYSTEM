@@ -1,0 +1,477 @@
+{
+  "task": "pipeline",
+  "run": "p5_pipeline_synthetic",
+  "timestamp": "2026-09-30T17:45:05.550955+00:00",
+  "duration_seconds": 1399.5,
+  "git": "80f1e0d4a126ee13c5971f57e3b689059edc2854",
+  "datasets_sha256": {
+    "brightline-retail.csv": "08bdee3ea2cac177bd451e2392efe685b4aaf2be102c2fda9f37e54a68462dfe",
+    "helix-health.csv": "4b17d110035601408e06bdd0ae1326370841dab5b81269993281c363550fcae7",
+    "orbital-engineering.csv": "94d56659992bbf25598c52ac332d9bdb32b38f42d5208f60dc76b413a8433797"
+  },
+  "params": {
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "thresholds": [
+      0.5,
+      0.7,
+      0.9
+    ],
+    "duplicate_sweep": [
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "min_similarity": 0.35,
+    "k": 20,
+    "vote_power": 4.0,
+    "engine_version": "triage-knn-2",
+    "planner": "triage-playbook-1",
+    "limit_replay": 0,
+    "orgs": [
+      "helix-health",
+      "brightline-retail",
+      "orbital-engineering"
+    ]
+  },
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "cpu_count": 12,
+    "postgres": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "pgvector": "0.8.6"
+  },
+  "data_origin": "synthetic",
+  "results": [
+    {
+      "org": "Helix Health (Synthetic)",
+      "cutoff": "2026-07-24T10:37:00+00:00",
+      "tickets_total": 5500,
+      "history": 4219,
+      "replayed": 1100,
+      "categories": 10,
+      "import_seconds": 12.11,
+      "index_seconds": 93.9,
+      "index_tickets_per_second": 44.9,
+      "skipped_on_import": 0,
+      "latency_ms": {
+        "n": 1100,
+        "p50": 154.36070000214386,
+        "p95": 663.3883949984006,
+        "p99": 1095.3552499969373
+      },
+      "embed_only_ms": {
+        "n": 100,
+        "p50": 41.46915000092122,
+        "p95": 98.36345500225433
+      },
+      "metrics": {
+        "category": {
+          "coverage": 1.0,
+          "accuracy": 0.5290909090909091,
+          "macro_f1": 0.45339118288965635,
+          "selective": {
+            "0.5": {
+              "coverage": 0.33545454545454545,
+              "accuracy": 0.7669376693766937
+            },
+            "0.7": {
+              "coverage": 0.09909090909090909,
+              "accuracy": 0.944954128440367
+            },
+            "0.9": {
+              "coverage": 0.05909090909090909,
+              "accuracy": 1.0
+            }
+          },
+          "majority_baseline_accuracy": 0.27545454545454545
+        },
+        "priority": {
+          "coverage": 1.0,
+          "accuracy": 0.57,
+          "macro_f1": 0.559768417190714,
+          "selective": {
+            "0.5": {
+              "coverage": 0.6209090909090909,
+              "accuracy": 0.664714494875549
+            },
+            "0.7": {
+              "coverage": 0.09363636363636364,
+              "accuracy": 0.8252427184466019
+            },
+            "0.9": {
+              "coverage": 0.0009090909090909091,
+              "accuracy": 1.0
+            }
+          }
+        },
+        "resolution_time": {
+          "n": 1100,
+          "coverage": 1.0,
+          "mae_hours": 130.1723547979798,
+          "median_ae_hours": 51.6,
+          "baseline_global_median_mae_hours": 131.339676010101,
+          "baseline_global_median_median_ae_hours": 27.116666666666667
+        },
+        "sla_risk": {
+          "n": 1100,
+          "coverage": 1.0,
+          "breach_rate": 0.5836363636363636,
+          "brier": 0.22269068454545451,
+          "brier_constant_test_rate": 0.24300495867768596,
+          "auc": 0.6560659239004748
+        },
+        "duplicates": {
+          "positives": 40,
+          "sweep": {
+            "0.8": {
+              "flagged": 513,
+              "true_positives": 37,
+              "precision": 0.07212475633528265,
+              "recall": 0.925,
+              "false_flag_rate_on_non_duplicates": 0.44716981132075473
+            },
+            "0.85": {
+              "flagged": 337,
+              "true_positives": 36,
+              "precision": 0.10682492581602374,
+              "recall": 0.9,
+              "false_flag_rate_on_non_duplicates": 0.2820754716981132
+            },
+            "0.9": {
+              "flagged": 210,
+              "true_positives": 30,
+              "precision": 0.14285714285714285,
+              "recall": 0.75,
+              "false_flag_rate_on_non_duplicates": 0.16792452830188678
+            },
+            "0.95": {
+              "flagged": 150,
+              "true_positives": 21,
+              "precision": 0.14,
+              "recall": 0.525,
+              "false_flag_rate_on_non_duplicates": 0.12075471698113208
+            }
+          }
+        }
+      },
+      "agent_step_outcomes": {
+        "category:proposed": 1100,
+        "priority:no_change": 627,
+        "team:proposed": 1100,
+        "duplicate:proposed": 1085,
+        "resolution_time:recorded": 1100,
+        "sla_risk:recorded": 1100,
+        "next_action:recorded": 1100,
+        "priority:proposed": 473,
+        "request_info:proposed": 50
+      },
+      "ann": {
+        "k": 60,
+        "queries": 200,
+        "nexadesk_settings": {
+          "mean_recall_at_k": 0.9926666666666665,
+          "min_rows_returned": 60,
+          "mean_rows_returned": 60.0,
+          "p50_ms": 11.706300003424985,
+          "p95_ms": 15.678649998517345
+        },
+        "pgvector_defaults": {
+          "mean_recall_at_k": 0.8299166666666666,
+          "min_rows_returned": 43,
+          "mean_rows_returned": 49.8,
+          "p50_ms": 10.865150001336588,
+          "p95_ms": 13.506030000280587
+        },
+        "plan_uses_hnsw": true
+      }
+    },
+    {
+      "org": "Brightline Retail (Synthetic)",
+      "cutoff": "2026-07-22T17:39:00+00:00",
+      "tickets_total": 4000,
+      "history": 3070,
+      "replayed": 800,
+      "categories": 10,
+      "import_seconds": 11.64,
+      "index_seconds": 121.78,
+      "index_tickets_per_second": 25.2,
+      "skipped_on_import": 0,
+      "latency_ms": {
+        "n": 800,
+        "p50": 187.381550000282,
+        "p95": 582.8699350018718,
+        "p99": 916.5267610015871
+      },
+      "embed_only_ms": {
+        "n": 100,
+        "p50": 29.667549999430776,
+        "p95": 91.89671500389521
+      },
+      "metrics": {
+        "category": {
+          "coverage": 1.0,
+          "accuracy": 0.47,
+          "macro_f1": 0.38382030456692456,
+          "selective": {
+            "0.5": {
+              "coverage": 0.3225,
+              "accuracy": 0.6550387596899225
+            },
+            "0.7": {
+              "coverage": 0.09125,
+              "accuracy": 0.9041095890410958
+            },
+            "0.9": {
+              "coverage": 0.055,
+              "accuracy": 1.0
+            }
+          },
+          "majority_baseline_accuracy": 0.28625
+        },
+        "priority": {
+          "coverage": 1.0,
+          "accuracy": 0.5525,
+          "macro_f1": 0.47086281725528045,
+          "selective": {
+            "0.5": {
+              "coverage": 0.53375,
+              "accuracy": 0.6370023419203747
+            },
+            "0.7": {
+              "coverage": 0.0875,
+              "accuracy": 0.7285714285714285
+            },
+            "0.9": {
+              "coverage": 0.0025,
+              "accuracy": 1.0
+            }
+          }
+        },
+        "resolution_time": {
+          "n": 800,
+          "coverage": 1.0,
+          "mae_hours": 139.7481138888889,
+          "median_ae_hours": 46.40833333333333,
+          "baseline_global_median_mae_hours": 140.69487361111112,
+          "baseline_global_median_median_ae_hours": 26.97125
+        },
+        "sla_risk": {
+          "n": 800,
+          "coverage": 1.0,
+          "breach_rate": 0.5675,
+          "brier": 0.22578218999999997,
+          "brier_constant_test_rate": 0.24544375000000002,
+          "auc": 0.6542009370782511
+        },
+        "duplicates": {
+          "positives": 30,
+          "sweep": {
+            "0.8": {
+              "flagged": 350,
+              "true_positives": 26,
+              "precision": 0.07428571428571429,
+              "recall": 0.8666666666666667,
+              "false_flag_rate_on_non_duplicates": 0.41688311688311686
+            },
+            "0.85": {
+              "flagged": 217,
+              "true_positives": 23,
+              "precision": 0.10599078341013825,
+              "recall": 0.7666666666666667,
+              "false_flag_rate_on_non_duplicates": 0.24805194805194805
+            },
+            "0.9": {
+              "flagged": 108,
+              "true_positives": 20,
+              "precision": 0.18518518518518517,
+              "recall": 0.6666666666666666,
+              "false_flag_rate_on_non_duplicates": 0.11298701298701298
+            },
+            "0.95": {
+              "flagged": 68,
+              "true_positives": 11,
+              "precision": 0.16176470588235295,
+              "recall": 0.36666666666666664,
+              "false_flag_rate_on_non_duplicates": 0.07272727272727272
+            }
+          }
+        }
+      },
+      "agent_step_outcomes": {
+        "category:proposed": 800,
+        "priority:no_change": 442,
+        "team:proposed": 800,
+        "duplicate:proposed": 779,
+        "resolution_time:recorded": 800,
+        "sla_risk:recorded": 800,
+        "next_action:recorded": 800,
+        "priority:proposed": 358,
+        "request_info:proposed": 50
+      },
+      "ann": {
+        "k": 60,
+        "queries": 200,
+        "nexadesk_settings": {
+          "mean_recall_at_k": 1.0,
+          "min_rows_returned": 60,
+          "mean_rows_returned": 60.0,
+          "p50_ms": 15.268799998011673,
+          "p95_ms": 22.614654996868907
+        },
+        "pgvector_defaults": {
+          "mean_recall_at_k": 0.41208333333333336,
+          "min_rows_returned": 14,
+          "mean_rows_returned": 24.725,
+          "p50_ms": 13.13684999695397,
+          "p95_ms": 40.2949299965257
+        },
+        "plan_uses_hnsw": true
+      }
+    },
+    {
+      "org": "Orbital Engineering (Synthetic)",
+      "cutoff": "2026-07-20T20:53:00+00:00",
+      "tickets_total": 2500,
+      "history": 1927,
+      "replayed": 500,
+      "categories": 10,
+      "import_seconds": 7.25,
+      "index_seconds": 82.57,
+      "index_tickets_per_second": 23.3,
+      "skipped_on_import": 0,
+      "latency_ms": {
+        "n": 500,
+        "p50": 314.1920499983826,
+        "p95": 747.27963500045,
+        "p99": 1039.9231340042018
+      },
+      "embed_only_ms": {
+        "n": 100,
+        "p50": 47.89674999847193,
+        "p95": 144.68207999889273
+      },
+      "metrics": {
+        "category": {
+          "coverage": 1.0,
+          "accuracy": 0.462,
+          "macro_f1": 0.3740016811953152,
+          "selective": {
+            "0.5": {
+              "coverage": 0.24,
+              "accuracy": 0.7
+            },
+            "0.7": {
+              "coverage": 0.062,
+              "accuracy": 0.967741935483871
+            },
+            "0.9": {
+              "coverage": 0.048,
+              "accuracy": 1.0
+            }
+          },
+          "majority_baseline_accuracy": 0.312
+        },
+        "priority": {
+          "coverage": 1.0,
+          "accuracy": 0.47,
+          "macro_f1": 0.3771841138236205,
+          "selective": {
+            "0.5": {
+              "coverage": 0.524,
+              "accuracy": 0.5572519083969466
+            },
+            "0.7": {
+              "coverage": 0.098,
+              "accuracy": 0.7755102040816326
+            },
+            "0.9": {
+              "coverage": 0.0,
+              "accuracy": null
+            }
+          }
+        },
+        "resolution_time": {
+          "n": 500,
+          "coverage": 1.0,
+          "mae_hours": 131.1730533333333,
+          "median_ae_hours": 67.01666666666667,
+          "baseline_global_median_mae_hours": 131.49753777777778,
+          "baseline_global_median_median_ae_hours": 32.805277777777775
+        },
+        "sla_risk": {
+          "n": 500,
+          "coverage": 1.0,
+          "breach_rate": 0.53,
+          "brier": 0.241180024,
+          "brier_constant_test_rate": 0.24909999999999993,
+          "auc": 0.6234604576475311
+        },
+        "duplicates": {
+          "positives": 23,
+          "sweep": {
+            "0.8": {
+              "flagged": 182,
+              "true_positives": 21,
+              "precision": 0.11538461538461539,
+              "recall": 0.9130434782608695,
+              "false_flag_rate_on_non_duplicates": 0.33752620545073375
+            },
+            "0.85": {
+              "flagged": 113,
+              "true_positives": 18,
+              "precision": 0.1592920353982301,
+              "recall": 0.782608695652174,
+              "false_flag_rate_on_non_duplicates": 0.19916142557651992
+            },
+            "0.9": {
+              "flagged": 54,
+              "true_positives": 17,
+              "precision": 0.3148148148148148,
+              "recall": 0.7391304347826086,
+              "false_flag_rate_on_non_duplicates": 0.07756813417190776
+            },
+            "0.95": {
+              "flagged": 34,
+              "true_positives": 13,
+              "precision": 0.38235294117647056,
+              "recall": 0.5652173913043478,
+              "false_flag_rate_on_non_duplicates": 0.0440251572327044
+            }
+          }
+        }
+      },
+      "agent_step_outcomes": {
+        "category:proposed": 500,
+        "priority:no_change": 235,
+        "team:proposed": 500,
+        "duplicate:proposed": 482,
+        "resolution_time:recorded": 500,
+        "sla_risk:recorded": 500,
+        "next_action:recorded": 500,
+        "priority:proposed": 265,
+        "request_info:proposed": 29
+      },
+      "ann": {
+        "k": 60,
+        "queries": 200,
+        "nexadesk_settings": {
+          "mean_recall_at_k": 1.0,
+          "min_rows_returned": 60,
+          "mean_rows_returned": 60.0,
+          "p50_ms": 26.081200001499383,
+          "p95_ms": 35.391409996736904
+        },
+        "pgvector_defaults": {
+          "mean_recall_at_k": 1.0,
+          "min_rows_returned": 60,
+          "mean_rows_returned": 60.0,
+          "p50_ms": 22.7749000005133,
+          "p95_ms": 31.24973499616316
+        },
+        "plan_uses_hnsw": false
+      }
+    }
+  ]
+}

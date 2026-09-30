@@ -15,6 +15,9 @@ import { TicketDetailPage } from "./pages/tickets/TicketDetailPage";
 import { TicketListPage } from "./pages/tickets/TicketListPage";
 
 // Route-level code splitting: charts and admin screens load only when opened.
+const ApprovalQueuePage = lazy(() => import("./pages/ApprovalQueuePage").then((m) => ({ default: m.ApprovalQueuePage })));
+const AINoticePage = lazy(() => import("./pages/public/AINoticePage").then((m) => ({ default: m.AINoticePage })));
+const KnowledgePage = lazy(() => import("./pages/kb/KnowledgePage").then((m) => ({ default: m.KnowledgePage })));
 const DashboardPage = lazy(() => import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 const MembersPage = lazy(() => import("./pages/admin/MembersPage").then((m) => ({ default: m.MembersPage })));
 const config = () => import("./pages/admin/ConfigPages");
@@ -55,6 +58,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/ai-notice" element={<AINoticePage />} />
       <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
       <Route path="/join/:slug" element={<PublicOnly><RegisterPage /></PublicOnly>} />
@@ -76,6 +80,8 @@ export default function App() {
         <Route path="/admin/settings" element={<RequirePermission permission="org:update"><OrgSettingsPage /></RequirePermission>} />
         <Route path="/audit" element={<RequirePermission permission="audit:read"><AuditLogPage /></RequirePermission>} />
         <Route path="/platform" element={<RequirePermission permission="platform:admin"><PlatformPage /></RequirePermission>} />
+        <Route path="/ai/approvals" element={<RequirePermission permission="tickets:work"><ApprovalQueuePage /></RequirePermission>} />
+        <Route path="/kb" element={<RequirePermission permission="kb:read"><KnowledgePage /></RequirePermission>} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

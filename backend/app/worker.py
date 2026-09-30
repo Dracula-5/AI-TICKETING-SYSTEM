@@ -6,6 +6,7 @@ Runs the periodic jobs that must not live inside request handling:
 * SLA sweep — breach recording, escalation, auto-close (services/sla.py)
 * email delivery — drains the transactional outbox with retry/dead-letter
   (services/email.py)
+* background jobs — AI triage and other queued work (services/jobs.py)
 
 Every job is idempotent and claims rows with FOR UPDATE SKIP LOCKED, so
 running several worker replicas is safe (no leader election needed). The loop
@@ -27,11 +28,12 @@ from app.core.logging import setup_logging
 from app.core.monitoring import init_error_monitoring
 from app.db.database import SessionLocal
 from app.services.email import deliver_pending
+from app.services.jobs import run_due_jobs
 from app.services.sla import run_sla_sweep
 
 logger = logging.getLogger("app.worker")
 
-HEARTBEAT_FILE = Path("/tmp/nexadesk-worker.heartbeat")  # noqa: S108 -- container-local liveness marker
+HEARTBEAT_FILE = Path("/tmp/nexadesk-worker.heartbeat")  # noqa: S108  # nosec B108 -- container-local liveness marker
 HEARTBEAT_MAX_AGE_SECONDS = 120
 
 
@@ -69,10 +71,31 @@ def _sla_sweep() -> dict:
         db.close()
 
 
+def _ai_monitoring() -> dict:
+    """Daily drift / agreement check for every organization with AI enabled."""
+    from app.ai import monitoring
+    from app.db.models import Tenant
+
+    db = SessionLocal()
+    try:
+        results = {}
+        for tenant in db.query(Tenant).all():
+            results[tenant.id] = monitoring.run(db, tenant).status
+        db.commit()
+        return results
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
 def build_jobs() -> list[PeriodicJob]:
     return [
         PeriodicJob("sla_sweep", settings.sla_sweep_interval_seconds, _sla_sweep),
         PeriodicJob("email_delivery", settings.email_poll_interval_seconds, deliver_pending),
+        PeriodicJob("jobs", settings.job_poll_interval_seconds, run_due_jobs),
+        PeriodicJob("ai_monitoring", 24 * 3600, _ai_monitoring),
     ]
 
 
@@ -101,6 +124,10 @@ def main() -> None:
     setup_logging()
     settings.validate_for_environment()
     init_error_monitoring("worker")
+    if settings.worker_metrics_port:
+        from app.core import metrics
+
+        metrics.serve_worker_metrics(settings.worker_metrics_port)
     stop = threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())

@@ -113,7 +113,7 @@ class TestWorker:
         assert not worker.healthy()
 
     def test_default_jobs(self):
-        assert [j.name for j in worker.build_jobs()] == ["sla_sweep", "email_delivery"]
+        assert [j.name for j in worker.build_jobs()] == ["sla_sweep", "email_delivery", "jobs", "ai_monitoring"]
 
     def test_worker_sla_job_uses_its_own_session(self, client, db, manager_a, agent_a, customer_a):
         tid = create_ticket(client, customer_a, priority="critical")["id"]
@@ -207,3 +207,13 @@ class TestMonitoring:
         assert out["request"]["headers"]["Cookie"] == "[scrubbed]"
         assert out["request"]["headers"]["Accept"] == "*/*"
         assert "data" not in out["request"] and "cookies" not in out["request"]
+
+
+def test_db_session_teardown_does_not_use_the_request_threadpool():
+    # A sync `yield` dependency closes sessions on the shared request threadpool, which
+    # deadlocked the API under load (P10 finding). get_db must stay async.
+    import inspect
+
+    from app.db.database import get_db
+
+    assert inspect.isasyncgenfunction(get_db)

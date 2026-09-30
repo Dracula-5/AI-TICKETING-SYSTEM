@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 import { Link as RouterLink } from "react-router";
 
 import { analyticsApi } from "../api/endpoints";
+import { AIPerformanceSection } from "./AIPerformanceSection";
 import type { Overview, Priority, TicketStatus } from "../api/types";
 import { BarList, ChartCard, Legend, TrendLines } from "../components/charts";
 import { ErrorState, Loading, PageHeader } from "../components/states";
@@ -220,6 +221,7 @@ export function DashboardPage() {
           </Grid>
         </Grid>
       </Box>
+      <AIPerformanceSection />
     </>
   );
 }

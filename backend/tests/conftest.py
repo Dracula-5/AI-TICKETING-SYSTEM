@@ -16,12 +16,16 @@ os.environ["ENVIRONMENT"] = "test"
 os.environ["DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", "sqlite:///:memory:")
 os.environ["SECRET_KEY"] = "test-secret-key-for-pytest-only-0123456789abcdef"
 os.environ["SLA_SWEEP_ENABLED"] = "false"
+os.environ["JOB_RUNNER_ENABLED"] = "false"  # tests run jobs explicitly (run_due_jobs)
 os.environ["BCRYPT_ROUNDS"] = "4"
 os.environ["REDIS_URL"] = "redis://127.0.0.1:1/0"
 os.environ["ATTACHMENT_DIR"] = tempfile.mkdtemp(prefix="nexadesk-test-attachments-")
+# Deterministic offline embedder: no model downloads in tests (never used for metrics).
+os.environ["EMBEDDING_MODEL"] = "test-hashing"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import text  # noqa: E402
 
 from app.core.limiter import limiter  # noqa: E402
 from app.core.security import create_access_token, get_password_hash  # noqa: E402
@@ -33,10 +37,29 @@ from app.services.organizations import create_organization  # noqa: E402
 PASSWORD = "Correct-Horse-9"
 
 
+def _migration_module(name: str):
+    """Load a migration file (for its PostgreSQL-only DDL) without Alembic's runner."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[1] / "alembic" / "versions" / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(f"migration_{name}", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _schema():
+    if engine.dialect.name == "postgresql":  # migrations do this in real deployments (0003)
+        with engine.begin() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    if engine.dialect.name == "postgresql":  # PostgreSQL-only objects from migration 0005
+        with engine.begin() as conn:
+            for statement in _migration_module("0005_knowledge_base").PG_UP:
+                conn.execute(text(statement))
     yield
     Base.metadata.drop_all(engine)
 
@@ -194,3 +217,8 @@ def assign(client, user, ticket_id, assignee_id, **extra):
     return client.post(
         f"/api/v1/tickets/{ticket_id}/assign", json={"assignee_id": assignee_id, **extra}, headers=auth(user)
     )
+
+
+@pytest.fixture()
+def manager_b(db, org_b):
+    return make_user(db, org_b, "manager", "mia@globex.example.com")

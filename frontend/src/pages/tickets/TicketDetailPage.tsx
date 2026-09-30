@@ -29,10 +29,12 @@ import { orgApi, ticketsApi } from "../../api/endpoints";
 import type { Attachment, Priority, TicketDetail, TicketStatus } from "../../api/types";
 import { useAuth } from "../../auth/AuthProvider";
 import { DecisionSourceChip, PriorityChip, SlaChip, StatusChip } from "../../components/chips";
+import { CsatPrompt } from "../../components/Feedback";
 import { ErrorState, Loading } from "../../components/states";
 import { useToast } from "../../components/Toast";
 import { formatBytes, formatDateTime, formatDue, ticketRef } from "../../lib/format";
 import { PRIORITIES, PRIORITY, STATUS, TRANSITION_ACTION } from "../../lib/labels";
+import { AIPanel } from "./AIPanel";
 import { TicketTimeline } from "./TicketTimeline";
 
 const NEEDS_REASON: TicketStatus[] = ["waiting_for_customer", "escalated", "closed", "reopened"];
@@ -283,6 +285,7 @@ function ResolutionPanel({ ticket }: { ticket: TicketDetail }) {
           )}
         </Box>
       )}
+      {isRequester && (ticket.status === "closed" || ticket.status === "resolved") && !rejecting && <CsatPrompt ticketId={ticket.id} />}
     </Alert>
   );
 }
@@ -401,6 +404,8 @@ export function TicketDetailPage() {
               </Stack>
             </CardContent>
           </Card>
+
+          {staff && <AIPanel ticket={t} />}
 
           {staff && (
             <Card sx={{ mb: 2 }}>

@@ -281,6 +281,57 @@ function SlaPolicyForm({ initial }: { initial: SlaPolicy[] }) {
 }
 
 // --- Organization settings ------------------------------------------------------
+const AUTO_KINDS: { kind: OrgSettings["ai_auto_apply_kinds"][number]; label: string }[] = [
+  { kind: "category", label: "Category" },
+  { kind: "priority", label: "Priority" },
+  { kind: "team", label: "Team routing" },
+  { kind: "assignee", label: "Assignee" },
+];
+
+function AIPolicyFields({ settings, onChange }: { settings: OrgSettings; onChange: (s: OrgSettings) => void }) {
+  const toggle = (kind: OrgSettings["ai_auto_apply_kinds"][number], on: boolean) =>
+    onChange({
+      ...settings,
+      ai_auto_apply_kinds: on ? [...settings.ai_auto_apply_kinds, kind] : settings.ai_auto_apply_kinds.filter((k) => k !== kind),
+    });
+  return (
+    <Box>
+      <Typography variant="h4" sx={{ mb: 0.5 }}>AI recommendations</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        By default every AI recommendation waits for a person to accept, edit or reject it. Turn on automatic
+        application only for low-risk fields, and only after the AI performance report shows a low override rate for
+        your organization. Duplicate links are never applied automatically.
+      </Typography>
+      <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, mb: 2 }}>
+        {AUTO_KINDS.map(({ kind, label }) => (
+          <FormControlLabel
+            key={kind}
+            control={<Switch checked={settings.ai_auto_apply_kinds.includes(kind)} onChange={(e) => toggle(kind, e.target.checked)} />}
+            label={`Auto-apply ${label.toLowerCase()}`}
+          />
+        ))}
+      </Stack>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+        <TextField type="number" label="Auto-apply only at confidence ≥" value={settings.ai_auto_apply_threshold}
+          slotProps={{ htmlInput: { min: 0.5, max: 1, step: 0.01 } }} fullWidth
+          onChange={(e) => onChange({ ...settings, ai_auto_apply_threshold: Number(e.target.value) })} />
+        <TextField type="number" label="Flag possible duplicates at similarity ≥" value={settings.ai_duplicate_threshold}
+          slotProps={{ htmlInput: { min: 0.5, max: 1, step: 0.01 } }} fullWidth
+          onChange={(e) => onChange({ ...settings, ai_duplicate_threshold: Number(e.target.value) })} />
+        <TextField type="number" label="Similar resolved tickets needed" value={settings.ai_min_history}
+          slotProps={{ htmlInput: { min: 1, max: 100 } }} fullWidth
+          helperText="Below this, the rules engine decides alone"
+          onChange={(e) => onChange({ ...settings, ai_min_history: Number(e.target.value) })} />
+      </Stack>
+      <TextField type="number" label="Monthly token budget for generated text (summaries, reply drafts)"
+        value={settings.ai_llm_monthly_token_budget} sx={{ mt: 2 }} fullWidth
+        slotProps={{ htmlInput: { min: 0, step: 100000 } }}
+        helperText="Requests beyond the budget are refused until next month. 0 disables text generation."
+        onChange={(e) => onChange({ ...settings, ai_llm_monthly_token_budget: Number(e.target.value) })} />
+    </Box>
+  );
+}
+
 export function OrgSettingsPage() {
   const org = useQuery({ queryKey: ["organization"], queryFn: orgApi.get });
   if (org.isLoading) return <Loading />;
@@ -337,6 +388,7 @@ function OrgSettingsForm({ org }: { org: Organization }) {
                 </Stack>
               )}
             </Box>
+            <AIPolicyFields settings={settings} onChange={setSettings} />
             <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
               <Button variant="contained" disabled={save.isPending} onClick={() => save.mutate()}>Save changes</Button>
             </Box>

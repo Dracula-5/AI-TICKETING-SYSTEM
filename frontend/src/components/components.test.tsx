@@ -51,3 +51,15 @@ it("EmptyState shows title, body and action", () => {
   expect(screen.getByText("No tickets yet")).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Create" })).toBeInTheDocument();
 });
+
+describe("StarRating", () => {
+  it("is an accessible 1–5 radio group", async () => {
+    const { StarRating } = await import("./Feedback");
+    const onChange = vi.fn();
+    render(<StarRating value={3} onChange={onChange} />);
+    expect(screen.getByRole("radiogroup", { name: "Rating from 1 to 5" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "3 — OK" })).toHaveAttribute("aria-checked", "true");
+    screen.getByRole("radio", { name: "5 — Excellent" }).click();
+    expect(onChange).toHaveBeenCalledWith(5);
+  });
+});

@@ -10,4 +10,11 @@ if [ "${MIGRATE_ON_START:-true}" = "true" ]; then
   alembic upgrade head
 fi
 
+# Prometheus multi-process mode: every API worker process writes its metrics
+# to this directory and one /metrics scrape aggregates them. Cleared on start
+# so a restart does not resurrect stale counters.
+export PROMETHEUS_MULTIPROC_DIR="${PROMETHEUS_MULTIPROC_DIR:-/tmp/prometheus}"
+rm -rf "$PROMETHEUS_MULTIPROC_DIR"
+mkdir -p "$PROMETHEUS_MULTIPROC_DIR"
+
 exec "$@"

@@ -16,3 +16,9 @@ redis
 slowapi
 sentry-sdk
 boto3
+pgvector
+fastembed
+httpx
+pypdf
+python-docx
+prometheus-client

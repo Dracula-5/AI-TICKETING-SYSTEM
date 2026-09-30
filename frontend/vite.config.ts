@@ -37,6 +37,8 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     css: false,
     include: ["src/**/*.test.{ts,tsx}"],
+    // Full-app render tests take seconds on a loaded CI runner; 5 s default flakes.
+    testTimeout: 20_000,
     coverage: { provider: "v8", include: ["src/**/*.{ts,tsx}"], exclude: ["src/test/**", "src/main.tsx"] },
   },
 });

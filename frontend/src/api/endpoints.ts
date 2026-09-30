@@ -1,10 +1,20 @@
 import { api } from "./client";
 import type {
+  AgentRun,
+  AICapabilities,
+  AIMonitoringRun,
+  AIPerformance,
+  AIPrediction,
+  ApprovalQueue,
   AuditEntry,
   Attachment,
   Category,
   Comment,
   Invitation,
+  KBAnswer,
+  KBDocument,
+  KBDocumentDetail,
+  KBSearch,
   Me,
   NotificationItem,
   Organization,
@@ -17,6 +27,7 @@ import type {
   StatusHistoryEntry,
   Team,
   Ticket,
+  TicketAI,
   TicketDetail,
   TicketStatus,
   TokenOut,
@@ -127,6 +138,48 @@ export const orgApi = {
 // --- analytics, audit, notifications ----------------------------------------
 export const analyticsApi = {
   overview: () => data<Overview>(api.get("/analytics/overview")),
+};
+
+export const aiApi = {
+  ticket: (id: number) => data<TicketAI>(api.get(`/tickets/${id}/ai`)),
+  analyze: (id: number) => data<TicketAI>(api.post(`/tickets/${id}/ai/analyze`)),
+  decide: (predictionId: number, decision: "accept" | "edit" | "reject", value?: Record<string, unknown>) =>
+    data<AIPrediction>(api.post(`/ai/predictions/${predictionId}/decision`, { decision, value })),
+  performance: (days = 30) => data<AIPerformance>(api.get("/analytics/ai-performance", { params: { days } })),
+  capabilities: () => data<AICapabilities>(api.get("/ai/capabilities")),
+  monitoring: () => data<AIMonitoringRun[]>(api.get("/analytics/ai-monitoring")),
+  summary: (id: number) => data<AIPrediction>(api.post(`/tickets/${id}/ai/summary`)),
+  replyDraft: (id: number) => data<AIPrediction>(api.post(`/tickets/${id}/ai/reply-draft`)),
+  runs: (id: number) => data<AgentRun[]>(api.get(`/tickets/${id}/agent/runs`)),
+  queue: (params: { risk?: string; kind?: string; limit?: number } = {}) =>
+    data<ApprovalQueue>(api.get("/ai/queue", { params })),
+  bulkDecide: (prediction_ids: number[], decision: "accept" | "reject") =>
+    data<{ decided: number[]; failed: Record<string, string> }>(api.post("/ai/predictions/bulk-decision", { prediction_ids, decision })),
+};
+
+export const kbApi = {
+  documents: () => data<KBDocument[]>(api.get("/kb/documents")),
+  document: (id: number) => data<KBDocumentDetail>(api.get(`/kb/documents/${id}`)),
+  upload: (file: File, visibility: "internal" | "public") => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("visibility", visibility);
+    return data<KBDocument>(api.post("/kb/documents", form));
+  },
+  update: (id: number, body: { title?: string; visibility?: "internal" | "public" }) =>
+    data<KBDocument>(api.patch(`/kb/documents/${id}`, body)),
+  reindex: (id: number) => data<KBDocument>(api.post(`/kb/documents/${id}/reindex`)),
+  remove: (id: number) => data(api.delete(`/kb/documents/${id}`)),
+  search: (q: string, k = 5) => data<KBSearch>(api.get("/kb/search", { params: { q, k } })),
+  answer: (question: string) => data<KBAnswer>(api.post("/kb/answer", { question })),
+  feedback: (queryId: number, helpful: boolean) => data(api.post(`/kb/queries/${queryId}/feedback`, { helpful })),
+  forTicket: (ticketId: number) => data<KBSearch>(api.get(`/tickets/${ticketId}/ai/knowledge`)),
+};
+
+export const feedbackApi = {
+  csat: (ticketId: number, rating: number, comment?: string) =>
+    data(api.post(`/tickets/${ticketId}/csat`, { rating, comment })),
+  product: (comment: string, page?: string) => data(api.post("/feedback", { comment, page })),
 };
 
 export const auditApi = {

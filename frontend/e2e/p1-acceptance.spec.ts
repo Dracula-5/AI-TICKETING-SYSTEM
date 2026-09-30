@@ -126,6 +126,10 @@ test("P1: register → invite → requester ticket → agent resolves → reques
   await requester.screenshot({ path: `${SHOTS}/05-requester-resolution.png` });
   await requester.getByRole("button", { name: "Yes, it's fixed" }).click();
   await expect(requester.getByText("Closed").first()).toBeVisible();
+  // …and rates the service (CSAT, P9).
+  await requester.getByRole("radio", { name: "5 — Excellent" }).click();
+  await requester.getByRole("button", { name: "Send rating" }).click();
+  await expect(requester.getByText("Thanks — your rating helps the team improve.")).toBeVisible();
 
   // 6. The admin sees it in analytics…
   await admin.goto("/dashboard");

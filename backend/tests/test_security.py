@@ -5,7 +5,7 @@ the defects A1–A10 reproduced in docs/current_architecture.md §5.
 
 import pytest
 
-from app.core.config import Settings
+from app.core.config import Settings, settings
 from app.core.limiter import limiter
 from app.db.models import User
 from tests.conftest import PASSWORD, auth, create_ticket, move
@@ -36,7 +36,7 @@ class TestAuditFindings:
             ("post", "/tenants/"),
             ("get", "/tenants/1"),
             ("put", "/sla/check"),
-            ("get", "/metrics"),
+            ("get", "/api/v1/metrics"),
             ("post", "/auth/register-simple"),
             ("post", "/users/create-default-users"),
         ],
@@ -46,6 +46,17 @@ class TestAuditFindings:
             kwargs = {"json": {}} if method != "get" else {}
             resp = getattr(client, method)(prefix + path, **kwargs)
             assert resp.status_code in (404, 405), (prefix + path, resp.status_code)
+
+    def test_a5_metrics_carry_no_tenant_data_and_need_a_token(self, client, db, org_a, customer_a, monkeypatch):
+        # The legacy /metrics leaked per-tenant business data to anyone. Its
+        # replacement is Prometheus operational counters only, token-protected.
+        create_ticket(client, customer_a, title="Payroll for Acme is wrong")
+        body = client.get("/metrics").text
+        assert "Acme" not in body and "Payroll" not in body and org_a.slug not in body
+        monkeypatch.setattr(settings, "metrics_token", "s" * 32)
+        assert client.get("/metrics").status_code == 401
+        assert client.get("/metrics", headers={"Authorization": "Bearer wrong"}).status_code == 401
+        assert client.get("/metrics", headers={"Authorization": "Bearer " + "s" * 32}).status_code == 200
 
     def test_a7_no_default_credentials_are_seeded(self, client, db):
         assert db.query(User).count() == 0
@@ -131,6 +142,8 @@ class TestProductionConfig:
             cookie_secure=True,
             database_url="postgresql://u:p@db/nexadesk",
             bcrypt_rounds=12,
+            embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+            metrics_token="m" * 32,
         )
         return Settings(**{**base, **overrides})
 
@@ -145,6 +158,8 @@ class TestProductionConfig:
             ({"cookie_secure": False}, "COOKIE_SECURE"),
             ({"database_url": "sqlite:///./x.db"}, "PostgreSQL"),
             ({"bcrypt_rounds": 4}, "BCRYPT_ROUNDS"),
+            ({"embedding_model": "test-hashing"}, "EMBEDDING_MODEL"),
+            ({"metrics_token": ""}, "METRICS_TOKEN"),
         ],
     )
     def test_unsafe_production_config_refuses_to_boot(self, override, message):

@@ -1,0 +1,71 @@
+[
+  {
+    "org": "brightline-retail",
+    "n": 800,
+    "A_no_tools": {
+      "automation_rate": 1.0,
+      "error_rate": 0.71375,
+      "note": "majority category of the replayed tickets (optimistic for A)"
+    },
+    "B_tools_no_gate": {
+      "automation_rate": 1.0,
+      "error_rate": 0.53
+    },
+    "C_gate_0.7": {
+      "automation_rate": 0.09125,
+      "error_rate": 0.0958904109589041,
+      "queued_for_people": 0.90875
+    },
+    "C_gate_0.9": {
+      "automation_rate": 0.055,
+      "error_rate": 0.0,
+      "queued_for_people": 0.945
+    }
+  },
+  {
+    "org": "helix-health",
+    "n": 1100,
+    "A_no_tools": {
+      "automation_rate": 1.0,
+      "error_rate": 0.7245454545454545,
+      "note": "majority category of the replayed tickets (optimistic for A)"
+    },
+    "B_tools_no_gate": {
+      "automation_rate": 1.0,
+      "error_rate": 0.4709090909090909
+    },
+    "C_gate_0.7": {
+      "automation_rate": 0.09909090909090909,
+      "error_rate": 0.05504587155963303,
+      "queued_for_people": 0.9009090909090909
+    },
+    "C_gate_0.9": {
+      "automation_rate": 0.05909090909090909,
+      "error_rate": 0.0,
+      "queued_for_people": 0.9409090909090909
+    }
+  },
+  {
+    "org": "orbital-engineering",
+    "n": 500,
+    "A_no_tools": {
+      "automation_rate": 1.0,
+      "error_rate": 0.688,
+      "note": "majority category of the replayed tickets (optimistic for A)"
+    },
+    "B_tools_no_gate": {
+      "automation_rate": 1.0,
+      "error_rate": 0.538
+    },
+    "C_gate_0.7": {
+      "automation_rate": 0.062,
+      "error_rate": 0.03225806451612903,
+      "queued_for_people": 0.938
+    },
+    "C_gate_0.9": {
+      "automation_rate": 0.048,
+      "error_rate": 0.0,
+      "queued_for_people": 0.952
+    }
+  }
+]

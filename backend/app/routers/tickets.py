@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Reques
 from sqlalchemy import ColumnElement, case, func, or_
 from sqlalchemy.orm import Session, joinedload
 
+from app.ai import decisions as ai_decisions
 from app.core.config import settings
 from app.core.deps import get_org_user, org_id, require_permission
 from app.core.limiter import limiter
@@ -223,14 +224,19 @@ def list_tickets(
             )
         else:
             query = query.filter(at_risk_clause(db, org_id(user), now))
-    if q:
+    if q and q.startswith("#") and q[1:].isdigit():
+        # "#123" is a ticket-number lookup: use the unique (tenant, number) index. Mixing it into
+        # the text search took 5 s at 1M tickets (reports/scale/): the planner walked the
+        # created_at index looking for a rare match.
+        query = query.filter(Ticket.number == int(q[1:]))
+    elif q:
         like = f"%{q.lower()}%"
         conditions: list[ColumnElement[bool]] = [
             func.lower(Ticket.title).like(like),
             func.lower(Ticket.description).like(like),
         ]
-        if q.lstrip("#").isdigit():
-            conditions.append(Ticket.number == int(q.lstrip("#")))
+        if q.isdigit():
+            conditions.append(Ticket.number == int(q))
         query = query.filter(or_(*conditions))
 
     total = query.count()
@@ -278,9 +284,10 @@ def update_ticket(
         if required in fields and fields[required] is None:
             raise HTTPException(status_code=422, detail=f"{required} cannot be empty")
     try:
-        svc.update_fields(db, ticket, actor=user, fields=fields)
+        changes = svc.update_fields(db, ticket, actor=user, fields=fields)
     except TicketError as e:
         _raise(e)
+    ai_decisions.note_human_change(db, ticket, set(changes), user)
     db.commit()
     db.refresh(ticket)
     return detail_out(ticket, user)
@@ -320,12 +327,14 @@ def assign_ticket(ticket_id: int, payload: AssignIn, user: User = Depends(get_or
         )
         if not self_service or payload.team_id not in (None, ticket.team_id):
             raise HTTPException(status_code=403, detail="Only managers can assign tickets to other people")
+    before = {"team_id": ticket.team_id, "assigned_to_user_id": ticket.assigned_to_user_id}
     try:
         svc.assign(
             db, ticket, assignee_id=payload.assignee_id, team_id=payload.team_id, actor=user, reason=payload.reason
         )
     except TicketError as e:
         _raise(e)
+    ai_decisions.note_human_change(db, ticket, {k for k, v in before.items() if getattr(ticket, k) != v}, user)
     db.commit()
     db.refresh(ticket)
     return detail_out(ticket, user)

@@ -1,0 +1,169 @@
+{
+  "task": "rag",
+  "run": "p6_retrieval_cqadupstack",
+  "timestamp": "2026-09-30T17:01:53+00:00",
+  "duration_seconds": 0.27,
+  "git": {
+    "commit": "80f1e0d4a126ee13c5971f57e3b689059edc2854",
+    "dirty": true
+  },
+  "datasets_sha256": {
+    "data/processed/dup_unix_corpus.parquet": "712879bbf6bdb4dcd128b65ce8d60fe7f707228c98864f5066a11b22df289cff",
+    "data/processed/dup_unix_queries.parquet": "aa2a9a32bd9ca73f67f9624ba8fc09053795de95a445de710541b72e3ef7c904",
+    "data/processed/dup_unix_qrels.parquet": "3f77562114ee6e32f62ac2b787fce057443436c9a9298f29d4a6e5566756e9a2"
+  },
+  "params": {
+    "candidates": 30,
+    "rrf_k": 60,
+    "rerank_top": 20,
+    "reranker": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "test_queries": 533,
+    "corpus": 47382,
+    "lexical": "BM25Okapi, stop-listed lower-case tokens"
+  },
+  "metrics": {
+    "systems": {
+      "BM25 (lexical)": {
+        "recall_at_1": 0.199656,
+        "hit_rate_at_1": 0.225141,
+        "recall_at_3": 0.25813,
+        "hit_rate_at_3": 0.283302,
+        "recall_at_5": 0.304018,
+        "hit_rate_at_5": 0.339587,
+        "recall_at_10": 0.341565,
+        "hit_rate_at_10": 0.380863,
+        "recall_at_20": 0.39469,
+        "hit_rate_at_20": 0.442777,
+        "mrr": 0.274703,
+        "mrr_at_10": 0.268958,
+        "ndcg_at_10": 0.274286
+      },
+      "Dense \u00b7 all-MiniLM-L6-v2": {
+        "recall_at_1": 0.252019,
+        "hit_rate_at_1": 0.300188,
+        "recall_at_3": 0.392648,
+        "hit_rate_at_3": 0.452158,
+        "recall_at_5": 0.466435,
+        "hit_rate_at_5": 0.527205,
+        "recall_at_10": 0.532467,
+        "hit_rate_at_10": 0.594747,
+        "recall_at_20": 0.617845,
+        "hit_rate_at_20": 0.673546,
+        "mrr": 0.399179,
+        "mrr_at_10": 0.391889,
+        "ndcg_at_10": 0.406791
+      },
+      "Hybrid RRF \u00b7 BM25 + all-MiniLM-L6-v2": {
+        "recall_at_1": 0.237649,
+        "hit_rate_at_1": 0.272045,
+        "recall_at_3": 0.340025,
+        "hit_rate_at_3": 0.382739,
+        "recall_at_5": 0.391695,
+        "hit_rate_at_5": 0.442777,
+        "recall_at_10": 0.504814,
+        "hit_rate_at_10": 0.570356,
+        "recall_at_20": 0.594125,
+        "hit_rate_at_20": 0.654784,
+        "mrr": 0.360683,
+        "mrr_at_10": 0.35166,
+        "ndcg_at_10": 0.372047
+      },
+      "Dense \u00b7 bge-small-en-v1.5": {
+        "recall_at_1": 0.231899,
+        "hit_rate_at_1": 0.272045,
+        "recall_at_3": 0.367098,
+        "hit_rate_at_3": 0.420263,
+        "recall_at_5": 0.409455,
+        "hit_rate_at_5": 0.465291,
+        "recall_at_10": 0.478221,
+        "hit_rate_at_10": 0.529081,
+        "recall_at_20": 0.56908,
+        "hit_rate_at_20": 0.624765,
+        "mrr": 0.363816,
+        "mrr_at_10": 0.355054,
+        "ndcg_at_10": 0.366238
+      },
+      "Hybrid RRF \u00b7 BM25 + bge-small-en-v1.5": {
+        "recall_at_1": 0.225297,
+        "hit_rate_at_1": 0.257036,
+        "recall_at_3": 0.32439,
+        "hit_rate_at_3": 0.363977,
+        "recall_at_5": 0.380414,
+        "hit_rate_at_5": 0.425891,
+        "recall_at_10": 0.470977,
+        "hit_rate_at_10": 0.525328,
+        "recall_at_20": 0.554464,
+        "hit_rate_at_20": 0.611632,
+        "mrr": 0.3423,
+        "mrr_at_10": 0.33266,
+        "ndcg_at_10": 0.351218
+      },
+      "Hybrid RRF + rerank \u00b7 BM25 + all-MiniLM-L6-v2": {
+        "recall_at_1": 0.2707,
+        "hit_rate_at_1": 0.311445,
+        "recall_at_3": 0.365455,
+        "hit_rate_at_3": 0.409006,
+        "recall_at_5": 0.423199,
+        "hit_rate_at_5": 0.474672,
+        "recall_at_10": 0.496603,
+        "hit_rate_at_10": 0.551595,
+        "recall_at_20": 0.594125,
+        "hit_rate_at_20": 0.654784,
+        "mrr": 0.387675,
+        "mrr_at_10": 0.377645,
+        "ndcg_at_10": 0.389549
+      },
+      "Hybrid RRF + rerank \u00b7 BM25 + bge-small-en-v1.5": {
+        "recall_at_1": 0.266948,
+        "hit_rate_at_1": 0.307692,
+        "recall_at_3": 0.352595,
+        "hit_rate_at_3": 0.39212,
+        "recall_at_5": 0.393156,
+        "hit_rate_at_5": 0.439024,
+        "recall_at_10": 0.475867,
+        "hit_rate_at_10": 0.530957,
+        "recall_at_20": 0.554464,
+        "hit_rate_at_20": 0.611632,
+        "mrr": 0.376847,
+        "mrr_at_10": 0.36806,
+        "ndcg_at_10": 0.376865
+      },
+      "Dense + rerank \u00b7 all-MiniLM-L6-v2": {
+        "recall_at_1": 0.26921,
+        "hit_rate_at_1": 0.313321,
+        "recall_at_3": 0.391872,
+        "hit_rate_at_3": 0.440901,
+        "recall_at_5": 0.430615,
+        "hit_rate_at_5": 0.487805,
+        "recall_at_10": 0.527997,
+        "hit_rate_at_10": 0.585366,
+        "recall_at_20": 0.617845,
+        "hit_rate_at_20": 0.673546,
+        "mrr": 0.401656,
+        "mrr_at_10": 0.394035,
+        "ndcg_at_10": 0.408244
+      }
+    },
+    "latency": {
+      "rerank_top20_p50_ms": 1154.1118,
+      "rerank_top20_p95_ms": 1813.49833,
+      "bm25_mean_ms_per_query_python": 281.99241
+    }
+  },
+  "artifacts": [],
+  "notes": [],
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "lightgbm": "4.7.0",
+      "torch": "2.14.0+cpu",
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.17.0"
+    }
+  }
+}

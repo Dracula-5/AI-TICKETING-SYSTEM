@@ -293,3 +293,10 @@ class TestListing:
         create_ticket(client, customer_a, title="crit one", description="x", priority="critical")
         items = client.get(API, params={"sort": "-priority"}, headers=auth(agent_a)).json()["items"]
         assert items[0]["priority"] == "critical"
+
+
+def test_hash_number_search_is_an_exact_ticket_lookup(client, customer_a, agent_a):
+    first = create_ticket(client, customer_a, title="Printer offline")
+    create_ticket(client, customer_a, title="Follow-up", description=f"Same as #{first['number']} last week")
+    r = client.get("/api/v1/tickets", params={"q": f"#{first['number']}"}, headers=auth(agent_a)).json()
+    assert [t["id"] for t in r["items"]] == [first["id"]]

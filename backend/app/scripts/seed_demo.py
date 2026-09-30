@@ -23,14 +23,24 @@ from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import get_password_hash
 from app.db.database import SessionLocal, utcnow
 from app.db.models import (
+    AgentRun,
+    AIMonitoringRun,
+    AIPrediction,
     Attachment,
     AuditLog,
     Category,
     EmailOutbox,
+    Feedback,
     Invitation,
+    Job,
+    KBChunk,
+    KBDocument,
+    KBQuery,
+    LLMCall,
     Notification,
     RefreshToken,
     SlaPolicy,
@@ -39,10 +49,12 @@ from app.db.models import (
     Tenant,
     Ticket,
     TicketComment,
+    TicketEmbedding,
     TicketStatusHistory,
     User,
     UserToken,
 )
+from app.services import jobs
 from app.services import tickets as svc
 from app.services.organizations import create_organization
 
@@ -155,7 +167,25 @@ RESOLUTIONS = [
 def _delete_org(db: Session, tenant: Tenant) -> None:
     tid = tenant.id
     user_ids = [u for (u,) in db.query(User.id).filter(User.tenant_id == tid)]
-    for model in (Attachment, TicketComment, TicketStatusHistory, Notification, AuditLog, Invitation, EmailOutbox):
+    for model in (
+        Attachment,
+        TicketComment,
+        TicketStatusHistory,
+        Notification,
+        AuditLog,
+        Invitation,
+        EmailOutbox,
+        AIPrediction,
+        AgentRun,
+        AIMonitoringRun,
+        Feedback,
+        TicketEmbedding,
+        Job,
+        KBQuery,
+        KBChunk,
+        KBDocument,
+        LLMCall,
+    ):
         db.query(model).filter(model.tenant_id == tid).delete(synchronize_session=False)
     db.query(Ticket).filter(Ticket.tenant_id == tid).delete(synchronize_session=False)
     if user_ids:
@@ -233,9 +263,12 @@ def _seed_org(db: Session, spec: dict, password_hash: str, rng: random.Random) -
             priority=priority,
             data_origin="demo",
             created_at=created,
+            analyze=False,  # history is indexed once below, not triaged after the fact
         )
         _backdate_creation_history(db, ticket, created)
         _play_lifecycle(db, ticket, created, agents, rng)
+    if settings.ai_enabled:
+        jobs.enqueue(db, "ai.reindex_tenant", {"tenant_id": tenant.id, "triage_open": True}, tenant_id=tenant.id)
     db.commit()
     return {"org": tenant.name, "slug": tenant.slug, "users": {r: [u.email for u in us] for r, us in people.items()}}
 

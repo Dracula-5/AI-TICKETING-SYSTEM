@@ -164,6 +164,11 @@ export interface OrgSettings {
   reopen_window_days: number;
   portal_signup_enabled: boolean;
   portal_allowed_domains: string[];
+  ai_auto_apply_kinds: ("category" | "priority" | "team" | "assignee")[];
+  ai_auto_apply_threshold: number;
+  ai_duplicate_threshold: number;
+  ai_min_history: number;
+  ai_llm_monthly_token_budget: number;
 }
 
 export interface Organization {
@@ -240,5 +245,224 @@ export interface AuditEntry {
   changes: Record<string, unknown> | null;
   ip: string | null;
   request_id: string | null;
+  created_at: string;
+}
+
+// --- AI recommendations -------------------------------------------------------
+export type AIKind =
+  | "category"
+  | "priority"
+  | "team"
+  | "assignee"
+  | "duplicate"
+  | "resolution_time"
+  | "sla_risk"
+  | "next_action"
+  | "summary"
+  | "reply"
+  | "request_info"
+  | "escalate";
+
+export type AIStatus =
+  | "proposed"
+  | "auto_applied"
+  | "accepted"
+  | "edited"
+  | "rejected"
+  | "superseded"
+  | "overridden"
+  | "no_change"
+  | "invalid"
+  | "failed_verification";
+
+export interface SimilarTicket {
+  ticket_id: number;
+  number: number;
+  title: string;
+  status: TicketStatus;
+  similarity: number;
+  same_requester?: boolean;
+}
+
+export interface AIPrediction {
+  id: number;
+  kind: AIKind;
+  source: "ai" | "rules" | "statistics";
+  model: string;
+  model_version: string;
+  value: Record<string, unknown>;
+  confidence: number | null;
+  evidence: {
+    similar_tickets?: SimilarTicket[];
+    candidates?: SimilarTicket[];
+    distribution?: Record<string, number>;
+    neighbors_used?: number;
+    policy?: string;
+    method?: string;
+    reason?: string;
+    n?: number;
+    threshold?: number;
+    llm_call_id?: number;
+  } | null;
+  latency_ms: number | null;
+  status: AIStatus;
+  final_value: Record<string, unknown> | null;
+  decided_at: string | null;
+  created_at: string;
+}
+
+export interface TicketAI {
+  status: "disabled" | "pending" | "ready" | "failed";
+  model: string | null;
+  predictions: AIPrediction[];
+}
+
+export interface AIKindStats {
+  kind: AIKind;
+  total: number;
+  auto_applied: number;
+  accepted: number;
+  edited: number;
+  rejected: number;
+  overridden: number;
+  pending: number;
+  no_change: number;
+  invalid: number;
+  failed_verification: number;
+  acceptance_rate: number | null;
+  override_rate: number | null;
+  automation_false_positive_rate: number | null;
+  mean_confidence: number | null;
+}
+
+export interface AICapabilities {
+  triage: boolean;
+  embedding_model: string | null;
+  text_generation: boolean;
+  llm_provider: string | null;
+  llm_model: string | null;
+}
+
+export interface LLMUsage {
+  calls: number;
+  failed_calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cost_usd: number | null;
+  p50_latency_ms: number | null;
+  tokens_this_month: number;
+  monthly_token_budget: number;
+}
+
+export interface AIPerformance {
+  window_days: number;
+  data_origin: string;
+  tickets_analyzed: number;
+  p50_latency_ms: number | null;
+  p95_latency_ms: number | null;
+  models: Record<string, number>;
+  by_kind: AIKindStats[];
+  text_generation: LLMUsage;
+  definitions: Record<string, string>;
+}
+
+// --- knowledge base -----------------------------------------------------------
+export interface KBDocument {
+  id: number;
+  title: string;
+  filename: string;
+  content_type: string;
+  visibility: "internal" | "public";
+  status: "processing" | "ready" | "failed";
+  error: string | null;
+  size_bytes: number;
+  chunk_count: number;
+  data_origin: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KBDocumentDetail extends KBDocument {
+  text: string | null;
+}
+
+export interface KBHit {
+  chunk_id: number;
+  document_id: number;
+  title: string;
+  heading: string | null;
+  snippet: string;
+  visibility: "internal" | "public";
+  score: number;
+  dense_similarity: number | null;
+  reranked: boolean;
+}
+
+export interface KBSearch {
+  query_id: number | null;
+  mode: string;
+  hits: KBHit[];
+}
+
+export interface KBCitation {
+  number: number;
+  chunk_id: number;
+  document_id: number;
+  title: string;
+  heading: string | null;
+  snippet: string;
+}
+
+export interface KBAnswer {
+  query_id: number | null;
+  status: "answered" | "no_answer" | "search_only";
+  answer: string | null;
+  citations: KBCitation[];
+  supported_ratio: number | null;
+  unsupported_sentences: string[];
+  mode: string;
+  hits: KBHit[];
+}
+
+export interface AgentRun {
+  id: number;
+  trigger: string;
+  planner: string;
+  model: string;
+  status: string;
+  steps: { kind: AIKind; tool: string | null; outcome: string; reason?: string; risk?: string; confidence: number | null; ms?: number }[];
+  latency_ms: number | null;
+  created_at: string;
+}
+
+export interface QueueItem {
+  prediction: AIPrediction;
+  risk: "low" | "medium" | "high";
+  ticket_id: number;
+  ticket_number: number;
+  ticket_title: string;
+  ticket_status: TicketStatus;
+  ticket_priority: Priority;
+}
+
+export interface ApprovalQueue {
+  items: QueueItem[];
+  total: number;
+  by_risk: Record<string, number>;
+}
+
+export interface AIMonitoringRun {
+  status: "ok" | "alert" | "insufficient_data";
+  metrics: {
+    recent_tickets: number;
+    baseline_tickets: number;
+    category_psi?: number;
+    embedding_centroid_distance?: number;
+    novelty_rate?: number;
+    acceptance_recent?: number | null;
+    acceptance_baseline?: number | null;
+  };
+  alerts: string[];
+  engine_version: string;
   created_at: string;
 }

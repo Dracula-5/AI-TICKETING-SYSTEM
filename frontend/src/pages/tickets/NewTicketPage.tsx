@@ -1,14 +1,42 @@
 import { Alert, Button, Card, CardContent, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 
 import { errorMessage } from "../../api/client";
-import { orgApi, ticketsApi } from "../../api/endpoints";
+import { kbApi, orgApi, ticketsApi } from "../../api/endpoints";
 import type { Priority } from "../../api/types";
 import { PageHeader } from "../../components/states";
 import { useToast } from "../../components/Toast";
+import { useAuth } from "../../auth/AuthProvider";
 import { PRIORITIES, PRIORITY } from "../../lib/labels";
+import { DocumentDialog, HitList } from "../kb/KBComponents";
+
+/** Published articles matching what the requester is typing (debounced). */
+function SuggestedArticles({ text }: { text: string }) {
+  const { can } = useAuth();
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState<number | null>(null);
+  useEffect(() => {
+    const id = setTimeout(() => setQuery(text.trim().slice(0, 300)), 600);
+    return () => clearTimeout(id);
+  }, [text]);
+  const results = useQuery({
+    queryKey: ["kb", "suggest", query],
+    queryFn: () => kbApi.search(query, 3),
+    enabled: can("kb:read") && query.length >= 12,
+    staleTime: 60_000,
+  });
+  const hits = (results.data?.hits ?? []).filter((h) => (h.dense_similarity ?? 0) >= 0.45 || h.reranked);
+  if (!hits.length) return null;
+  return (
+    <Alert severity="info" icon={false}>
+      <Typography variant="subtitle2" sx={{ mb: 1 }}>These articles might solve it right away</Typography>
+      <HitList hits={hits} onOpen={setOpen} />
+      <DocumentDialog id={open} onClose={() => setOpen(null)} />
+    </Alert>
+  );
+}
 
 export function NewTicketPage() {
   const navigate = useNavigate();
@@ -78,6 +106,7 @@ export function NewTicketPage() {
               slotProps={{ htmlInput: { maxLength: 10000 } }}
               helperText="What happened, when it started, who is affected, any error messages."
             />
+            <SuggestedArticles text={`${title}\n${description}`} />
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField select label="Category (optional)" value={category} onChange={(e) => setCategory(e.target.value)} fullWidth
                 helperText="Leave empty and it will be categorized automatically.">

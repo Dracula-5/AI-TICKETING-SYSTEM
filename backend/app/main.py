@@ -1,4 +1,5 @@
 import asyncio
+import hmac
 import logging
 import re
 import time
@@ -14,6 +15,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
+from app.core import metrics
 from app.core.cache import get_redis
 from app.core.config import settings
 from app.core.limiter import limiter
@@ -22,10 +24,13 @@ from app.core.monitoring import init_error_monitoring
 from app.core.request_context import RequestContext, reset_request_context, set_request_context
 from app.db.database import SessionLocal
 from app.routers import (
+    ai,
     analytics,
     audit_logs,
     auth,
     dev,
+    feedback,
+    kb,
     notifications,
     org_config,
     organizations,
@@ -65,13 +70,31 @@ async def _sla_loop() -> None:
         await asyncio.sleep(settings.sla_sweep_interval_seconds)
 
 
+async def _jobs_loop() -> None:
+    # BACKGROUND_MODE=inline only: run queued jobs (AI triage, knowledge-base
+    # indexing) in-process. Independent of the SLA sweep setting.
+    from app.services.jobs import run_due_jobs
+
+    while True:
+        await anyio.to_thread.run_sync(run_due_jobs)
+        await asyncio.sleep(settings.job_poll_interval_seconds)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.validate_for_environment()
     init_error_monitoring("api")
-    tasks = []
+    tasks: list[asyncio.Task] = []
     if settings.background_mode == "inline" and settings.sla_sweep_enabled:
         tasks.append(asyncio.create_task(_sla_loop()))
+    if settings.background_mode == "inline" and settings.job_runner_enabled:
+        tasks.append(asyncio.create_task(_jobs_loop()))
+    if settings.ai_enabled and settings.environment != "test":
+        # Load the embedding model in the background at start-up; lazily, the first
+        # KB search or analysis in each process paid ~3 s (P10 load test).
+        from app.ai.embedder import get_embedder
+
+        tasks.append(asyncio.create_task(anyio.to_thread.run_sync(get_embedder)))
     if get_redis() is not None:
         # Cross-process WebSocket fan-out (services/realtime.py).
         tasks.append(asyncio.create_task(run_subscriber(ws_manager)))
@@ -130,10 +153,26 @@ async def request_context_middleware(request: Request, call_next):
     start = time.perf_counter()
     try:
         response = await call_next(request)
+    except Exception:
+        # Unhandled errors become a 500 in the outer error middleware; count them here,
+        # or the 5xx metrics and alert never see them (found in the P10 load test).
+        route = getattr(request.scope.get("route"), "path", "unmatched")
+        if request.url.path.startswith(API_PREFIX) and not route.startswith(API_PREFIX) and route != "unmatched":
+            route = API_PREFIX + route
+        metrics.HTTP_REQUESTS.labels(request.method, route, "500").inc()
+        metrics.HTTP_LATENCY.labels(request.method, route).observe(time.perf_counter() - start)
+        raise
     finally:
         reset_request_context(token)
-    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    elapsed = time.perf_counter() - start
+    duration_ms = round(elapsed * 1000, 2)
     response.headers["X-Request-ID"] = request_id
+    # Route template, not the raw path, so ids do not explode label cardinality.
+    route = getattr(request.scope.get("route"), "path", "unmatched")
+    if request.url.path.startswith(API_PREFIX) and not route.startswith(API_PREFIX) and route != "unmatched":
+        route = API_PREFIX + route  # included routers report their path without the mount prefix
+    metrics.HTTP_REQUESTS.labels(request.method, route, str(response.status_code)).inc()
+    metrics.HTTP_LATENCY.labels(request.method, route).observe(elapsed)
 
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
@@ -162,7 +201,20 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
-for module in (auth, users, organizations, org_config, tickets, notifications, analytics, audit_logs, platform):
+for module in (
+    auth,
+    users,
+    organizations,
+    org_config,
+    tickets,
+    notifications,
+    analytics,
+    audit_logs,
+    platform,
+    ai,
+    kb,
+    feedback,
+):
     app.include_router(module.router, prefix=API_PREFIX)
 app.include_router(tickets.attachments_router, prefix=API_PREFIX)
 if settings.environment in ("development", "test"):
@@ -218,3 +270,15 @@ def _alembic_head() -> str | None:
         cfg.set_main_option("script_location", str(backend_dir / "alembic"))
         _HEAD = ScriptDirectory.from_config(cfg).get_current_head()
     return _HEAD
+
+
+@app.get("/metrics", include_in_schema=False)
+def prometheus_metrics(request: Request) -> Response:
+    """Prometheus scrape endpoint. Internal network only (Caddy routes nothing
+    here) and, when METRICS_TOKEN is set (required when deployed), bearer-protected."""
+    if settings.metrics_token:
+        supplied = request.headers.get("authorization", "").removeprefix("Bearer ").strip()
+        if not hmac.compare_digest(supplied.encode(), settings.metrics_token.encode()):
+            return Response(status_code=401)
+    body, content_type = metrics.render()
+    return Response(content=body, media_type=content_type)

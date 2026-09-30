@@ -17,6 +17,18 @@ DEFAULT_ORG_SETTINGS: dict = {
     "portal_signup_enabled": False,
     # When non-empty, portal sign-ups must use one of these email domains.
     "portal_allowed_domains": [],
+    # AI (human-in-the-loop policy in app/ai/policy.py). Empty = recommend only.
+    "ai_auto_apply_kinds": [],
+    "ai_auto_apply_threshold": 0.9,
+    # Cosine similarity (all-MiniLM-L6-v2) above which an open/recent ticket is
+    # flagged as a possible duplicate. 0.75 = lowest threshold with validation
+    # precision >= 0.5 on real duplicates (reports/duplicates/threshold.md:
+    # test precision 0.47, recall 0.18). Raise it for fewer, surer flags.
+    "ai_duplicate_threshold": 0.75,
+    # Minimum number of similar resolved tickets before the AI votes.
+    "ai_min_history": 5,
+    # Cap on generated-text tokens (input + output) per calendar month.
+    "ai_llm_monthly_token_budget": 1_000_000,
 }
 
 # (first-response minutes, resolution minutes) per priority. Defaults only —

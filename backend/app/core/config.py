@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "staging", "production"] = "development"
 
     database_url: str = "sqlite:///./nexadesk.db"
+    # Per API/worker process. Keep processes × (size + overflow) below PostgreSQL's max_connections.
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+    db_pool_timeout: int = 10
     redis_url: str = "redis://localhost:6379/0"
 
     secret_key: str = _DEV_SECRET_KEY
@@ -69,6 +73,35 @@ class Settings(BaseSettings):
     # "memory://" is per process; use redis:// whenever there is more than one.
     rate_limit_storage_uri: str = "memory://"
 
+    # AI. EMBEDDING_MODEL is chosen from the P4 benchmarks; "test-hashing" is a
+    # deterministic offline stand-in used only by the test suite.
+    ai_enabled: bool = True
+    embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    model_cache_dir: str = ""
+    job_poll_interval_seconds: int = 2
+    # Run queued jobs inside the API process when BACKGROUND_MODE=inline. The
+    # test suite turns this off and drives jobs explicitly.
+    job_runner_enabled: bool = True
+    # Bearer token Prometheus must present on /metrics (required when deployed).
+    metrics_token: str = ""
+    # Dashboard aggregates cache (seconds; 0 = off). See routers/analytics.py.
+    analytics_cache_seconds: int = 30
+    # Prometheus metrics port of the worker process (0 = off).
+    worker_metrics_port: int = 9101
+
+    # Generative features (summaries, reply drafts). Off unless both a provider
+    # and a key are set explicitly — see app/ai/llm.py. Prices are USD per
+    # million tokens from the provider's price list; unset = cost not recorded.
+    # Knowledge-base cross-encoder reranker (FastEmbed name, or "none").
+    kb_rerank_model: str = "none"
+    kb_max_upload_bytes: int = 20 * 1024 * 1024
+
+    llm_provider: Literal["none", "anthropic", "openai"] = "none"
+    llm_api_key: str = ""
+    llm_model: str = ""
+    llm_price_input_per_mtok: float | None = None
+    llm_price_output_per_mtok: float | None = None
+
     # Error monitoring (Sentry-compatible DSN). Disabled when empty.
     sentry_dsn: str = ""
     release: str = "dev"
@@ -97,6 +130,10 @@ class Settings(BaseSettings):
             problems.append("BCRYPT_ROUNDS must be at least 12")
         if self.database_url.startswith("sqlite"):
             problems.append("DATABASE_URL must point at PostgreSQL")
+        if len(self.metrics_token) < 24:
+            problems.append("METRICS_TOKEN must be set (at least 24 characters) so /metrics is not public")
+        if self.ai_enabled and self.embedding_model == "test-hashing":
+            problems.append("EMBEDDING_MODEL=test-hashing is a test stand-in; use a real embedding model")
         if problems:
             raise RuntimeError(f"Unsafe configuration for {self.environment}: {'; '.join(problems)}")
 

@@ -37,6 +37,10 @@ export default defineConfig({
         SLA_SWEEP_ENABLED: "false",
         FRONTEND_BASE_URL: `http://127.0.0.1:${WEB_PORT}`,
         ATTACHMENT_DIR: "./var/e2e-attachments",
+        // Deterministic offline embedder: exercises the AI flow without a model
+        // download. Model quality is measured in experiments/, not here.
+        EMBEDDING_MODEL: "test-hashing",
+        LLM_PROVIDER: "none",
       },
     },
     {

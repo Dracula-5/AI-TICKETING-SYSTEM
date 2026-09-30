@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -11,6 +12,11 @@ class OrgSettings(BaseModel):
     reopen_window_days: int = Field(default=14, ge=0, le=365)
     portal_signup_enabled: bool = False
     portal_allowed_domains: list[str] = Field(default_factory=list, max_length=20)
+    ai_auto_apply_kinds: list[Literal["category", "priority", "team", "assignee"]] = Field(default_factory=list)
+    ai_auto_apply_threshold: float = Field(default=0.9, ge=0.5, le=1.0)
+    ai_duplicate_threshold: float = Field(default=0.75, ge=0.5, le=1.0)
+    ai_min_history: int = Field(default=5, ge=1, le=100)
+    ai_llm_monthly_token_budget: int = Field(default=1_000_000, ge=0, le=1_000_000_000)
 
     @field_validator("portal_allowed_domains")
     @classmethod

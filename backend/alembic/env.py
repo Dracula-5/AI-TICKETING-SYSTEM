@@ -2,15 +2,16 @@ import sys
 from logging.config import fileConfig
 from pathlib import Path
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool, text
+
+from alembic import context
 
 # Make "app" importable when alembic is invoked from the backend/ directory.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.core.config import settings  # noqa: E402
 from app.db import models  # noqa: E402, F401 -- registers all model classes on Base
-from app.db.database import Base, UTCDateTime  # noqa: E402
+from app.db.database import Base, EmbeddingVector, UTCDateTime  # noqa: E402
 
 config = context.config
 
@@ -31,6 +32,10 @@ def render_item(type_, obj, autogen_context):
     migration files never import application code."""
     if type_ == "type" and isinstance(obj, UTCDateTime):
         return "sa.DateTime(timezone=True)"
+    if type_ == "type" and isinstance(obj, EmbeddingVector):
+        # Placeholder; migrations that add vector columns pick the dialect type
+        # explicitly (pgvector on PostgreSQL, JSON elsewhere).
+        return "sa.JSON()"
     if type_ == "type" and obj.__class__.__name__ == "JSON" and getattr(obj, "_variant_mapping", None):
         autogen_context.imports.add("from sqlalchemy.dialects import postgresql")
         return "sa.JSON().with_variant(postgresql.JSONB(), 'postgresql')"

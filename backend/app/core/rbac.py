@@ -47,11 +47,14 @@ class P(StrEnum):
     COMMENTS_INTERNAL = "comments:internal"
     AUDIT_READ = "audit:read"
     ANALYTICS_READ = "analytics:read"
+    # Knowledge base: requesters read published articles only (enforced in app/kb).
+    KB_READ = "kb:read"
+    KB_MANAGE = "kb:manage"
     PLATFORM_ADMIN = "platform:admin"
 
 
-_CUSTOMER = {P.ORG_READ, P.TICKETS_CREATE}
-_ANALYST = {P.ORG_READ, P.USERS_READ, P.TEAMS_READ, P.TICKETS_READ_ALL, P.AUDIT_READ, P.ANALYTICS_READ}
+_CUSTOMER = {P.ORG_READ, P.TICKETS_CREATE, P.KB_READ}
+_ANALYST = {P.ORG_READ, P.USERS_READ, P.TEAMS_READ, P.TICKETS_READ_ALL, P.AUDIT_READ, P.ANALYTICS_READ, P.KB_READ}
 _AGENT = {
     P.ORG_READ,
     P.USERS_READ,
@@ -60,6 +63,7 @@ _AGENT = {
     P.TICKETS_READ_ALL,
     P.TICKETS_WORK,
     P.COMMENTS_INTERNAL,
+    P.KB_READ,
 }
 _MANAGER = _AGENT | {
     P.TICKETS_ASSIGN,
@@ -67,6 +71,7 @@ _MANAGER = _AGENT | {
     P.USERS_INVITE,
     P.AUDIT_READ,
     P.ANALYTICS_READ,
+    P.KB_MANAGE,
 }
 _ORG_ADMIN = _MANAGER | {
     P.ORG_UPDATE,
