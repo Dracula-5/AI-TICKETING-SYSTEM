@@ -1,0 +1,4027 @@
+{
+  "task": "classification",
+  "run": "p4_production_classifier",
+  "timestamp": "2026-09-30T16:23:23+00:00",
+  "duration_seconds": 1422.89,
+  "git": {
+    "commit": "9d32cb8ce23f032d74a6122a2faeff2be638e96b",
+    "dirty": true
+  },
+  "datasets_sha256": {
+    "data/processed/tickets_en.parquet": "9783c888f1f12c1bf3b0816e347e1acb27417a389d4007239a3cb84b45252888"
+  },
+  "params": {
+    "methods": [
+      "kNN \u00b7 all-MiniLM-L6-v2",
+      "kNN \u00b7 bge-small-en-v1.5",
+      "kNN \u00b7 TF-IDF",
+      "Tenant model \u00b7 TF-IDF + LogReg"
+    ],
+    "history_sizes": [
+      "50",
+      "200",
+      "1000",
+      "5000",
+      "11433"
+    ],
+    "thresholds": [
+      0.5,
+      0.7,
+      0.9
+    ],
+    "seed": 11,
+    "novel_test_tickets": 2169,
+    "near_duplicate_cosine": 0.8
+  },
+  "metrics": {
+    "kNN \u00b7 all-MiniLM-L6-v2.queue": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.685132,
+        "macro_f1": 0.651929,
+        "weighted_f1": 0.682277,
+        "macro_precision": 0.676645,
+        "macro_recall": 0.632861,
+        "per_class": {
+          "Billing and Payments": {
+            "precision": 0.828452,
+            "recall": 0.825,
+            "f1-score": 0.826722,
+            "support": 240.0
+          },
+          "Customer Service": {
+            "precision": 0.645892,
+            "recall": 0.629834,
+            "f1-score": 0.637762,
+            "support": 362.0
+          },
+          "General Inquiry": {
+            "precision": 0.633333,
+            "recall": 0.527778,
+            "f1-score": 0.575758,
+            "support": 36.0
+          },
+          "Human Resources": {
+            "precision": 0.652174,
+            "recall": 0.566038,
+            "f1-score": 0.606061,
+            "support": 53.0
+          },
+          "IT Support": {
+            "precision": 0.673152,
+            "recall": 0.592466,
+            "f1-score": 0.630237,
+            "support": 292.0
+          },
+          "Product Support": {
+            "precision": 0.647059,
+            "recall": 0.644252,
+            "f1-score": 0.645652,
+            "support": 461.0
+          },
+          "Returns and Exchanges": {
+            "precision": 0.59633,
+            "recall": 0.528455,
+            "f1-score": 0.560345,
+            "support": 123.0
+          },
+          "Sales and Pre-Sales": {
+            "precision": 0.589286,
+            "recall": 0.428571,
+            "f1-score": 0.496241,
+            "support": 77.0
+          },
+          "Service Outages and Maintenance": {
+            "precision": 0.808081,
+            "recall": 0.8,
+            "f1-score": 0.80402,
+            "support": 100.0
+          },
+          "Technical Support": {
+            "precision": 0.692689,
+            "recall": 0.786217,
+            "f1-score": 0.736495,
+            "support": 711.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            198,
+            11,
+            1,
+            0,
+            3,
+            7,
+            6,
+            1,
+            1,
+            12
+          ],
+          [
+            11,
+            228,
+            3,
+            1,
+            21,
+            36,
+            8,
+            7,
+            2,
+            45
+          ],
+          [
+            0,
+            2,
+            19,
+            0,
+            1,
+            6,
+            0,
+            1,
+            0,
+            7
+          ],
+          [
+            1,
+            5,
+            0,
+            30,
+            4,
+            3,
+            0,
+            2,
+            0,
+            8
+          ],
+          [
+            3,
+            20,
+            1,
+            3,
+            173,
+            26,
+            4,
+            3,
+            2,
+            57
+          ],
+          [
+            5,
+            33,
+            3,
+            4,
+            17,
+            297,
+            13,
+            1,
+            5,
+            83
+          ],
+          [
+            1,
+            13,
+            1,
+            0,
+            6,
+            14,
+            65,
+            3,
+            1,
+            19
+          ],
+          [
+            8,
+            8,
+            0,
+            3,
+            3,
+            10,
+            3,
+            33,
+            0,
+            9
+          ],
+          [
+            1,
+            3,
+            0,
+            0,
+            4,
+            4,
+            0,
+            0,
+            80,
+            8
+          ],
+          [
+            11,
+            30,
+            2,
+            5,
+            25,
+            56,
+            10,
+            5,
+            8,
+            559
+          ]
+        ],
+        "labels": [
+          "Billing and Payments",
+          "Customer Service",
+          "General Inquiry",
+          "Human Resources",
+          "IT Support",
+          "Product Support",
+          "Returns and Exchanges",
+          "Sales and Pre-Sales",
+          "Service Outages and Maintenance",
+          "Technical Support"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.628771,
+          "high": 0.681305,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.651913,
+          "macro_f1": 0.615225,
+          "weighted_f1": 0.648382,
+          "macro_precision": 0.641499,
+          "macro_recall": 0.595384,
+          "per_class": {
+            "Billing and Payments": {
+              "precision": 0.802083,
+              "recall": 0.789744,
+              "f1-score": 0.795866,
+              "support": 195.0
+            },
+            "Customer Service": {
+              "precision": 0.607029,
+              "recall": 0.597484,
+              "f1-score": 0.602219,
+              "support": 318.0
+            },
+            "General Inquiry": {
+              "precision": 0.655172,
+              "recall": 0.542857,
+              "f1-score": 0.59375,
+              "support": 35.0
+            },
+            "Human Resources": {
+              "precision": 0.578947,
+              "recall": 0.488889,
+              "f1-score": 0.53012,
+              "support": 45.0
+            },
+            "IT Support": {
+              "precision": 0.64,
+              "recall": 0.547529,
+              "f1-score": 0.590164,
+              "support": 263.0
+            },
+            "Product Support": {
+              "precision": 0.610706,
+              "recall": 0.612195,
+              "f1-score": 0.611449,
+              "support": 410.0
+            },
+            "Returns and Exchanges": {
+              "precision": 0.547368,
+              "recall": 0.472727,
+              "f1-score": 0.507317,
+              "support": 110.0
+            },
+            "Sales and Pre-Sales": {
+              "precision": 0.511111,
+              "recall": 0.359375,
+              "f1-score": 0.422018,
+              "support": 64.0
+            },
+            "Service Outages and Maintenance": {
+              "precision": 0.795455,
+              "recall": 0.777778,
+              "f1-score": 0.786517,
+              "support": 90.0
+            },
+            "Technical Support": {
+              "precision": 0.667121,
+              "recall": 0.765258,
+              "f1-score": 0.712828,
+              "support": 639.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              154,
+              11,
+              1,
+              0,
+              3,
+              7,
+              6,
+              1,
+              1,
+              11
+            ],
+            [
+              10,
+              190,
+              2,
+              1,
+              20,
+              35,
+              8,
+              6,
+              2,
+              44
+            ],
+            [
+              0,
+              1,
+              19,
+              0,
+              1,
+              6,
+              0,
+              1,
+              0,
+              7
+            ],
+            [
+              1,
+              5,
+              0,
+              22,
+              4,
+              3,
+              0,
+              2,
+              0,
+              8
+            ],
+            [
+              3,
+              20,
+              1,
+              3,
+              144,
+              26,
+              4,
+              3,
+              2,
+              57
+            ],
+            [
+              4,
+              33,
+              3,
+              4,
+              16,
+              251,
+              13,
+              1,
+              4,
+              81
+            ],
+            [
+              1,
+              13,
+              1,
+              0,
+              6,
+              14,
+              52,
+              3,
+              1,
+              19
+            ],
+            [
+              7,
+              7,
+              0,
+              3,
+              3,
+              10,
+              2,
+              23,
+              0,
+              9
+            ],
+            [
+              1,
+              3,
+              0,
+              0,
+              4,
+              4,
+              0,
+              0,
+              70,
+              8
+            ],
+            [
+              11,
+              30,
+              2,
+              5,
+              24,
+              55,
+              10,
+              5,
+              8,
+              489
+            ]
+          ],
+          "labels": [
+            "Billing and Payments",
+            "Customer Service",
+            "General Inquiry",
+            "Human Resources",
+            "IT Support",
+            "Product Support",
+            "Returns and Exchanges",
+            "Sales and Pre-Sales",
+            "Service Outages and Maintenance",
+            "Technical Support"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.22444,
+          "macro_f1": 0.167552,
+          "weighted_f1": 0.243394,
+          "selective": {
+            "0.5": {
+              "coverage": 0.645621,
+              "accuracy": 0.256782
+            },
+            "0.7": {
+              "coverage": 0.281059,
+              "accuracy": 0.286957
+            },
+            "0.9": {
+              "coverage": 0.070468,
+              "accuracy": 0.404624
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "200": {
+          "accuracy": 0.292872,
+          "macro_f1": 0.191853,
+          "weighted_f1": 0.274272,
+          "selective": {
+            "0.5": {
+              "coverage": 0.487984,
+              "accuracy": 0.3798
+            },
+            "0.7": {
+              "coverage": 0.18167,
+              "accuracy": 0.517937
+            },
+            "0.9": {
+              "coverage": 0.065173,
+              "accuracy": 0.78125
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.360081,
+          "macro_f1": 0.280725,
+          "weighted_f1": 0.354461,
+          "selective": {
+            "0.5": {
+              "coverage": 0.557637,
+              "accuracy": 0.464573
+            },
+            "0.7": {
+              "coverage": 0.250509,
+              "accuracy": 0.590244
+            },
+            "0.9": {
+              "coverage": 0.093279,
+              "accuracy": 0.812227
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.523422,
+          "macro_f1": 0.467599,
+          "weighted_f1": 0.517889,
+          "selective": {
+            "0.5": {
+              "coverage": 0.653768,
+              "accuracy": 0.640498
+            },
+            "0.7": {
+              "coverage": 0.323422,
+              "accuracy": 0.804786
+            },
+            "0.9": {
+              "coverage": 0.125866,
+              "accuracy": 0.906149
+            }
+          },
+          "fit_seconds": 0.004
+        },
+        "11433": {
+          "accuracy": 0.685132,
+          "macro_f1": 0.651929,
+          "weighted_f1": 0.682277,
+          "selective": {
+            "0.5": {
+              "coverage": 0.766599,
+              "accuracy": 0.790648
+            },
+            "0.7": {
+              "coverage": 0.436253,
+              "accuracy": 0.901027
+            },
+            "0.9": {
+              "coverage": 0.182892,
+              "accuracy": 0.946548
+            }
+          },
+          "fit_seconds": 0.006
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 42.7187,
+        "p95_ms": 57.9163,
+        "p99_ms": 64.070995,
+        "mean_ms": 44.037154
+      }
+    },
+    "kNN \u00b7 bge-small-en-v1.5.queue": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.617515,
+        "macro_f1": 0.573116,
+        "weighted_f1": 0.615226,
+        "macro_precision": 0.600639,
+        "macro_recall": 0.553235,
+        "per_class": {
+          "Billing and Payments": {
+            "precision": 0.857798,
+            "recall": 0.779167,
+            "f1-score": 0.816594,
+            "support": 240.0
+          },
+          "Customer Service": {
+            "precision": 0.554622,
+            "recall": 0.546961,
+            "f1-score": 0.550765,
+            "support": 362.0
+          },
+          "General Inquiry": {
+            "precision": 0.576923,
+            "recall": 0.416667,
+            "f1-score": 0.483871,
+            "support": 36.0
+          },
+          "Human Resources": {
+            "precision": 0.473684,
+            "recall": 0.339623,
+            "f1-score": 0.395604,
+            "support": 53.0
+          },
+          "IT Support": {
+            "precision": 0.604839,
+            "recall": 0.513699,
+            "f1-score": 0.555556,
+            "support": 292.0
+          },
+          "Product Support": {
+            "precision": 0.591489,
+            "recall": 0.603037,
+            "f1-score": 0.597207,
+            "support": 461.0
+          },
+          "Returns and Exchanges": {
+            "precision": 0.530435,
+            "recall": 0.495935,
+            "f1-score": 0.512605,
+            "support": 123.0
+          },
+          "Sales and Pre-Sales": {
+            "precision": 0.507937,
+            "recall": 0.415584,
+            "f1-score": 0.457143,
+            "support": 77.0
+          },
+          "Service Outages and Maintenance": {
+            "precision": 0.68932,
+            "recall": 0.71,
+            "f1-score": 0.699507,
+            "support": 100.0
+          },
+          "Technical Support": {
+            "precision": 0.619339,
+            "recall": 0.711674,
+            "f1-score": 0.662304,
+            "support": 711.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            187,
+            16,
+            0,
+            1,
+            6,
+            7,
+            3,
+            3,
+            3,
+            14
+          ],
+          [
+            6,
+            198,
+            2,
+            2,
+            18,
+            47,
+            9,
+            10,
+            2,
+            68
+          ],
+          [
+            0,
+            1,
+            15,
+            0,
+            2,
+            4,
+            2,
+            1,
+            2,
+            9
+          ],
+          [
+            1,
+            8,
+            1,
+            18,
+            2,
+            6,
+            5,
+            0,
+            2,
+            10
+          ],
+          [
+            4,
+            23,
+            0,
+            3,
+            150,
+            32,
+            5,
+            4,
+            4,
+            67
+          ],
+          [
+            7,
+            33,
+            6,
+            4,
+            14,
+            278,
+            15,
+            3,
+            7,
+            94
+          ],
+          [
+            2,
+            10,
+            0,
+            1,
+            7,
+            14,
+            61,
+            5,
+            0,
+            23
+          ],
+          [
+            5,
+            11,
+            0,
+            1,
+            3,
+            11,
+            1,
+            32,
+            1,
+            12
+          ],
+          [
+            0,
+            5,
+            0,
+            0,
+            5,
+            4,
+            1,
+            0,
+            71,
+            14
+          ],
+          [
+            6,
+            52,
+            2,
+            8,
+            41,
+            67,
+            13,
+            5,
+            11,
+            506
+          ]
+        ],
+        "labels": [
+          "Billing and Payments",
+          "Customer Service",
+          "General Inquiry",
+          "Human Resources",
+          "IT Support",
+          "Product Support",
+          "Returns and Exchanges",
+          "Sales and Pre-Sales",
+          "Service Outages and Maintenance",
+          "Technical Support"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.544048,
+          "high": 0.601122,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.58414,
+          "macro_f1": 0.540955,
+          "weighted_f1": 0.58184,
+          "macro_precision": 0.567622,
+          "macro_recall": 0.521962,
+          "per_class": {
+            "Billing and Payments": {
+              "precision": 0.842105,
+              "recall": 0.738462,
+              "f1-score": 0.786885,
+              "support": 195.0
+            },
+            "Customer Service": {
+              "precision": 0.514377,
+              "recall": 0.506289,
+              "f1-score": 0.510301,
+              "support": 318.0
+            },
+            "General Inquiry": {
+              "precision": 0.6,
+              "recall": 0.428571,
+              "f1-score": 0.5,
+              "support": 35.0
+            },
+            "Human Resources": {
+              "precision": 0.424242,
+              "recall": 0.311111,
+              "f1-score": 0.358974,
+              "support": 45.0
+            },
+            "IT Support": {
+              "precision": 0.565022,
+              "recall": 0.479087,
+              "f1-score": 0.518519,
+              "support": 263.0
+            },
+            "Product Support": {
+              "precision": 0.556338,
+              "recall": 0.578049,
+              "f1-score": 0.566986,
+              "support": 410.0
+            },
+            "Returns and Exchanges": {
+              "precision": 0.470588,
+              "recall": 0.436364,
+              "f1-score": 0.45283,
+              "support": 110.0
+            },
+            "Sales and Pre-Sales": {
+              "precision": 0.442308,
+              "recall": 0.359375,
+              "f1-score": 0.396552,
+              "support": 64.0
+            },
+            "Service Outages and Maintenance": {
+              "precision": 0.663158,
+              "recall": 0.7,
+              "f1-score": 0.681081,
+              "support": 90.0
+            },
+            "Technical Support": {
+              "precision": 0.59808,
+              "recall": 0.682316,
+              "f1-score": 0.637427,
+              "support": 639.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              144,
+              15,
+              0,
+              1,
+              6,
+              7,
+              3,
+              3,
+              3,
+              13
+            ],
+            [
+              5,
+              161,
+              1,
+              2,
+              17,
+              47,
+              9,
+              9,
+              2,
+              65
+            ],
+            [
+              0,
+              0,
+              15,
+              0,
+              2,
+              4,
+              2,
+              1,
+              2,
+              9
+            ],
+            [
+              0,
+              8,
+              1,
+              14,
+              2,
+              5,
+              5,
+              0,
+              2,
+              8
+            ],
+            [
+              4,
+              22,
+              0,
+              2,
+              126,
+              31,
+              5,
+              4,
+              4,
+              65
+            ],
+            [
+              6,
+              33,
+              6,
+              4,
+              14,
+              237,
+              15,
+              2,
+              7,
+              86
+            ],
+            [
+              2,
+              10,
+              0,
+              1,
+              7,
+              14,
+              48,
+              5,
+              0,
+              23
+            ],
+            [
+              4,
+              8,
+              0,
+              1,
+              3,
+              11,
+              1,
+              23,
+              1,
+              12
+            ],
+            [
+              0,
+              5,
+              0,
+              0,
+              5,
+              4,
+              1,
+              0,
+              63,
+              12
+            ],
+            [
+              6,
+              51,
+              2,
+              8,
+              41,
+              66,
+              13,
+              5,
+              11,
+              436
+            ]
+          ],
+          "labels": [
+            "Billing and Payments",
+            "Customer Service",
+            "General Inquiry",
+            "Human Resources",
+            "IT Support",
+            "Product Support",
+            "Returns and Exchanges",
+            "Sales and Pre-Sales",
+            "Service Outages and Maintenance",
+            "Technical Support"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.244807,
+          "macro_f1": 0.160492,
+          "weighted_f1": 0.244379,
+          "selective": {
+            "0.5": {
+              "coverage": 0.263136,
+              "accuracy": 0.400929
+            },
+            "0.7": {
+              "coverage": 0.034623,
+              "accuracy": 0.752941
+            },
+            "0.9": {
+              "coverage": 0.000407,
+              "accuracy": 1.0
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "200": {
+          "accuracy": 0.292872,
+          "macro_f1": 0.183962,
+          "weighted_f1": 0.264649,
+          "selective": {
+            "0.5": {
+              "coverage": 0.313238,
+              "accuracy": 0.464239
+            },
+            "0.7": {
+              "coverage": 0.088391,
+              "accuracy": 0.677419
+            },
+            "0.9": {
+              "coverage": 0.030957,
+              "accuracy": 0.973684
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.361303,
+          "macro_f1": 0.279908,
+          "weighted_f1": 0.354271,
+          "selective": {
+            "0.5": {
+              "coverage": 0.496538,
+              "accuracy": 0.481542
+            },
+            "0.7": {
+              "coverage": 0.168228,
+              "accuracy": 0.64891
+            },
+            "0.9": {
+              "coverage": 0.05336,
+              "accuracy": 0.877863
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.480244,
+          "macro_f1": 0.41929,
+          "weighted_f1": 0.475428,
+          "selective": {
+            "0.5": {
+              "coverage": 0.564562,
+              "accuracy": 0.597403
+            },
+            "0.7": {
+              "coverage": 0.23055,
+              "accuracy": 0.738516
+            },
+            "0.9": {
+              "coverage": 0.078615,
+              "accuracy": 0.891192
+            }
+          },
+          "fit_seconds": 0.003
+        },
+        "11433": {
+          "accuracy": 0.617515,
+          "macro_f1": 0.573116,
+          "weighted_f1": 0.615226,
+          "selective": {
+            "0.5": {
+              "coverage": 0.693686,
+              "accuracy": 0.699354
+            },
+            "0.7": {
+              "coverage": 0.320978,
+              "accuracy": 0.843909
+            },
+            "0.9": {
+              "coverage": 0.118126,
+              "accuracy": 0.941379
+            }
+          },
+          "fit_seconds": 0.006
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 95.51885,
+        "p95_ms": 184.58273,
+        "p99_ms": 369.997387,
+        "mean_ms": 105.037118
+      }
+    },
+    "kNN \u00b7 TF-IDF.queue": {
+      "params": {
+        "k": 40,
+        "power": 4.0
+      },
+      "test_full_history": {
+        "accuracy": 0.760896,
+        "macro_f1": 0.756035,
+        "weighted_f1": 0.759484,
+        "macro_precision": 0.839487,
+        "macro_recall": 0.702205,
+        "per_class": {
+          "Billing and Payments": {
+            "precision": 0.92,
+            "recall": 0.8625,
+            "f1-score": 0.890323,
+            "support": 240.0
+          },
+          "Customer Service": {
+            "precision": 0.728767,
+            "recall": 0.734807,
+            "f1-score": 0.731774,
+            "support": 362.0
+          },
+          "General Inquiry": {
+            "precision": 0.92,
+            "recall": 0.638889,
+            "f1-score": 0.754098,
+            "support": 36.0
+          },
+          "Human Resources": {
+            "precision": 0.942857,
+            "recall": 0.622642,
+            "f1-score": 0.75,
+            "support": 53.0
+          },
+          "IT Support": {
+            "precision": 0.807692,
+            "recall": 0.64726,
+            "f1-score": 0.718631,
+            "support": 292.0
+          },
+          "Product Support": {
+            "precision": 0.729258,
+            "recall": 0.724512,
+            "f1-score": 0.726877,
+            "support": 461.0
+          },
+          "Returns and Exchanges": {
+            "precision": 0.872093,
+            "recall": 0.609756,
+            "f1-score": 0.717703,
+            "support": 123.0
+          },
+          "Sales and Pre-Sales": {
+            "precision": 0.893617,
+            "recall": 0.545455,
+            "f1-score": 0.677419,
+            "support": 77.0
+          },
+          "Service Outages and Maintenance": {
+            "precision": 0.883721,
+            "recall": 0.76,
+            "f1-score": 0.817204,
+            "support": 100.0
+          },
+          "Technical Support": {
+            "precision": 0.696868,
+            "recall": 0.876231,
+            "f1-score": 0.776324,
+            "support": 711.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            207,
+            10,
+            0,
+            0,
+            2,
+            4,
+            2,
+            1,
+            0,
+            14
+          ],
+          [
+            2,
+            266,
+            0,
+            0,
+            7,
+            29,
+            2,
+            1,
+            2,
+            53
+          ],
+          [
+            0,
+            1,
+            23,
+            0,
+            2,
+            2,
+            0,
+            0,
+            0,
+            8
+          ],
+          [
+            0,
+            4,
+            0,
+            33,
+            1,
+            5,
+            1,
+            0,
+            1,
+            8
+          ],
+          [
+            2,
+            13,
+            0,
+            1,
+            189,
+            20,
+            1,
+            0,
+            2,
+            64
+          ],
+          [
+            4,
+            32,
+            2,
+            0,
+            12,
+            334,
+            2,
+            0,
+            0,
+            75
+          ],
+          [
+            2,
+            9,
+            0,
+            0,
+            3,
+            12,
+            75,
+            1,
+            0,
+            21
+          ],
+          [
+            2,
+            7,
+            0,
+            0,
+            2,
+            9,
+            1,
+            42,
+            0,
+            14
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            1,
+            6,
+            0,
+            0,
+            76,
+            14
+          ],
+          [
+            6,
+            20,
+            0,
+            1,
+            15,
+            37,
+            2,
+            2,
+            5,
+            623
+          ]
+        ],
+        "labels": [
+          "Billing and Payments",
+          "Customer Service",
+          "General Inquiry",
+          "Human Resources",
+          "IT Support",
+          "Product Support",
+          "Returns and Exchanges",
+          "Sales and Pre-Sales",
+          "Service Outages and Maintenance",
+          "Technical Support"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.733025,
+          "high": 0.778984,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.729368,
+          "macro_f1": 0.719447,
+          "weighted_f1": 0.726888,
+          "macro_precision": 0.815099,
+          "macro_recall": 0.6624,
+          "per_class": {
+            "Billing and Payments": {
+              "precision": 0.9,
+              "recall": 0.830769,
+              "f1-score": 0.864,
+              "support": 195.0
+            },
+            "Customer Service": {
+              "precision": 0.691589,
+              "recall": 0.698113,
+              "f1-score": 0.694836,
+              "support": 318.0
+            },
+            "General Inquiry": {
+              "precision": 0.916667,
+              "recall": 0.628571,
+              "f1-score": 0.745763,
+              "support": 35.0
+            },
+            "Human Resources": {
+              "precision": 0.925926,
+              "recall": 0.555556,
+              "f1-score": 0.694444,
+              "support": 45.0
+            },
+            "IT Support": {
+              "precision": 0.780488,
+              "recall": 0.608365,
+              "f1-score": 0.683761,
+              "support": 263.0
+            },
+            "Product Support": {
+              "precision": 0.695332,
+              "recall": 0.690244,
+              "f1-score": 0.692778,
+              "support": 410.0
+            },
+            "Returns and Exchanges": {
+              "precision": 0.849315,
+              "recall": 0.563636,
+              "f1-score": 0.677596,
+              "support": 110.0
+            },
+            "Sales and Pre-Sales": {
+              "precision": 0.852941,
+              "recall": 0.453125,
+              "f1-score": 0.591837,
+              "support": 64.0
+            },
+            "Service Outages and Maintenance": {
+              "precision": 0.868421,
+              "recall": 0.733333,
+              "f1-score": 0.795181,
+              "support": 90.0
+            },
+            "Technical Support": {
+              "precision": 0.670316,
+              "recall": 0.862285,
+              "f1-score": 0.754278,
+              "support": 639.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              162,
+              10,
+              0,
+              0,
+              2,
+              4,
+              2,
+              1,
+              0,
+              14
+            ],
+            [
+              2,
+              222,
+              0,
+              0,
+              7,
+              29,
+              2,
+              1,
+              2,
+              53
+            ],
+            [
+              0,
+              1,
+              22,
+              0,
+              2,
+              2,
+              0,
+              0,
+              0,
+              8
+            ],
+            [
+              0,
+              4,
+              0,
+              25,
+              1,
+              5,
+              1,
+              0,
+              1,
+              8
+            ],
+            [
+              2,
+              13,
+              0,
+              1,
+              160,
+              20,
+              1,
+              0,
+              2,
+              64
+            ],
+            [
+              4,
+              32,
+              2,
+              0,
+              12,
+              283,
+              2,
+              0,
+              0,
+              75
+            ],
+            [
+              2,
+              9,
+              0,
+              0,
+              3,
+              12,
+              62,
+              1,
+              0,
+              21
+            ],
+            [
+              2,
+              7,
+              0,
+              0,
+              2,
+              9,
+              1,
+              29,
+              0,
+              14
+            ],
+            [
+              0,
+              3,
+              0,
+              0,
+              1,
+              6,
+              0,
+              0,
+              66,
+              14
+            ],
+            [
+              6,
+              20,
+              0,
+              1,
+              15,
+              37,
+              2,
+              2,
+              5,
+              551
+            ]
+          ],
+          "labels": [
+            "Billing and Payments",
+            "Customer Service",
+            "General Inquiry",
+            "Human Resources",
+            "IT Support",
+            "Product Support",
+            "Returns and Exchanges",
+            "Sales and Pre-Sales",
+            "Service Outages and Maintenance",
+            "Technical Support"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.221996,
+          "macro_f1": 0.151756,
+          "weighted_f1": 0.230622,
+          "selective": {
+            "0.5": {
+              "coverage": 0.374745,
+              "accuracy": 0.251087
+            },
+            "0.7": {
+              "coverage": 0.138493,
+              "accuracy": 0.255882
+            },
+            "0.9": {
+              "coverage": 0.025662,
+              "accuracy": 0.396825
+            }
+          },
+          "fit_seconds": 0.048
+        },
+        "200": {
+          "accuracy": 0.279837,
+          "macro_f1": 0.175659,
+          "weighted_f1": 0.257367,
+          "selective": {
+            "0.5": {
+              "coverage": 0.355601,
+              "accuracy": 0.378007
+            },
+            "0.7": {
+              "coverage": 0.107943,
+              "accuracy": 0.49434
+            },
+            "0.9": {
+              "coverage": 0.025662,
+              "accuracy": 0.746032
+            }
+          },
+          "fit_seconds": 0.187
+        },
+        "1000": {
+          "accuracy": 0.376782,
+          "macro_f1": 0.289126,
+          "weighted_f1": 0.360854,
+          "selective": {
+            "0.5": {
+              "coverage": 0.312831,
+              "accuracy": 0.5625
+            },
+            "0.7": {
+              "coverage": 0.125866,
+              "accuracy": 0.822006
+            },
+            "0.9": {
+              "coverage": 0.07332,
+              "accuracy": 0.955556
+            }
+          },
+          "fit_seconds": 0.829
+        },
+        "5000": {
+          "accuracy": 0.585743,
+          "macro_f1": 0.549561,
+          "weighted_f1": 0.578784,
+          "selective": {
+            "0.5": {
+              "coverage": 0.50998,
+              "accuracy": 0.84984
+            },
+            "0.7": {
+              "coverage": 0.361711,
+              "accuracy": 0.969595
+            },
+            "0.9": {
+              "coverage": 0.215479,
+              "accuracy": 1.0
+            }
+          },
+          "fit_seconds": 3.317
+        },
+        "11433": {
+          "accuracy": 0.760896,
+          "macro_f1": 0.756035,
+          "weighted_f1": 0.759484,
+          "selective": {
+            "0.5": {
+              "coverage": 0.698982,
+              "accuracy": 0.932984
+            },
+            "0.7": {
+              "coverage": 0.565784,
+              "accuracy": 0.990641
+            },
+            "0.9": {
+              "coverage": 0.32668,
+              "accuracy": 1.0
+            }
+          },
+          "fit_seconds": 9.264
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 76.5551,
+        "p95_ms": 106.671235,
+        "p99_ms": 114.380644,
+        "mean_ms": 77.591242
+      }
+    },
+    "Tenant model \u00b7 TF-IDF + LogReg.queue": {
+      "params": {
+        "C": 100.0
+      },
+      "test_full_history": {
+        "accuracy": 0.657841,
+        "macro_f1": 0.653461,
+        "weighted_f1": 0.657258,
+        "macro_precision": 0.712815,
+        "macro_recall": 0.616977,
+        "per_class": {
+          "Billing and Payments": {
+            "precision": 0.869369,
+            "recall": 0.804167,
+            "f1-score": 0.835498,
+            "support": 240.0
+          },
+          "Customer Service": {
+            "precision": 0.613941,
+            "recall": 0.632597,
+            "f1-score": 0.623129,
+            "support": 362.0
+          },
+          "General Inquiry": {
+            "precision": 0.769231,
+            "recall": 0.555556,
+            "f1-score": 0.645161,
+            "support": 36.0
+          },
+          "Human Resources": {
+            "precision": 0.892857,
+            "recall": 0.471698,
+            "f1-score": 0.617284,
+            "support": 53.0
+          },
+          "IT Support": {
+            "precision": 0.623134,
+            "recall": 0.571918,
+            "f1-score": 0.596429,
+            "support": 292.0
+          },
+          "Product Support": {
+            "precision": 0.59,
+            "recall": 0.639913,
+            "f1-score": 0.613944,
+            "support": 461.0
+          },
+          "Returns and Exchanges": {
+            "precision": 0.646465,
+            "recall": 0.520325,
+            "f1-score": 0.576577,
+            "support": 123.0
+          },
+          "Sales and Pre-Sales": {
+            "precision": 0.698113,
+            "recall": 0.480519,
+            "f1-score": 0.569231,
+            "support": 77.0
+          },
+          "Service Outages and Maintenance": {
+            "precision": 0.78,
+            "recall": 0.78,
+            "f1-score": 0.78,
+            "support": 100.0
+          },
+          "Technical Support": {
+            "precision": 0.645038,
+            "recall": 0.71308,
+            "f1-score": 0.677355,
+            "support": 711.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            193,
+            11,
+            1,
+            0,
+            3,
+            13,
+            3,
+            1,
+            0,
+            15
+          ],
+          [
+            3,
+            229,
+            3,
+            0,
+            15,
+            47,
+            8,
+            4,
+            1,
+            52
+          ],
+          [
+            0,
+            1,
+            20,
+            0,
+            1,
+            4,
+            0,
+            0,
+            0,
+            10
+          ],
+          [
+            1,
+            3,
+            0,
+            25,
+            4,
+            10,
+            2,
+            1,
+            1,
+            6
+          ],
+          [
+            1,
+            22,
+            1,
+            1,
+            167,
+            24,
+            0,
+            1,
+            5,
+            70
+          ],
+          [
+            8,
+            34,
+            1,
+            2,
+            19,
+            295,
+            5,
+            5,
+            4,
+            88
+          ],
+          [
+            2,
+            13,
+            0,
+            0,
+            4,
+            18,
+            64,
+            4,
+            0,
+            18
+          ],
+          [
+            3,
+            11,
+            0,
+            0,
+            3,
+            10,
+            3,
+            37,
+            0,
+            10
+          ],
+          [
+            0,
+            3,
+            0,
+            0,
+            3,
+            5,
+            1,
+            0,
+            78,
+            10
+          ],
+          [
+            11,
+            46,
+            0,
+            0,
+            49,
+            74,
+            13,
+            0,
+            11,
+            507
+          ]
+        ],
+        "labels": [
+          "Billing and Payments",
+          "Customer Service",
+          "General Inquiry",
+          "Human Resources",
+          "IT Support",
+          "Product Support",
+          "Returns and Exchanges",
+          "Sales and Pre-Sales",
+          "Service Outages and Maintenance",
+          "Technical Support"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.628394,
+          "high": 0.681188,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.616413,
+          "macro_f1": 0.605197,
+          "weighted_f1": 0.6149,
+          "macro_precision": 0.671368,
+          "macro_recall": 0.568518,
+          "per_class": {
+            "Billing and Payments": {
+              "precision": 0.836158,
+              "recall": 0.758974,
+              "f1-score": 0.795699,
+              "support": 195.0
+            },
+            "Customer Service": {
+              "precision": 0.568807,
+              "recall": 0.584906,
+              "f1-score": 0.576744,
+              "support": 318.0
+            },
+            "General Inquiry": {
+              "precision": 0.76,
+              "recall": 0.542857,
+              "f1-score": 0.633333,
+              "support": 35.0
+            },
+            "Human Resources": {
+              "precision": 0.85,
+              "recall": 0.377778,
+              "f1-score": 0.523077,
+              "support": 45.0
+            },
+            "IT Support": {
+              "precision": 0.579832,
+              "recall": 0.524715,
+              "f1-score": 0.550898,
+              "support": 263.0
+            },
+            "Product Support": {
+              "precision": 0.546875,
+              "recall": 0.597561,
+              "f1-score": 0.571096,
+              "support": 410.0
+            },
+            "Returns and Exchanges": {
+              "precision": 0.593023,
+              "recall": 0.463636,
+              "f1-score": 0.520408,
+              "support": 110.0
+            },
+            "Sales and Pre-Sales": {
+              "precision": 0.609756,
+              "recall": 0.390625,
+              "f1-score": 0.47619,
+              "support": 64.0
+            },
+            "Service Outages and Maintenance": {
+              "precision": 0.755556,
+              "recall": 0.755556,
+              "f1-score": 0.755556,
+              "support": 90.0
+            },
+            "Technical Support": {
+              "precision": 0.613668,
+              "recall": 0.688576,
+              "f1-score": 0.648968,
+              "support": 639.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              148,
+              11,
+              1,
+              0,
+              3,
+              13,
+              3,
+              1,
+              0,
+              15
+            ],
+            [
+              3,
+              186,
+              3,
+              0,
+              15,
+              47,
+              8,
+              4,
+              1,
+              51
+            ],
+            [
+              0,
+              1,
+              19,
+              0,
+              1,
+              4,
+              0,
+              0,
+              0,
+              10
+            ],
+            [
+              1,
+              3,
+              0,
+              17,
+              4,
+              10,
+              2,
+              1,
+              1,
+              6
+            ],
+            [
+              1,
+              22,
+              1,
+              1,
+              138,
+              24,
+              0,
+              1,
+              5,
+              70
+            ],
+            [
+              8,
+              34,
+              1,
+              2,
+              19,
+              245,
+              5,
+              5,
+              4,
+              87
+            ],
+            [
+              2,
+              13,
+              0,
+              0,
+              4,
+              18,
+              51,
+              4,
+              0,
+              18
+            ],
+            [
+              3,
+              10,
+              0,
+              0,
+              3,
+              10,
+              3,
+              25,
+              0,
+              10
+            ],
+            [
+              0,
+              3,
+              0,
+              0,
+              3,
+              5,
+              1,
+              0,
+              68,
+              10
+            ],
+            [
+              11,
+              44,
+              0,
+              0,
+              48,
+              72,
+              13,
+              0,
+              11,
+              440
+            ]
+          ],
+          "labels": [
+            "Billing and Payments",
+            "Customer Service",
+            "General Inquiry",
+            "Human Resources",
+            "IT Support",
+            "Product Support",
+            "Returns and Exchanges",
+            "Sales and Pre-Sales",
+            "Service Outages and Maintenance",
+            "Technical Support"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.265173,
+          "macro_f1": 0.141323,
+          "weighted_f1": 0.240621,
+          "selective": {
+            "0.5": {
+              "coverage": 0.045621,
+              "accuracy": 0.446429
+            },
+            "0.7": {
+              "coverage": 0.004888,
+              "accuracy": 0.916667
+            },
+            "0.9": {
+              "coverage": 0.000407,
+              "accuracy": 1.0
+            }
+          },
+          "fit_seconds": 0.376
+        },
+        "200": {
+          "accuracy": 0.310794,
+          "macro_f1": 0.183842,
+          "weighted_f1": 0.273035,
+          "selective": {
+            "0.5": {
+              "coverage": 0.250916,
+              "accuracy": 0.467532
+            },
+            "0.7": {
+              "coverage": 0.059878,
+              "accuracy": 0.632653
+            },
+            "0.9": {
+              "coverage": 0.004481,
+              "accuracy": 0.909091
+            }
+          },
+          "fit_seconds": 1.525
+        },
+        "1000": {
+          "accuracy": 0.380855,
+          "macro_f1": 0.313414,
+          "weighted_f1": 0.374189,
+          "selective": {
+            "0.5": {
+              "coverage": 0.548269,
+              "accuracy": 0.489599
+            },
+            "0.7": {
+              "coverage": 0.26721,
+              "accuracy": 0.599085
+            },
+            "0.9": {
+              "coverage": 0.067617,
+              "accuracy": 0.843373
+            }
+          },
+          "fit_seconds": 3.79
+        },
+        "5000": {
+          "accuracy": 0.531976,
+          "macro_f1": 0.510886,
+          "weighted_f1": 0.529929,
+          "selective": {
+            "0.5": {
+              "coverage": 0.690835,
+              "accuracy": 0.633844
+            },
+            "0.7": {
+              "coverage": 0.429328,
+              "accuracy": 0.743833
+            },
+            "0.9": {
+              "coverage": 0.170672,
+              "accuracy": 0.849642
+            }
+          },
+          "fit_seconds": 26.342
+        },
+        "11433": {
+          "accuracy": 0.657841,
+          "macro_f1": 0.653461,
+          "weighted_f1": 0.657258,
+          "selective": {
+            "0.5": {
+              "coverage": 0.791039,
+              "accuracy": 0.740989
+            },
+            "0.7": {
+              "coverage": 0.540937,
+              "accuracy": 0.832078
+            },
+            "0.9": {
+              "coverage": 0.259063,
+              "accuracy": 0.927673
+            }
+          },
+          "fit_seconds": 80.372
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 2.1142,
+        "p95_ms": 3.48678,
+        "p99_ms": 4.057656,
+        "mean_ms": 2.123637
+      }
+    },
+    "kNN \u00b7 all-MiniLM-L6-v2.type": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.881059,
+        "macro_f1": 0.879908,
+        "weighted_f1": 0.879414,
+        "macro_precision": 0.886051,
+        "macro_recall": 0.875081,
+        "per_class": {
+          "Change": {
+            "precision": 0.950207,
+            "recall": 0.927126,
+            "f1-score": 0.938525,
+            "support": 247.0
+          },
+          "Incident": {
+            "precision": 0.855352,
+            "recall": 0.893253,
+            "f1-score": 0.873892,
+            "support": 993.0
+          },
+          "Problem": {
+            "precision": 0.773707,
+            "recall": 0.697087,
+            "f1-score": 0.733401,
+            "support": 515.0
+          },
+          "Request": {
+            "precision": 0.964937,
+            "recall": 0.982857,
+            "f1-score": 0.973815,
+            "support": 700.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            229,
+            1,
+            0,
+            17
+          ],
+          [
+            0,
+            887,
+            104,
+            2
+          ],
+          [
+            2,
+            148,
+            359,
+            6
+          ],
+          [
+            10,
+            1,
+            1,
+            688
+          ]
+        ],
+        "labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.865699,
+          "high": 0.893493,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.86722,
+          "macro_f1": 0.866844,
+          "weighted_f1": 0.865071,
+          "macro_precision": 0.873704,
+          "macro_recall": 0.861708,
+          "per_class": {
+            "Change": {
+              "precision": 0.942857,
+              "recall": 0.916667,
+              "f1-score": 0.929577,
+              "support": 216.0
+            },
+            "Incident": {
+              "precision": 0.841994,
+              "recall": 0.885173,
+              "f1-score": 0.863043,
+              "support": 897.0
+            },
+            "Problem": {
+              "precision": 0.75122,
+              "recall": 0.665227,
+              "f1-score": 0.705613,
+              "support": 463.0
+            },
+            "Request": {
+              "precision": 0.958746,
+              "recall": 0.979764,
+              "f1-score": 0.969141,
+              "support": 593.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              198,
+              1,
+              0,
+              17
+            ],
+            [
+              0,
+              794,
+              101,
+              2
+            ],
+            [
+              2,
+              147,
+              308,
+              6
+            ],
+            [
+              10,
+              1,
+              1,
+              581
+            ]
+          ],
+          "labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.625255,
+          "macro_f1": 0.581783,
+          "weighted_f1": 0.626114,
+          "selective": {
+            "0.5": {
+              "coverage": 0.931161,
+              "accuracy": 0.64042
+            },
+            "0.7": {
+              "coverage": 0.608147,
+              "accuracy": 0.685198
+            },
+            "0.9": {
+              "coverage": 0.278615,
+              "accuracy": 0.785088
+            }
+          },
+          "fit_seconds": 0.002
+        },
+        "200": {
+          "accuracy": 0.65947,
+          "macro_f1": 0.607253,
+          "weighted_f1": 0.647235,
+          "selective": {
+            "0.5": {
+              "coverage": 0.970672,
+              "accuracy": 0.668065
+            },
+            "0.7": {
+              "coverage": 0.598778,
+              "accuracy": 0.736735
+            },
+            "0.9": {
+              "coverage": 0.28391,
+              "accuracy": 0.819225
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.732383,
+          "macro_f1": 0.723025,
+          "weighted_f1": 0.728964,
+          "selective": {
+            "0.5": {
+              "coverage": 0.986965,
+              "accuracy": 0.737103
+            },
+            "0.7": {
+              "coverage": 0.660692,
+              "accuracy": 0.826757
+            },
+            "0.9": {
+              "coverage": 0.353564,
+              "accuracy": 0.895161
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.823218,
+          "macro_f1": 0.818905,
+          "weighted_f1": 0.818958,
+          "selective": {
+            "0.5": {
+              "coverage": 0.991039,
+              "accuracy": 0.826963
+            },
+            "0.7": {
+              "coverage": 0.780448,
+              "accuracy": 0.883612
+            },
+            "0.9": {
+              "coverage": 0.496945,
+              "accuracy": 0.928689
+            }
+          },
+          "fit_seconds": 0.003
+        },
+        "11433": {
+          "accuracy": 0.881059,
+          "macro_f1": 0.879908,
+          "weighted_f1": 0.879414,
+          "selective": {
+            "0.5": {
+              "coverage": 0.995927,
+              "accuracy": 0.883027
+            },
+            "0.7": {
+              "coverage": 0.81833,
+              "accuracy": 0.933798
+            },
+            "0.9": {
+              "coverage": 0.588595,
+              "accuracy": 0.95917
+            }
+          },
+          "fit_seconds": 0.006
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 43.19015,
+        "p95_ms": 61.455295,
+        "p99_ms": 68.100683,
+        "mean_ms": 44.167815
+      }
+    },
+    "kNN \u00b7 bge-small-en-v1.5.type": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.864766,
+        "macro_f1": 0.863465,
+        "weighted_f1": 0.862468,
+        "macro_precision": 0.869444,
+        "macro_recall": 0.85932,
+        "per_class": {
+          "Change": {
+            "precision": 0.938525,
+            "recall": 0.927126,
+            "f1-score": 0.93279,
+            "support": 247.0
+          },
+          "Incident": {
+            "precision": 0.833811,
+            "recall": 0.879154,
+            "f1-score": 0.855882,
+            "support": 993.0
+          },
+          "Problem": {
+            "precision": 0.743363,
+            "recall": 0.652427,
+            "f1-score": 0.694933,
+            "support": 515.0
+          },
+          "Request": {
+            "precision": 0.962079,
+            "recall": 0.978571,
+            "f1-score": 0.970255,
+            "support": 700.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            229,
+            1,
+            0,
+            17
+          ],
+          [
+            2,
+            873,
+            115,
+            3
+          ],
+          [
+            0,
+            172,
+            336,
+            7
+          ],
+          [
+            13,
+            1,
+            1,
+            685
+          ]
+        ],
+        "labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.850432,
+          "high": 0.876624,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.851083,
+          "macro_f1": 0.851152,
+          "weighted_f1": 0.848328,
+          "macro_precision": 0.856921,
+          "macro_recall": 0.847439,
+          "per_class": {
+            "Change": {
+              "precision": 0.929907,
+              "recall": 0.921296,
+              "f1-score": 0.925581,
+              "support": 216.0
+            },
+            "Incident": {
+              "precision": 0.821918,
+              "recall": 0.869565,
+              "f1-score": 0.84507,
+              "support": 897.0
+            },
+            "Problem": {
+              "precision": 0.718905,
+              "recall": 0.62419,
+              "f1-score": 0.668208,
+              "support": 463.0
+            },
+            "Request": {
+              "precision": 0.956954,
+              "recall": 0.974705,
+              "f1-score": 0.965748,
+              "support": 593.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              199,
+              1,
+              0,
+              16
+            ],
+            [
+              2,
+              780,
+              112,
+              3
+            ],
+            [
+              0,
+              167,
+              289,
+              7
+            ],
+            [
+              13,
+              1,
+              1,
+              578
+            ]
+          ],
+          "labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.582485,
+          "macro_f1": 0.53603,
+          "weighted_f1": 0.582791,
+          "selective": {
+            "0.5": {
+              "coverage": 0.821589,
+              "accuracy": 0.616758
+            },
+            "0.7": {
+              "coverage": 0.345825,
+              "accuracy": 0.724382
+            },
+            "0.9": {
+              "coverage": 0.066395,
+              "accuracy": 0.822086
+            }
+          },
+          "fit_seconds": 0.002
+        },
+        "200": {
+          "accuracy": 0.680652,
+          "macro_f1": 0.620437,
+          "weighted_f1": 0.657792,
+          "selective": {
+            "0.5": {
+              "coverage": 0.953564,
+              "accuracy": 0.694148
+            },
+            "0.7": {
+              "coverage": 0.541344,
+              "accuracy": 0.772761
+            },
+            "0.9": {
+              "coverage": 0.199185,
+              "accuracy": 0.877301
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.751527,
+          "macro_f1": 0.733649,
+          "weighted_f1": 0.740535,
+          "selective": {
+            "0.5": {
+              "coverage": 0.973116,
+              "accuracy": 0.756802
+            },
+            "0.7": {
+              "coverage": 0.631365,
+              "accuracy": 0.842581
+            },
+            "0.9": {
+              "coverage": 0.317312,
+              "accuracy": 0.91656
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.810183,
+          "macro_f1": 0.807574,
+          "weighted_f1": 0.804534,
+          "selective": {
+            "0.5": {
+              "coverage": 0.992261,
+              "accuracy": 0.813629
+            },
+            "0.7": {
+              "coverage": 0.730346,
+              "accuracy": 0.886782
+            },
+            "0.9": {
+              "coverage": 0.439511,
+              "accuracy": 0.943466
+            }
+          },
+          "fit_seconds": 0.003
+        },
+        "11433": {
+          "accuracy": 0.864766,
+          "macro_f1": 0.863465,
+          "weighted_f1": 0.862468,
+          "selective": {
+            "0.5": {
+              "coverage": 0.996741,
+              "accuracy": 0.865958
+            },
+            "0.7": {
+              "coverage": 0.764969,
+              "accuracy": 0.925985
+            },
+            "0.9": {
+              "coverage": 0.511202,
+              "accuracy": 0.965737
+            }
+          },
+          "fit_seconds": 0.006
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 109.38775,
+        "p95_ms": 150.00927,
+        "p99_ms": 214.889557,
+        "mean_ms": 112.077912
+      }
+    },
+    "kNN \u00b7 TF-IDF.type": {
+      "params": {
+        "k": 40,
+        "power": 4.0
+      },
+      "test_full_history": {
+        "accuracy": 0.91446,
+        "macro_f1": 0.914644,
+        "weighted_f1": 0.912396,
+        "macro_precision": 0.927763,
+        "macro_recall": 0.905886,
+        "per_class": {
+          "Change": {
+            "precision": 0.983333,
+            "recall": 0.955466,
+            "f1-score": 0.969199,
+            "support": 247.0
+          },
+          "Incident": {
+            "precision": 0.874185,
+            "recall": 0.944612,
+            "f1-score": 0.908035,
+            "support": 993.0
+          },
+          "Problem": {
+            "precision": 0.882904,
+            "recall": 0.732039,
+            "f1-score": 0.800425,
+            "support": 515.0
+          },
+          "Request": {
+            "precision": 0.970629,
+            "recall": 0.991429,
+            "f1-score": 0.980919,
+            "support": 700.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            236,
+            1,
+            0,
+            10
+          ],
+          [
+            0,
+            938,
+            50,
+            5
+          ],
+          [
+            0,
+            132,
+            377,
+            6
+          ],
+          [
+            4,
+            2,
+            0,
+            694
+          ]
+        ],
+        "labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.903298,
+          "high": 0.924614,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.903181,
+          "macro_f1": 0.904123,
+          "weighted_f1": 0.900521,
+          "macro_precision": 0.918703,
+          "macro_recall": 0.894896,
+          "per_class": {
+            "Change": {
+              "precision": 0.980861,
+              "recall": 0.949074,
+              "f1-score": 0.964706,
+              "support": 216.0
+            },
+            "Incident": {
+              "precision": 0.861822,
+              "recall": 0.938685,
+              "f1-score": 0.898613,
+              "support": 897.0
+            },
+            "Problem": {
+              "precision": 0.866667,
+              "recall": 0.701944,
+              "f1-score": 0.775656,
+              "support": 463.0
+            },
+            "Request": {
+              "precision": 0.965461,
+              "recall": 0.989882,
+              "f1-score": 0.977519,
+              "support": 593.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              205,
+              1,
+              0,
+              10
+            ],
+            [
+              0,
+              842,
+              50,
+              5
+            ],
+            [
+              0,
+              132,
+              325,
+              6
+            ],
+            [
+              4,
+              2,
+              0,
+              587
+            ]
+          ],
+          "labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.64888,
+          "macro_f1": 0.595213,
+          "weighted_f1": 0.641837,
+          "selective": {
+            "0.5": {
+              "coverage": 0.861507,
+              "accuracy": 0.683215
+            },
+            "0.7": {
+              "coverage": 0.449695,
+              "accuracy": 0.769022
+            },
+            "0.9": {
+              "coverage": 0.112424,
+              "accuracy": 0.855072
+            }
+          },
+          "fit_seconds": 0.018
+        },
+        "200": {
+          "accuracy": 0.718534,
+          "macro_f1": 0.657335,
+          "weighted_f1": 0.686132,
+          "selective": {
+            "0.5": {
+              "coverage": 0.900204,
+              "accuracy": 0.752941
+            },
+            "0.7": {
+              "coverage": 0.578411,
+              "accuracy": 0.820423
+            },
+            "0.9": {
+              "coverage": 0.218737,
+              "accuracy": 0.951583
+            }
+          },
+          "fit_seconds": 0.098
+        },
+        "1000": {
+          "accuracy": 0.771487,
+          "macro_f1": 0.735127,
+          "weighted_f1": 0.748051,
+          "selective": {
+            "0.5": {
+              "coverage": 0.933605,
+              "accuracy": 0.787958
+            },
+            "0.7": {
+              "coverage": 0.571079,
+              "accuracy": 0.884451
+            },
+            "0.9": {
+              "coverage": 0.306314,
+              "accuracy": 0.980053
+            }
+          },
+          "fit_seconds": 0.39
+        },
+        "5000": {
+          "accuracy": 0.852953,
+          "macro_f1": 0.843726,
+          "weighted_f1": 0.8448,
+          "selective": {
+            "0.5": {
+              "coverage": 0.968228,
+              "accuracy": 0.867901
+            },
+            "0.7": {
+              "coverage": 0.735234,
+              "accuracy": 0.944598
+            },
+            "0.9": {
+              "coverage": 0.494908,
+              "accuracy": 0.998354
+            }
+          },
+          "fit_seconds": 1.768
+        },
+        "11433": {
+          "accuracy": 0.91446,
+          "macro_f1": 0.914644,
+          "weighted_f1": 0.912396,
+          "selective": {
+            "0.5": {
+              "coverage": 0.982485,
+              "accuracy": 0.921642
+            },
+            "0.7": {
+              "coverage": 0.841141,
+              "accuracy": 0.975303
+            },
+            "0.9": {
+              "coverage": 0.639511,
+              "accuracy": 0.999363
+            }
+          },
+          "fit_seconds": 3.99
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 27.1,
+        "p95_ms": 32.151815,
+        "p99_ms": 46.689579,
+        "mean_ms": 28.025402
+      }
+    },
+    "Tenant model \u00b7 TF-IDF + LogReg.type": {
+      "params": {
+        "C": 100.0
+      },
+      "test_full_history": {
+        "accuracy": 0.872098,
+        "macro_f1": 0.882403,
+        "weighted_f1": 0.872303,
+        "macro_precision": 0.880902,
+        "macro_recall": 0.883953,
+        "per_class": {
+          "Change": {
+            "precision": 0.98,
+            "recall": 0.991903,
+            "f1-score": 0.985915,
+            "support": 247.0
+          },
+          "Incident": {
+            "precision": 0.848577,
+            "recall": 0.840886,
+            "f1-score": 0.844714,
+            "support": 993.0
+          },
+          "Problem": {
+            "precision": 0.697897,
+            "recall": 0.708738,
+            "f1-score": 0.703276,
+            "support": 515.0
+          },
+          "Request": {
+            "precision": 0.997135,
+            "recall": 0.994286,
+            "f1-score": 0.995708,
+            "support": 700.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            245,
+            1,
+            0,
+            1
+          ],
+          [
+            1,
+            835,
+            157,
+            0
+          ],
+          [
+            1,
+            148,
+            365,
+            1
+          ],
+          [
+            3,
+            0,
+            1,
+            696
+          ]
+        ],
+        "labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.87014,
+          "high": 0.891577,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.857077,
+          "macro_f1": 0.870776,
+          "weighted_f1": 0.857263,
+          "macro_precision": 0.869251,
+          "macro_recall": 0.872346,
+          "per_class": {
+            "Change": {
+              "precision": 0.977169,
+              "recall": 0.990741,
+              "f1-score": 0.983908,
+              "support": 216.0
+            },
+            "Incident": {
+              "precision": 0.833708,
+              "recall": 0.827202,
+              "f1-score": 0.830442,
+              "support": 897.0
+            },
+            "Problem": {
+              "precision": 0.66951,
+              "recall": 0.678186,
+              "f1-score": 0.67382,
+              "support": 463.0
+            },
+            "Request": {
+              "precision": 0.996616,
+              "recall": 0.993255,
+              "f1-score": 0.994932,
+              "support": 593.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              214,
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              742,
+              154,
+              0
+            ],
+            [
+              1,
+              147,
+              314,
+              1
+            ],
+            [
+              3,
+              0,
+              1,
+              589
+            ]
+          ],
+          "labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.670468,
+          "macro_f1": 0.570996,
+          "weighted_f1": 0.651156,
+          "selective": {
+            "0.5": {
+              "coverage": 0.766191,
+              "accuracy": 0.738437
+            },
+            "0.7": {
+              "coverage": 0.338086,
+              "accuracy": 0.885542
+            },
+            "0.9": {
+              "coverage": 0.053768,
+              "accuracy": 0.992424
+            }
+          },
+          "fit_seconds": 0.272
+        },
+        "200": {
+          "accuracy": 0.747862,
+          "macro_f1": 0.698937,
+          "weighted_f1": 0.714301,
+          "selective": {
+            "0.5": {
+              "coverage": 0.931976,
+              "accuracy": 0.767045
+            },
+            "0.7": {
+              "coverage": 0.707943,
+              "accuracy": 0.817606
+            },
+            "0.9": {
+              "coverage": 0.359674,
+              "accuracy": 0.889015
+            }
+          },
+          "fit_seconds": 0.341
+        },
+        "1000": {
+          "accuracy": 0.778819,
+          "macro_f1": 0.785231,
+          "weighted_f1": 0.774537,
+          "selective": {
+            "0.5": {
+              "coverage": 0.980041,
+              "accuracy": 0.784289
+            },
+            "0.7": {
+              "coverage": 0.792668,
+              "accuracy": 0.836074
+            },
+            "0.9": {
+              "coverage": 0.548676,
+              "accuracy": 0.903489
+            }
+          },
+          "fit_seconds": 0.901
+        },
+        "5000": {
+          "accuracy": 0.837475,
+          "macro_f1": 0.848952,
+          "weighted_f1": 0.837301,
+          "selective": {
+            "0.5": {
+              "coverage": 0.995112,
+              "accuracy": 0.837495
+            },
+            "0.7": {
+              "coverage": 0.875764,
+              "accuracy": 0.876279
+            },
+            "0.9": {
+              "coverage": 0.700611,
+              "accuracy": 0.923837
+            }
+          },
+          "fit_seconds": 3.613
+        },
+        "11433": {
+          "accuracy": 0.872098,
+          "macro_f1": 0.882403,
+          "weighted_f1": 0.872303,
+          "selective": {
+            "0.5": {
+              "coverage": 0.998778,
+              "accuracy": 0.872757
+            },
+            "0.7": {
+              "coverage": 0.905499,
+              "accuracy": 0.912281
+            },
+            "0.9": {
+              "coverage": 0.759674,
+              "accuracy": 0.95067
+            }
+          },
+          "fit_seconds": 7.203
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 3.8254,
+        "p95_ms": 4.96984,
+        "p99_ms": 5.402427,
+        "mean_ms": 3.830186
+      }
+    },
+    "kNN \u00b7 all-MiniLM-L6-v2.priority": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.726273,
+        "macro_f1": 0.716519,
+        "weighted_f1": 0.725819,
+        "macro_precision": 0.722137,
+        "macro_recall": 0.712304,
+        "per_class": {
+          "high": {
+            "precision": 0.762552,
+            "recall": 0.750772,
+            "f1-score": 0.756617,
+            "support": 971.0
+          },
+          "low": {
+            "precision": 0.698718,
+            "recall": 0.637427,
+            "f1-score": 0.666667,
+            "support": 513.0
+          },
+          "medium": {
+            "precision": 0.705141,
+            "recall": 0.748713,
+            "f1-score": 0.726274,
+            "support": 971.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            729,
+            59,
+            183
+          ],
+          [
+            65,
+            327,
+            121
+          ],
+          [
+            162,
+            82,
+            727
+          ]
+        ],
+        "labels": [
+          "high",
+          "low",
+          "medium"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.701374,
+          "high": 0.735597,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.697556,
+          "macro_f1": 0.685982,
+          "weighted_f1": 0.696984,
+          "macro_precision": 0.691924,
+          "macro_recall": 0.681636,
+          "per_class": {
+            "high": {
+              "precision": 0.738372,
+              "recall": 0.729047,
+              "f1-score": 0.73368,
+              "support": 871.0
+            },
+            "low": {
+              "precision": 0.663366,
+              "recall": 0.598214,
+              "f1-score": 0.629108,
+              "support": 448.0
+            },
+            "medium": {
+              "precision": 0.674033,
+              "recall": 0.717647,
+              "f1-score": 0.695157,
+              "support": 850.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              635,
+              57,
+              179
+            ],
+            [
+              64,
+              268,
+              116
+            ],
+            [
+              161,
+              79,
+              610
+            ]
+          ],
+          "labels": [
+            "high",
+            "low",
+            "medium"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.383299,
+          "macro_f1": 0.347945,
+          "weighted_f1": 0.375062,
+          "selective": {
+            "0.5": {
+              "coverage": 0.806517,
+              "accuracy": 0.388384
+            },
+            "0.7": {
+              "coverage": 0.405295,
+              "accuracy": 0.401005
+            },
+            "0.9": {
+              "coverage": 0.125051,
+              "accuracy": 0.420195
+            }
+          },
+          "fit_seconds": 0.004
+        },
+        "200": {
+          "accuracy": 0.40611,
+          "macro_f1": 0.35896,
+          "weighted_f1": 0.391536,
+          "selective": {
+            "0.5": {
+              "coverage": 0.789002,
+              "accuracy": 0.421786
+            },
+            "0.7": {
+              "coverage": 0.333198,
+              "accuracy": 0.438875
+            },
+            "0.9": {
+              "coverage": 0.068839,
+              "accuracy": 0.473373
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.437475,
+          "macro_f1": 0.40675,
+          "weighted_f1": 0.43272,
+          "selective": {
+            "0.5": {
+              "coverage": 0.805295,
+              "accuracy": 0.459282
+            },
+            "0.7": {
+              "coverage": 0.348269,
+              "accuracy": 0.554386
+            },
+            "0.9": {
+              "coverage": 0.080652,
+              "accuracy": 0.691919
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.587373,
+          "macro_f1": 0.569011,
+          "weighted_f1": 0.585238,
+          "selective": {
+            "0.5": {
+              "coverage": 0.8611,
+              "accuracy": 0.626774
+            },
+            "0.7": {
+              "coverage": 0.447251,
+              "accuracy": 0.728597
+            },
+            "0.9": {
+              "coverage": 0.136049,
+              "accuracy": 0.844311
+            }
+          },
+          "fit_seconds": 0.005
+        },
+        "11433": {
+          "accuracy": 0.726273,
+          "macro_f1": 0.716519,
+          "weighted_f1": 0.725819,
+          "selective": {
+            "0.5": {
+              "coverage": 0.901426,
+              "accuracy": 0.750565
+            },
+            "0.7": {
+              "coverage": 0.565377,
+              "accuracy": 0.849424
+            },
+            "0.9": {
+              "coverage": 0.214257,
+              "accuracy": 0.914449
+            }
+          },
+          "fit_seconds": 0.011
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 69.9424,
+        "p95_ms": 88.101505,
+        "p99_ms": 94.044363,
+        "mean_ms": 69.885557
+      }
+    },
+    "kNN \u00b7 bge-small-en-v1.5.priority": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.678208,
+        "macro_f1": 0.665149,
+        "weighted_f1": 0.67671,
+        "macro_precision": 0.674755,
+        "macro_recall": 0.658924,
+        "per_class": {
+          "high": {
+            "precision": 0.694611,
+            "recall": 0.716787,
+            "f1-score": 0.705525,
+            "support": 971.0
+          },
+          "low": {
+            "precision": 0.659722,
+            "recall": 0.555556,
+            "f1-score": 0.603175,
+            "support": 513.0
+          },
+          "medium": {
+            "precision": 0.669931,
+            "recall": 0.704428,
+            "f1-score": 0.686747,
+            "support": 971.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            696,
+            65,
+            210
+          ],
+          [
+            101,
+            285,
+            127
+          ],
+          [
+            205,
+            82,
+            684
+          ]
+        ],
+        "labels": [
+          "high",
+          "low",
+          "medium"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.647094,
+          "high": 0.684904,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.65053,
+          "macro_f1": 0.634757,
+          "weighted_f1": 0.648658,
+          "macro_precision": 0.644891,
+          "macro_recall": 0.628548,
+          "per_class": {
+            "high": {
+              "precision": 0.67447,
+              "recall": 0.694604,
+              "f1-score": 0.684389,
+              "support": 871.0
+            },
+            "low": {
+              "precision": 0.621622,
+              "recall": 0.513393,
+              "f1-score": 0.562347,
+              "support": 448.0
+            },
+            "medium": {
+              "precision": 0.638581,
+              "recall": 0.677647,
+              "f1-score": 0.657534,
+              "support": 850.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              605,
+              61,
+              205
+            ],
+            [
+              97,
+              230,
+              121
+            ],
+            [
+              195,
+              79,
+              576
+            ]
+          ],
+          "labels": [
+            "high",
+            "low",
+            "medium"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.377189,
+          "macro_f1": 0.34768,
+          "weighted_f1": 0.37469,
+          "selective": {
+            "0.5": {
+              "coverage": 0.624847,
+              "accuracy": 0.407432
+            },
+            "0.7": {
+              "coverage": 0.090428,
+              "accuracy": 0.468468
+            },
+            "0.9": {
+              "coverage": 0.003666,
+              "accuracy": 0.444444
+            }
+          },
+          "fit_seconds": 0.003
+        },
+        "200": {
+          "accuracy": 0.407739,
+          "macro_f1": 0.350631,
+          "weighted_f1": 0.381671,
+          "selective": {
+            "0.5": {
+              "coverage": 0.698982,
+              "accuracy": 0.422494
+            },
+            "0.7": {
+              "coverage": 0.240733,
+              "accuracy": 0.468697
+            },
+            "0.9": {
+              "coverage": 0.033809,
+              "accuracy": 0.385542
+            }
+          },
+          "fit_seconds": 0.0
+        },
+        "1000": {
+          "accuracy": 0.446436,
+          "macro_f1": 0.402325,
+          "weighted_f1": 0.435211,
+          "selective": {
+            "0.5": {
+              "coverage": 0.750713,
+              "accuracy": 0.472599
+            },
+            "0.7": {
+              "coverage": 0.261507,
+              "accuracy": 0.53271
+            },
+            "0.9": {
+              "coverage": 0.046843,
+              "accuracy": 0.565217
+            }
+          },
+          "fit_seconds": 0.001
+        },
+        "5000": {
+          "accuracy": 0.570672,
+          "macro_f1": 0.547839,
+          "weighted_f1": 0.567619,
+          "selective": {
+            "0.5": {
+              "coverage": 0.802851,
+              "accuracy": 0.606799
+            },
+            "0.7": {
+              "coverage": 0.335642,
+              "accuracy": 0.695388
+            },
+            "0.9": {
+              "coverage": 0.074542,
+              "accuracy": 0.79235
+            }
+          },
+          "fit_seconds": 0.006
+        },
+        "11433": {
+          "accuracy": 0.678208,
+          "macro_f1": 0.665149,
+          "weighted_f1": 0.67671,
+          "selective": {
+            "0.5": {
+              "coverage": 0.877393,
+              "accuracy": 0.699629
+            },
+            "0.7": {
+              "coverage": 0.432179,
+              "accuracy": 0.828464
+            },
+            "0.9": {
+              "coverage": 0.131976,
+              "accuracy": 0.87037
+            }
+          },
+          "fit_seconds": 0.012
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 158.6574,
+        "p95_ms": 292.203455,
+        "p99_ms": 394.158905,
+        "mean_ms": 171.870108
+      }
+    },
+    "kNN \u00b7 TF-IDF.priority": {
+      "params": {
+        "k": 5,
+        "power": 8.0
+      },
+      "test_full_history": {
+        "accuracy": 0.783707,
+        "macro_f1": 0.774014,
+        "weighted_f1": 0.783605,
+        "macro_precision": 0.775543,
+        "macro_recall": 0.772661,
+        "per_class": {
+          "high": {
+            "precision": 0.81875,
+            "recall": 0.809475,
+            "f1-score": 0.814086,
+            "support": 971.0
+          },
+          "low": {
+            "precision": 0.732,
+            "recall": 0.71345,
+            "f1-score": 0.722606,
+            "support": 513.0
+          },
+          "medium": {
+            "precision": 0.775879,
+            "recall": 0.795057,
+            "f1-score": 0.785351,
+            "support": 971.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            786,
+            53,
+            132
+          ],
+          [
+            56,
+            366,
+            91
+          ],
+          [
+            118,
+            81,
+            772
+          ]
+        ],
+        "labels": [
+          "high",
+          "low",
+          "medium"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.757139,
+          "high": 0.790042,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.755187,
+          "macro_f1": 0.743198,
+          "weighted_f1": 0.755061,
+          "macro_precision": 0.744827,
+          "macro_recall": 0.741786,
+          "per_class": {
+            "high": {
+              "precision": 0.797674,
+              "recall": 0.7876,
+              "f1-score": 0.792605,
+              "support": 871.0
+            },
+            "low": {
+              "precision": 0.691954,
+              "recall": 0.671875,
+              "f1-score": 0.681767,
+              "support": 448.0
+            },
+            "medium": {
+              "precision": 0.744851,
+              "recall": 0.765882,
+              "f1-score": 0.75522,
+              "support": 850.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              686,
+              53,
+              132
+            ],
+            [
+              56,
+              301,
+              91
+            ],
+            [
+              118,
+              81,
+              651
+            ]
+          ],
+          "labels": [
+            "high",
+            "low",
+            "medium"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.377189,
+          "macro_f1": 0.359089,
+          "weighted_f1": 0.37789,
+          "selective": {
+            "0.5": {
+              "coverage": 0.929939,
+              "accuracy": 0.378011
+            },
+            "0.7": {
+              "coverage": 0.643992,
+              "accuracy": 0.388994
+            },
+            "0.9": {
+              "coverage": 0.347047,
+              "accuracy": 0.390845
+            }
+          },
+          "fit_seconds": 0.052
+        },
+        "200": {
+          "accuracy": 0.398371,
+          "macro_f1": 0.372139,
+          "weighted_f1": 0.395949,
+          "selective": {
+            "0.5": {
+              "coverage": 0.911202,
+              "accuracy": 0.396066
+            },
+            "0.7": {
+              "coverage": 0.610998,
+              "accuracy": 0.407333
+            },
+            "0.9": {
+              "coverage": 0.301833,
+              "accuracy": 0.445344
+            }
+          },
+          "fit_seconds": 0.196
+        },
+        "1000": {
+          "accuracy": 0.445214,
+          "macro_f1": 0.421961,
+          "weighted_f1": 0.442831,
+          "selective": {
+            "0.5": {
+              "coverage": 0.920163,
+              "accuracy": 0.452413
+            },
+            "0.7": {
+              "coverage": 0.618737,
+              "accuracy": 0.479263
+            },
+            "0.9": {
+              "coverage": 0.310387,
+              "accuracy": 0.568241
+            }
+          },
+          "fit_seconds": 0.771
+        },
+        "5000": {
+          "accuracy": 0.626069,
+          "macro_f1": 0.610295,
+          "weighted_f1": 0.626456,
+          "selective": {
+            "0.5": {
+              "coverage": 0.936456,
+              "accuracy": 0.644628
+            },
+            "0.7": {
+              "coverage": 0.705906,
+              "accuracy": 0.729371
+            },
+            "0.9": {
+              "coverage": 0.491242,
+              "accuracy": 0.860697
+            }
+          },
+          "fit_seconds": 4.239
+        },
+        "11433": {
+          "accuracy": 0.783707,
+          "macro_f1": 0.774014,
+          "weighted_f1": 0.783605,
+          "selective": {
+            "0.5": {
+              "coverage": 0.968228,
+              "accuracy": 0.795541
+            },
+            "0.7": {
+              "coverage": 0.831772,
+              "accuracy": 0.866797
+            },
+            "0.9": {
+              "coverage": 0.690428,
+              "accuracy": 0.951032
+            }
+          },
+          "fit_seconds": 8.238
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 63.15505,
+        "p95_ms": 80.990715,
+        "p99_ms": 100.416946,
+        "mean_ms": 61.903946
+      }
+    },
+    "Tenant model \u00b7 TF-IDF + LogReg.priority": {
+      "params": {
+        "C": 100.0
+      },
+      "test_full_history": {
+        "accuracy": 0.689206,
+        "macro_f1": 0.674433,
+        "weighted_f1": 0.688357,
+        "macro_precision": 0.679644,
+        "macro_recall": 0.670644,
+        "per_class": {
+          "high": {
+            "precision": 0.734651,
+            "recall": 0.727085,
+            "f1-score": 0.730849,
+            "support": 971.0
+          },
+          "low": {
+            "precision": 0.631466,
+            "recall": 0.57115,
+            "f1-score": 0.599795,
+            "support": 513.0
+          },
+          "medium": {
+            "precision": 0.672816,
+            "recall": 0.713697,
+            "f1-score": 0.692654,
+            "support": 971.0
+          }
+        },
+        "confusion_matrix": [
+          [
+            706,
+            66,
+            199
+          ],
+          [
+            82,
+            293,
+            138
+          ],
+          [
+            173,
+            105,
+            693
+          ]
+        ],
+        "labels": [
+          "high",
+          "low",
+          "medium"
+        ],
+        "macro_f1_ci95": {
+          "low": 0.65668,
+          "high": 0.691537,
+          "n_bootstrap": 300
+        },
+        "novel": {
+          "accuracy": 0.651913,
+          "macro_f1": 0.63292,
+          "weighted_f1": 0.650655,
+          "macro_precision": 0.638882,
+          "macro_recall": 0.628983,
+          "per_class": {
+            "high": {
+              "precision": 0.70814,
+              "recall": 0.699196,
+              "f1-score": 0.70364,
+              "support": 871.0
+            },
+            "low": {
+              "precision": 0.577215,
+              "recall": 0.508929,
+              "f1-score": 0.540925,
+              "support": 448.0
+            },
+            "medium": {
+              "precision": 0.631291,
+              "recall": 0.678824,
+              "f1-score": 0.654195,
+              "support": 850.0
+            }
+          },
+          "confusion_matrix": [
+            [
+              609,
+              63,
+              199
+            ],
+            [
+              82,
+              228,
+              138
+            ],
+            [
+              169,
+              104,
+              577
+            ]
+          ],
+          "labels": [
+            "high",
+            "low",
+            "medium"
+          ]
+        }
+      },
+      "learning_curve": {
+        "50": {
+          "accuracy": 0.413442,
+          "macro_f1": 0.337414,
+          "weighted_f1": 0.383159,
+          "selective": {
+            "0.5": {
+              "coverage": 0.759674,
+              "accuracy": 0.425201
+            },
+            "0.7": {
+              "coverage": 0.237067,
+              "accuracy": 0.424399
+            },
+            "0.9": {
+              "coverage": 0.017515,
+              "accuracy": 0.697674
+            }
+          },
+          "fit_seconds": 0.103
+        },
+        "200": {
+          "accuracy": 0.401222,
+          "macro_f1": 0.344999,
+          "weighted_f1": 0.38201,
+          "selective": {
+            "0.5": {
+              "coverage": 0.784521,
+              "accuracy": 0.41433
+            },
+            "0.7": {
+              "coverage": 0.34501,
+              "accuracy": 0.465171
+            },
+            "0.9": {
+              "coverage": 0.041141,
+              "accuracy": 0.475248
+            }
+          },
+          "fit_seconds": 0.393
+        },
+        "1000": {
+          "accuracy": 0.435031,
+          "macro_f1": 0.407282,
+          "weighted_f1": 0.431117,
+          "selective": {
+            "0.5": {
+              "coverage": 0.894501,
+              "accuracy": 0.449454
+            },
+            "0.7": {
+              "coverage": 0.560896,
+              "accuracy": 0.491649
+            },
+            "0.9": {
+              "coverage": 0.218737,
+              "accuracy": 0.541899
+            }
+          },
+          "fit_seconds": 1.493
+        },
+        "5000": {
+          "accuracy": 0.582485,
+          "macro_f1": 0.561964,
+          "weighted_f1": 0.581082,
+          "selective": {
+            "0.5": {
+              "coverage": 0.92668,
+              "accuracy": 0.60044
+            },
+            "0.7": {
+              "coverage": 0.671283,
+              "accuracy": 0.649272
+            },
+            "0.9": {
+              "coverage": 0.335642,
+              "accuracy": 0.716019
+            }
+          },
+          "fit_seconds": 7.614
+        },
+        "11433": {
+          "accuracy": 0.689206,
+          "macro_f1": 0.674433,
+          "weighted_f1": 0.688357,
+          "selective": {
+            "0.5": {
+              "coverage": 0.947047,
+              "accuracy": 0.701505
+            },
+            "0.7": {
+              "coverage": 0.747862,
+              "accuracy": 0.753268
+            },
+            "0.9": {
+              "coverage": 0.437882,
+              "accuracy": 0.828837
+            }
+          },
+          "fit_seconds": 20.1
+        }
+      },
+      "latency_single": {
+        "n": 100,
+        "p50_ms": 2.82875,
+        "p95_ms": 4.428725,
+        "p99_ms": 5.030081,
+        "mean_ms": 2.829698
+      }
+    }
+  },
+  "artifacts": [],
+  "notes": [],
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "lightgbm": "4.7.0",
+      "torch": "2.14.0+cpu",
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.17.0"
+    }
+  }
+}

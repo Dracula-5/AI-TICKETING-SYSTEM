@@ -1,0 +1,246 @@
+{
+  "task": "duplicates",
+  "run": "p4_duplicate_threshold",
+  "timestamp": "2026-09-30T16:10:20+00:00",
+  "duration_seconds": 0.0,
+  "git": {
+    "commit": "9d32cb8ce23f032d74a6122a2faeff2be638e96b",
+    "dirty": true
+  },
+  "datasets_sha256": {
+    "data/processed/dup_unix_corpus.parquet": "712879bbf6bdb4dcd128b65ce8d60fe7f707228c98864f5066a11b22df289cff",
+    "data/processed/dup_unix_queries.parquet": "aa2a9a32bd9ca73f67f9624ba8fc09053795de95a445de710541b72e3ef7c904",
+    "data/processed/dup_unix_qrels.parquet": "3f77562114ee6e32f62ac2b787fce057443436c9a9298f29d4a6e5566756e9a2",
+    "data/synthetic/tickets.parquet": "22aba3e66bd7d0cc3881101ef34f672e3e35d39a9092702bcc45486201d86160",
+    "data/synthetic/duplicate_pairs.parquet": "c08040bf79e672e0bc7ac9f88a6279b7371df387b69ec60475d5721c7ad970b8"
+  },
+  "params": {
+    "model": "sentence-transformers/all-MiniLM-L6-v2",
+    "thresholds": [
+      0.65,
+      0.7,
+      0.75,
+      0.8,
+      0.85,
+      0.9,
+      0.95
+    ],
+    "min_precision": 0.5
+  },
+  "metrics": {
+    "public": {
+      "validation": {
+        "0.65": {
+          "threshold": 0.65,
+          "precision": 0.187556,
+          "recall": 0.525253,
+          "f1": 0.276412,
+          "false_positive_rate": 0.180416,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.7": {
+          "threshold": 0.7,
+          "precision": 0.334184,
+          "recall": 0.330808,
+          "f1": 0.332487,
+          "false_positive_rate": 0.052263,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.75": {
+          "threshold": 0.75,
+          "precision": 0.513889,
+          "recall": 0.186869,
+          "f1": 0.274074,
+          "false_positive_rate": 0.014017,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.8": {
+          "threshold": 0.8,
+          "precision": 0.8,
+          "recall": 0.10101,
+          "f1": 0.179372,
+          "false_positive_rate": 0.002002,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.85": {
+          "threshold": 0.85,
+          "precision": 0.833333,
+          "recall": 0.037879,
+          "f1": 0.072464,
+          "false_positive_rate": 0.000601,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.9": {
+          "threshold": 0.9,
+          "precision": 1.0,
+          "recall": 0.012626,
+          "f1": 0.024938,
+          "false_positive_rate": 0.0,
+          "n_pos": 396,
+          "n_neg": 4994
+        },
+        "0.95": {
+          "threshold": 0.95,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_positive_rate": 0.0,
+          "n_pos": 396,
+          "n_neg": 4994
+        }
+      },
+      "test": {
+        "0.65": {
+          "threshold": 0.65,
+          "precision": 0.187276,
+          "recall": 0.542857,
+          "f1": 0.278481,
+          "false_positive_rate": 0.183418,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.7": {
+          "threshold": 0.7,
+          "precision": 0.29638,
+          "recall": 0.34026,
+          "f1": 0.316808,
+          "false_positive_rate": 0.062892,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.75": {
+          "threshold": 0.75,
+          "precision": 0.470199,
+          "recall": 0.184416,
+          "f1": 0.264925,
+          "false_positive_rate": 0.016178,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.8": {
+          "threshold": 0.8,
+          "precision": 0.607143,
+          "recall": 0.088312,
+          "f1": 0.154195,
+          "false_positive_rate": 0.004449,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.85": {
+          "threshold": 0.85,
+          "precision": 0.8125,
+          "recall": 0.033766,
+          "f1": 0.064838,
+          "false_positive_rate": 0.000607,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.9": {
+          "threshold": 0.9,
+          "precision": 1.0,
+          "recall": 0.002597,
+          "f1": 0.005181,
+          "false_positive_rate": 0.0,
+          "n_pos": 385,
+          "n_neg": 4945
+        },
+        "0.95": {
+          "threshold": 0.95,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "false_positive_rate": 0.0,
+          "n_pos": 385,
+          "n_neg": 4945
+        }
+      }
+    },
+    "synthetic": {
+      "0.65": {
+        "threshold": 0.65,
+        "precision": 0.919386,
+        "recall": 0.997917,
+        "f1": 0.957043,
+        "false_positive_rate": 0.029724,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.7": {
+        "threshold": 0.7,
+        "precision": 0.955823,
+        "recall": 0.991667,
+        "f1": 0.973415,
+        "false_positive_rate": 0.01557,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.75": {
+        "threshold": 0.75,
+        "precision": 0.979381,
+        "recall": 0.989583,
+        "f1": 0.984456,
+        "false_positive_rate": 0.007077,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.8": {
+        "threshold": 0.8,
+        "precision": 0.989362,
+        "recall": 0.96875,
+        "f1": 0.978947,
+        "false_positive_rate": 0.003539,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.85": {
+        "threshold": 0.85,
+        "precision": 0.997732,
+        "recall": 0.916667,
+        "f1": 0.955483,
+        "false_positive_rate": 0.000708,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.9": {
+        "threshold": 0.9,
+        "precision": 0.997468,
+        "recall": 0.820833,
+        "f1": 0.900571,
+        "false_positive_rate": 0.000708,
+        "n_pos": 480,
+        "n_neg": 1413
+      },
+      "0.95": {
+        "threshold": 0.95,
+        "precision": 0.996516,
+        "recall": 0.595833,
+        "f1": 0.745763,
+        "false_positive_rate": 0.000708,
+        "n_pos": 480,
+        "n_neg": 1413
+      }
+    },
+    "chosen_threshold": 0.75
+  },
+  "artifacts": [],
+  "notes": [],
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "lightgbm": "4.7.0",
+      "torch": "2.14.0+cpu",
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.17.0"
+    }
+  }
+}

@@ -1,0 +1,225 @@
+{
+  "task": "routing",
+  "run": "p4_routing_uci",
+  "timestamp": "2026-09-30T16:25:48+00:00",
+  "duration_seconds": 123.18,
+  "git": {
+    "commit": "",
+    "dirty": false
+  },
+  "datasets_sha256": {
+    "data/processed/incidents.parquet": "d15f9b2f6592217d444b77f784d57caa4677ea78c115343d52bbd131e05cedca"
+  },
+  "params": {
+    "features": [
+      "open_category",
+      "open_subcategory",
+      "open_u_symptom",
+      "open_location",
+      "open_contact_type",
+      "open_impact",
+      "open_urgency",
+      "open_priority",
+      "open_knowledge",
+      "open_opened_by",
+      "open_hour",
+      "open_dow"
+    ],
+    "n_classes": 49,
+    "min_group_support": 20,
+    "split_sizes": {
+      "train": 17095,
+      "val": 3712,
+      "test": 3738
+    },
+    "split": "time-based"
+  },
+  "metrics": {
+    "human_dispatcher": {
+      "first_assignment_correct": 0.672552,
+      "wrong_routing_rate": 0.327448,
+      "incidents_with_any_reassignment": 0.371322,
+      "note": "Real ServiceNow data: share of test incidents whose initial assignment group was the group that resolved it."
+    },
+    "category_table": {
+      "top1_accuracy": 0.515249,
+      "macro_f1": 0.081448,
+      "wrong_routing_rate": 0.484751
+    },
+    "logreg": {
+      "C": 1.0,
+      "top1_accuracy": 0.655163,
+      "top3_accuracy": 0.85741,
+      "wrong_routing_rate": 0.344837,
+      "macro_f1": 0.404695,
+      "selective": {
+        "conf_0.3": {
+          "coverage": 0.925629,
+          "accuracy_on_covered": 0.68526,
+          "human_accuracy_on_same_subset": 0.683815,
+          "routed_to_human_triage": 0.074371
+        },
+        "conf_0.5": {
+          "coverage": 0.672552,
+          "accuracy_on_covered": 0.778839,
+          "human_accuracy_on_same_subset": 0.758552,
+          "routed_to_human_triage": 0.327448
+        },
+        "conf_0.7": {
+          "coverage": 0.437132,
+          "accuracy_on_covered": 0.872705,
+          "human_accuracy_on_same_subset": 0.851897,
+          "routed_to_human_triage": 0.562868
+        },
+        "conf_0.9": {
+          "coverage": 0.160246,
+          "accuracy_on_covered": 0.936561,
+          "human_accuracy_on_same_subset": 0.928214,
+          "routed_to_human_triage": 0.839754
+        }
+      },
+      "latency_single": {
+        "n": 300,
+        "p50_ms": 1.04145,
+        "p95_ms": 1.802325,
+        "p99_ms": 2.146542,
+        "mean_ms": 1.063204
+      },
+      "error_analysis": {
+        "n": 3738,
+        "errors": 1289,
+        "errors_where_human_also_wrong": 829,
+        "top_confusions": [
+          {
+            "true": "Group 39",
+            "pred": "Group 70",
+            "count": 81
+          },
+          {
+            "true": "Group 25",
+            "pred": "Group 70",
+            "count": 55
+          },
+          {
+            "true": "Group 24",
+            "pred": "Group 70",
+            "count": 54
+          },
+          {
+            "true": "Group 20",
+            "pred": "Group 70",
+            "count": 35
+          },
+          {
+            "true": "Group 70",
+            "pred": "Group 39",
+            "count": 34
+          },
+          {
+            "true": "Group 70",
+            "pred": "Group 25",
+            "count": 32
+          },
+          {
+            "true": "Group 28",
+            "pred": "Group 70",
+            "count": 28
+          },
+          {
+            "true": "Group 70",
+            "pred": "Group 65",
+            "count": 28
+          }
+        ],
+        "weakest_groups": [
+          {
+            "group": "Group 54",
+            "n": 45,
+            "recall": 0.0
+          },
+          {
+            "group": "Other",
+            "n": 51,
+            "recall": 0.039216
+          },
+          {
+            "group": "Group 56",
+            "n": 32,
+            "recall": 0.0625
+          },
+          {
+            "group": "Group 20",
+            "n": 46,
+            "recall": 0.086957
+          },
+          {
+            "group": "Group 31",
+            "n": 35,
+            "recall": 0.257143
+          }
+        ]
+      }
+    },
+    "lightgbm": {
+      "best_iteration": 63,
+      "top1_accuracy": 0.634029,
+      "top3_accuracy": 0.839219,
+      "wrong_routing_rate": 0.365971,
+      "macro_f1": 0.3553,
+      "selective": {
+        "conf_0.3": {
+          "coverage": 0.952916,
+          "accuracy_on_covered": 0.654969,
+          "human_accuracy_on_same_subset": 0.678832,
+          "routed_to_human_triage": 0.047084
+        },
+        "conf_0.5": {
+          "coverage": 0.708133,
+          "accuracy_on_covered": 0.755195,
+          "human_accuracy_on_same_subset": 0.744617,
+          "routed_to_human_triage": 0.291867
+        },
+        "conf_0.7": {
+          "coverage": 0.470305,
+          "accuracy_on_covered": 0.857224,
+          "human_accuracy_on_same_subset": 0.833902,
+          "routed_to_human_triage": 0.529695
+        },
+        "conf_0.9": {
+          "coverage": 0.172285,
+          "accuracy_on_covered": 0.947205,
+          "human_accuracy_on_same_subset": 0.936335,
+          "routed_to_human_triage": 0.827715
+        }
+      },
+      "latency_single": {
+        "n": 300,
+        "p50_ms": 29.6675,
+        "p95_ms": 33.156605,
+        "p99_ms": 36.176134,
+        "mean_ms": 27.886341
+      },
+      "top1_ci95": {
+        "low": 0.61771,
+        "high": 0.648743,
+        "n_bootstrap": 1000
+      }
+    }
+  },
+  "artifacts": [],
+  "notes": [],
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "lightgbm": "4.7.0",
+      "torch": "2.14.0+cpu",
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.17.0"
+    }
+  }
+}

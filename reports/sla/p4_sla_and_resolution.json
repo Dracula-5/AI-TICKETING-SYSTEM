@@ -1,0 +1,474 @@
+{
+  "task": "sla",
+  "run": "p4_sla_and_resolution",
+  "timestamp": "2026-09-30T15:59:24+00:00",
+  "duration_seconds": 26.11,
+  "git": {
+    "commit": "9d32cb8ce23f032d74a6122a2faeff2be638e96b",
+    "dirty": true
+  },
+  "datasets_sha256": {
+    "data/processed/incidents.parquet": "d15f9b2f6592217d444b77f784d57caa4677ea78c115343d52bbd131e05cedca"
+  },
+  "params": {
+    "categorical": [
+      "open_category",
+      "open_subcategory",
+      "open_u_symptom",
+      "open_location",
+      "open_contact_type",
+      "open_assignment_group",
+      "open_knowledge",
+      "open_u_priority_confirmation"
+    ],
+    "numeric": [
+      "priority_num",
+      "impact_num",
+      "urgency_num",
+      "open_hour",
+      "open_dow",
+      "group_load_24h",
+      "group_hist_breach_rate",
+      "group_hist_median_hours",
+      "group_hist_volume"
+    ],
+    "split": "time-based 70/15/15",
+    "sla_positive_rate": {
+      "train": 0.422773,
+      "val": 0.231407,
+      "test": 0.23435
+    },
+    "resolution_rows": {
+      "train": 15956,
+      "val": 3494,
+      "test": 3577
+    },
+    "resolution_target_summary_hours": {
+      "train_median": 26.475,
+      "test_median": 3.016667,
+      "test_p90": 291.276667
+    }
+  },
+  "metrics": {
+    "sla_breach": {
+      "majority_class": {
+        "accuracy": 0.76565,
+        "recall": 0.0,
+        "note": "Predicts the majority class for every ticket"
+      },
+      "logistic_regression": {
+        "positive_rate": 0.23435,
+        "roc_auc": 0.7687,
+        "pr_auc": 0.508402,
+        "threshold": 0.496048,
+        "precision": 0.438202,
+        "recall": 0.623288,
+        "f1": 0.514609,
+        "accuracy": 0.724452,
+        "brier": 0.184146,
+        "recall_at_fpr_5pct": 0.254566,
+        "recall_at_fpr_10pct": 0.380137,
+        "recall_at_fpr_20pct": 0.542237,
+        "calibration": [
+          {
+            "bin": "0.0-0.1",
+            "n": 412,
+            "mean_predicted": 0.071799,
+            "observed_rate": 0.024272
+          },
+          {
+            "bin": "0.1-0.2",
+            "n": 259,
+            "mean_predicted": 0.150514,
+            "observed_rate": 0.054054
+          },
+          {
+            "bin": "0.2-0.3",
+            "n": 582,
+            "mean_predicted": 0.25277,
+            "observed_rate": 0.103093
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 663,
+            "mean_predicted": 0.350822,
+            "observed_rate": 0.137255
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 597,
+            "mean_predicted": 0.447841,
+            "observed_rate": 0.271357
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 469,
+            "mean_predicted": 0.544589,
+            "observed_rate": 0.336887
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 312,
+            "mean_predicted": 0.649075,
+            "observed_rate": 0.394231
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 183,
+            "mean_predicted": 0.748718,
+            "observed_rate": 0.47541
+          },
+          {
+            "bin": "0.8-0.9",
+            "n": 149,
+            "mean_predicted": 0.851165,
+            "observed_rate": 0.590604
+          },
+          {
+            "bin": "0.9-1.0",
+            "n": 112,
+            "mean_predicted": 0.934642,
+            "observed_rate": 0.741071
+          }
+        ]
+      },
+      "lightgbm": {
+        "positive_rate": 0.23435,
+        "roc_auc": 0.761742,
+        "pr_auc": 0.523176,
+        "threshold": 0.504188,
+        "precision": 0.412837,
+        "recall": 0.646119,
+        "f1": 0.503783,
+        "accuracy": 0.701712,
+        "brier": 0.19007,
+        "recall_at_fpr_5pct": 0.263699,
+        "recall_at_fpr_10pct": 0.391553,
+        "recall_at_fpr_20pct": 0.561644,
+        "calibration": [
+          {
+            "bin": "0.0-0.1",
+            "n": 269,
+            "mean_predicted": 0.079552,
+            "observed_rate": 0.022305
+          },
+          {
+            "bin": "0.1-0.2",
+            "n": 406,
+            "mean_predicted": 0.140477,
+            "observed_rate": 0.039409
+          },
+          {
+            "bin": "0.2-0.3",
+            "n": 466,
+            "mean_predicted": 0.250964,
+            "observed_rate": 0.109442
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 578,
+            "mean_predicted": 0.350122,
+            "observed_rate": 0.16955
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 620,
+            "mean_predicted": 0.45127,
+            "observed_rate": 0.216129
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 605,
+            "mean_predicted": 0.544484,
+            "observed_rate": 0.284298
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 334,
+            "mean_predicted": 0.644861,
+            "observed_rate": 0.377246
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 215,
+            "mean_predicted": 0.743034,
+            "observed_rate": 0.451163
+          },
+          {
+            "bin": "0.8-0.9",
+            "n": 154,
+            "mean_predicted": 0.85038,
+            "observed_rate": 0.675325
+          },
+          {
+            "bin": "0.9-1.0",
+            "n": 91,
+            "mean_predicted": 0.921699,
+            "observed_rate": 0.791209
+          }
+        ],
+        "best_iteration": 175,
+        "latency_single": {
+          "n": 300,
+          "p50_ms": 11.07005,
+          "p95_ms": 14.648845,
+          "p99_ms": 16.22691,
+          "mean_ms": 11.432683
+        },
+        "pr_auc_ci95": {
+          "low": 0.487847,
+          "high": 0.556668,
+          "n_bootstrap": 500
+        },
+        "feature_importance_gain": {
+          "open_knowledge": 28014.9,
+          "group_hist_breach_rate": 20953.8,
+          "open_subcategory": 13114.2,
+          "group_load_24h": 12680.1,
+          "open_u_symptom": 12451.9,
+          "open_assignment_group": 11551.2,
+          "open_location": 8803.5,
+          "open_category": 6945.3,
+          "priority_num": 6063.5,
+          "open_dow": 5028.8,
+          "open_hour": 4497.5,
+          "group_hist_median_hours": 2640.2,
+          "impact_num": 1260.7,
+          "urgency_num": 821.3,
+          "group_hist_volume": 777.0,
+          "open_contact_type": 73.5,
+          "open_u_priority_confirmation": 0.0
+        }
+      },
+      "lightgbm_recalibrated": {
+        "positive_rate": 0.23435,
+        "roc_auc": 0.760446,
+        "pr_auc": 0.494378,
+        "threshold": 0.284444,
+        "precision": 0.412837,
+        "recall": 0.646119,
+        "f1": 0.503783,
+        "accuracy": 0.701712,
+        "brier": 0.151043,
+        "recall_at_fpr_5pct": 0.26536,
+        "recall_at_fpr_10pct": 0.377768,
+        "recall_at_fpr_20pct": 0.558342,
+        "calibration": [
+          {
+            "bin": "0.0-0.1",
+            "n": 559,
+            "mean_predicted": 0.021022,
+            "observed_rate": 0.0161
+          },
+          {
+            "bin": "0.1-0.2",
+            "n": 798,
+            "mean_predicted": 0.143467,
+            "observed_rate": 0.126566
+          },
+          {
+            "bin": "0.2-0.3",
+            "n": 1346,
+            "mean_predicted": 0.252504,
+            "observed_rate": 0.211738
+          },
+          {
+            "bin": "0.3-0.4",
+            "n": 254,
+            "mean_predicted": 0.359745,
+            "observed_rate": 0.354331
+          },
+          {
+            "bin": "0.4-0.5",
+            "n": 95,
+            "mean_predicted": 0.455926,
+            "observed_rate": 0.336842
+          },
+          {
+            "bin": "0.5-0.6",
+            "n": 445,
+            "mean_predicted": 0.518646,
+            "observed_rate": 0.417978
+          },
+          {
+            "bin": "0.6-0.7",
+            "n": 5,
+            "mean_predicted": 0.629199,
+            "observed_rate": 0.4
+          },
+          {
+            "bin": "0.7-0.8",
+            "n": 158,
+            "mean_predicted": 0.763314,
+            "observed_rate": 0.677215
+          },
+          {
+            "bin": "0.8-0.9",
+            "n": 71,
+            "mean_predicted": 0.823227,
+            "observed_rate": 0.802817
+          },
+          {
+            "bin": "0.9-1.0",
+            "n": 7,
+            "mean_predicted": 0.997409,
+            "observed_rate": 1.0
+          }
+        ],
+        "note": "isotonic regression fitted on the validation period"
+      },
+      "error_analysis": {
+        "by_priority": [
+          {
+            "priority": 1,
+            "n": 30,
+            "breach_rate": 0.8,
+            "roc_auc": 0.520833,
+            "recall": 1.0,
+            "fpr": 1.0
+          },
+          {
+            "priority": 2,
+            "n": 44,
+            "breach_rate": 0.954545,
+            "roc_auc": 0.60119,
+            "recall": 1.0,
+            "fpr": 1.0
+          },
+          {
+            "priority": 3,
+            "n": 3559,
+            "breach_rate": 0.226749,
+            "roc_auc": 0.737497,
+            "recall": 0.619579,
+            "fpr": 0.288881
+          },
+          {
+            "priority": 4,
+            "n": 105,
+            "breach_rate": 0.028571,
+            "roc_auc": 0.568627,
+            "recall": 0.0,
+            "fpr": 0.019608
+          }
+        ],
+        "threshold": 0.284444,
+        "missed_by_group": [
+          {
+            "group": "Group 70",
+            "breaches": 193,
+            "missed": 127
+          },
+          {
+            "group": "Group 65",
+            "breaches": 48,
+            "missed": 32
+          },
+          {
+            "group": "Group 20",
+            "breaches": 87,
+            "missed": 21
+          },
+          {
+            "group": "Group 24",
+            "breaches": 18,
+            "missed": 15
+          },
+          {
+            "group": "Group 66",
+            "breaches": 34,
+            "missed": 15
+          }
+        ]
+      }
+    },
+    "resolution_time": {
+      "global_median": {
+        "mae": 98.924068,
+        "rmse": 243.808308,
+        "r2": -0.087101,
+        "median_ae": 26.258333
+      },
+      "median_by_priority": {
+        "mae": 98.887911,
+        "rmse": 243.722133,
+        "r2": -0.086333,
+        "median_ae": 25.95
+      },
+      "linear_log_target": {
+        "mae": 92.496644,
+        "rmse": 231.273192,
+        "r2": 0.021809,
+        "median_ae": 18.189609
+      },
+      "lightgbm_log_target": {
+        "mae": 91.498181,
+        "rmse": 228.052362,
+        "r2": 0.048865,
+        "median_ae": 21.923201,
+        "best_iteration": 205
+      },
+      "lightgbm_median_objective": {
+        "mae": 95.07783,
+        "rmse": 226.645102,
+        "r2": 0.060568,
+        "median_ae": 30.267161
+      },
+      "error_analysis": [
+        {
+          "bucket": "< 1 h",
+          "n": 1471,
+          "model_median_ae": 13.102391,
+          "baseline_median_ae": 26.275,
+          "share_of_total_abs_error": 0.102036
+        },
+        {
+          "bucket": "1\u20138 h",
+          "n": 540,
+          "model_median_ae": 32.823246,
+          "baseline_median_ae": 23.941667,
+          "share_of_total_abs_error": 0.076391
+        },
+        {
+          "bucket": "8\u201372 h",
+          "n": 664,
+          "model_median_ae": 28.231762,
+          "baseline_median_ae": 9.575,
+          "share_of_total_abs_error": 0.087333
+        },
+        {
+          "bucket": "3\u201330 days",
+          "n": 804,
+          "model_median_ae": 127.983155,
+          "baseline_median_ae": 163.733333,
+          "share_of_total_abs_error": 0.42108
+        },
+        {
+          "bucket": "> 30 days",
+          "n": 98,
+          "model_median_ae": 964.964285,
+          "baseline_median_ae": 1056.825,
+          "share_of_total_abs_error": 0.31316
+        }
+      ]
+    }
+  },
+  "artifacts": [
+    "reports/sla/calibration.png"
+  ],
+  "notes": [],
+  "environment": {
+    "python": "3.12.7",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "cpu": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.5.3",
+      "pandas": "3.0.6",
+      "scikit-learn": "1.9.1",
+      "lightgbm": "4.7.0",
+      "torch": "2.14.0+cpu",
+      "sentence-transformers": "6.1.0",
+      "transformers": "5.17.0"
+    }
+  }
+}

@@ -255,3 +255,49 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
 * **Known issues:** backend image is 357 MB (boto3/botocore); backups stay on the VM until an
   off-site target is configured.
 * **Next:** P3 — realistic data.
+
+### P3 — Realistic data ✅ (2026-09-30)
+* **Completed:** SHA-256-pinned downloads and deterministic preparation (`python -m nexadesk_ml.datasets
+  all`) of three public datasets and one documented synthetic generator — full provenance,
+  licenses and limitations in [`datasets.md`](datasets.md):
+  UCI ServiceNow incident log (real, CC BY 4.0) · public support-ticket texts (LLM-generated,
+  CC BY-NC 4.0) · CQADupStack *unix* (real duplicates, CC BY-SA 4.0) · 3 synthetic organizations.
+* **Measured:** incidents 24,918 (time split 17,442 / 3,738 / 3,738; SLA-breach rate 42.3% train
+  vs 23.4% test — a real base-rate shift; resolution p50 22.1 h, p90 381.5 h; the human
+  dispatcher's first assignment was the resolving group for 65.1%); ticket texts 16,338 after
+  exact-duplicate removal (11,433 / 2,450 / 2,455); CQADupStack 47,382 posts, 1,072 queries with
+  1,693 duplicate links; synthetic 12,000 tickets (5,500 / 4,000 / 2,500), 480 planted duplicates.
+* **Known issues:** the ticket-text dataset is LLM-generated and non-commercial; no public dataset
+  has real ticket text *and* real routing/SLA outcomes together, so text tasks and operational tasks
+  are evaluated on different data.
+* **Next:** P4.
+
+### P4 — Baseline ML ✅ (2026-09-30)
+All numbers: test split scored once, models chosen on validation, reproducible with the scripts
+in [`experiments/`](../experiments/README.md); JSON provenance (git SHA, dataset hashes, params,
+environment) next to each `summary.md` under `reports/`.
+* **Classification** (public LLM-generated tickets, macro-F1): TF-IDF+LinearSVC queue 0.676 /
+  type 0.892 / priority 0.689 vs majority 0.045 / 0.144 / 0.189; sentence-embedding+LogReg much
+  worse (queue 0.307). Per-organization learners (`production_classifier.md`), on the 2,169
+  *novel* test tickets: kNN over TF-IDF 0.719 / 0.904 / 0.743, kNN over MiniLM (shipped)
+  0.615 / 0.867 / 0.686. With ≤ 1,000 tickets of history every method is weak (queue ≤ 0.31).
+* **Routing** (real incidents, 49 groups): logistic regression top-1 0.655, top-3 0.857, p50
+  1.04 ms vs the human dispatcher's first assignment 0.673 and a category→group table 0.515.
+  Selective routing at confidence ≥ 0.9 covers 16% of incidents at 0.937 accuracy (humans 0.928 on
+  the same subset) — automation at parity on a slice, not better routing.
+* **Duplicates** (CQADupStack, real): Recall@10 MiniLM 0.532 · BGE 0.478 · TF-IDF 0.324;
+  cross-encoder reranking lifts pair precision 0.277 → 0.421 but not recall. Production flag
+  threshold 0.75 (rule fixed before test: lowest threshold with validation precision ≥ 0.5): test
+  precision 0.47, recall 0.18 (`reports/duplicates/threshold.md`).
+* **SLA breach** (real): LR ROC-AUC 0.769, LightGBM 0.762 / PR-AUC 0.523; uncalibrated Brier
+  0.190 is worse than a constant forecast (0.179) because of the base-rate shift; isotonic
+  recalibration on the latest period → 0.151. **Resolution time:** LightGBM (median objective) MAE
+  95.1 h vs global-median 98.9 h, R² 0.061 — 73% of the error comes from tickets open > 3 days.
+* **Error analysis:** [`reports/error_analysis.md`](../reports/error_analysis.md).
+* **Decision for P5:** ship per-organization kNN over MiniLM embeddings (one vector index serves
+  triage, duplicates and "similar tickets" evidence). Known gap: TF-IDF kNN scored ~0.04–0.10
+  macro-F1 higher on this benchmark — the top improvement candidate, to be decided through the
+  P13 promotion gate, not assumed.
+* **Known issues:** MLflow rejects some metric names with "·" (JSON records unaffected); CPU
+  contention from parallel runs inflates some latency figures — latencies are indicative.
+* **Next:** P5.
