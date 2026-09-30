@@ -9,8 +9,8 @@ chat or commit them to Git.
 
 1. Review `git status` and confirm `.env`, tokens, database files, private keys, test exports and
    generated credentials are ignored. Stage only the intended NexaDesk changes.
-2. Commit and push the reviewed changes to `nexadesk-transformation`.
-3. Wait for every required CI check to pass. Fix failures before deployment.
+2. ✅ Done 2026-10-01: reviewed changes committed and pushed to `nexadesk-transformation`.
+3. ✅ Done: all 8 CI jobs pass on GitHub (run 36789072189).
 4. Keep the CI-passing commit ready, but wait to merge it to `main` until VM access and GitHub
    deployment secrets are configured below. The deploy workflow watches `main`.
 

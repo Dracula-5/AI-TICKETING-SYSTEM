@@ -447,5 +447,9 @@ screenshots (tickets, knowledge base, AI panel, approvals, Grafana).
 * Playwright: all 3 flows pass (AI assist, mobile, P1 acceptance + CSAT); the P1 flow failed once
   in a full-suite run ("Test ended" during a fill) and passed on re-run — CI retries once.
 * gitleaks over full history: only the reviewed entries in `.gitleaksignore`.
-* Not verified here: GitHub Actions runs of this branch (until pushed), the public deployment,
-  real users.
+* **GitHub Actions on the pushed branch: all 8 CI jobs pass** (run 36789072189, commit 95ae61b:
+  lint/types/Bandit, gitleaks, backend SQLite + PostgreSQL, dependency audit, frontend, Playwright,
+  Docker compose smoke). The first run had failed: `.gitignore`'s Python-template `lib/` rule had
+  kept `frontend/src/lib/` out of git since P1 — fixed in 95ae61b.
+* Not verified: the deploy workflow (needs the owner's VM and secrets), the AI-evaluation workflow
+  (runs on AI changes to `main`/PRs and weekly), the public deployment, real users.
