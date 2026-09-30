@@ -1,0 +1,42 @@
+# Alert rules. Without an Alertmanager they show as firing in Prometheus
+# (:9090/alerts) and Grafana; wire an Alertmanager receiver (email/Slack/pager)
+# once the owner chooses a channel.
+groups:
+  - name: nexadesk
+    rules:
+      - alert: NexaDeskTargetDown
+        expr: up{job=~"nexadesk-.*"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations: { summary: "{{ $labels.job }} is not answering scrapes" }
+      - alert: NexaDeskHighErrorRate
+        expr: sum(rate(nexadesk_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(nexadesk_http_requests_total[5m])), 1e-9) > 0.02
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: "More than 2% of requests are failing with 5xx" }
+      - alert: NexaDeskSlowRequests
+        expr: histogram_quantile(0.95, sum by (le) (rate(nexadesk_http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "p95 request latency above 1 s for 10 minutes" }
+      - alert: NexaDeskJobBacklog
+        expr: nexadesk_jobs_oldest_due_age_seconds > 600
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "Background jobs are waiting more than 10 minutes — is the worker running?" }
+      - alert: NexaDeskDeadJobs
+        expr: increase(nexadesk_jobs_total{status="dead"}[1h]) > 0
+        labels: { severity: warning }
+        annotations: { summary: "A background job exhausted its retries (see the jobs table, last_error)" }
+      - alert: NexaDeskEmailStuck
+        expr: sum(nexadesk_email_outbox{status="dead"}) > 0
+        labels: { severity: warning }
+        annotations: { summary: "Emails were dead-lettered; check SMTP settings" }
+      - alert: NexaDeskAIRejectionsHigh
+        expr: (sum(increase(nexadesk_ai_decisions_total{decision="reject"}[1d])) / clamp_min(sum(increase(nexadesk_ai_decisions_total[1d])), 1)) > 0.5 and sum(increase(nexadesk_ai_decisions_total[1d])) >= 20
+        labels: { severity: info }
+        annotations: { summary: "People rejected most AI recommendations today (≥20 decisions) — review model quality" }
+      - alert: NexaDeskAIDrift
+        expr: nexadesk_ai_drift_alerts > 0
+        labels: { severity: info }
+        annotations: { summary: "An organization's tickets drifted from what the AI learned from — re-run the offline evaluation (docs/ai_evaluation.md)" }

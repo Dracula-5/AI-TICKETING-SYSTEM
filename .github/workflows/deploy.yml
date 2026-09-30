@@ -60,11 +60,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     env:
-      HAS_TARGET: ${{ secrets.DEPLOY_HOST != '' }}
+      HAS_TARGET: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
     steps:
       - name: Skip when no deployment target is configured
         if: env.HAS_TARGET != 'true'
-        run: echo "::notice::DEPLOY_HOST not configured — images were pushed, deployment skipped."
+        run: echo "::notice::DEPLOY_HOST or DEPLOY_SSH_KEY not configured — images were pushed, deployment skipped."
       - name: Deploy over SSH
         if: env.HAS_TARGET == 'true'
         uses: appleboy/ssh-action@v1.2.0

@@ -12,7 +12,7 @@ APP_DIR=/opt/nexadesk
 
 echo "==> Base packages, automatic security updates, firewall"
 apt-get update -y
-apt-get install -y ca-certificates curl git ufw unattended-upgrades
+apt-get install -y ca-certificates curl git sudo ufw unattended-upgrades
 dpkg-reconfigure -f noninteractive unattended-upgrades
 ufw default deny incoming
 ufw default allow outgoing
@@ -30,13 +30,18 @@ systemctl enable --now docker
 
 echo "==> Deploy user (runs deployments; no root login needed afterwards)"
 id deploy >/dev/null 2>&1 || useradd -m -s /bin/bash -G docker deploy
+usermod -aG docker deploy
 mkdir -p /home/deploy/.ssh && chmod 700 /home/deploy/.ssh
 touch /home/deploy/.ssh/authorized_keys && chmod 600 /home/deploy/.ssh/authorized_keys
 chown -R deploy:deploy /home/deploy/.ssh
 
 echo "==> Application directory"
 if [ ! -d "$APP_DIR/.git" ]; then
-  git clone "$REPO_URL" "$APP_DIR"
+  # GitHub SSH deploy keys are installed for the unprivileged deploy account,
+  # so clone (and later fetch) as that same account instead of root.
+  mkdir -p "$APP_DIR"
+  chown deploy:deploy "$APP_DIR"
+  sudo -u deploy git clone "$REPO_URL" "$APP_DIR"
 fi
 mkdir -p "$APP_DIR/backups"
 chown -R deploy:deploy "$APP_DIR"
@@ -48,6 +53,8 @@ if [ ! -f "$APP_DIR/.env" ]; then
       -e "s|^REGISTRY=.*|REGISTRY=$REGISTRY|" \
       -e "s|^SECRET_KEY=.*|SECRET_KEY=$(openssl rand -base64 48 | tr -d '\n/+=')|" \
       -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -d '\n/+=')|" \
+      -e "s|^METRICS_TOKEN=.*|METRICS_TOKEN=$(openssl rand -base64 32 | tr -d '\n/+=')|" \
+      -e "s|^GRAFANA_ADMIN_PASSWORD=.*|GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 18 | tr -d '\n/+=')|" \
       "$APP_DIR/deploy/env.production.example" > "$APP_DIR/.env"
   chmod 600 "$APP_DIR/.env"
   chown deploy:deploy "$APP_DIR/.env"

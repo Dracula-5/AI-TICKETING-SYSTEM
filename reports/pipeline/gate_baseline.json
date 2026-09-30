@@ -1,0 +1,15 @@
+{
+  "category_accuracy": 0.4266666666666667,
+  "category_macro_f1": 0.3175696691337592,
+  "category_coverage": 1.0,
+  "category_selective_0.7_accuracy": 1.0,
+  "priority_accuracy": 0.43333333333333335,
+  "analysis_p95_ms": 280.6107850014089,
+  "replayed": 300,
+  "model": "sentence-transformers/all-MiniLM-L6-v2",
+  "engine": "triage-knn-2",
+  "planner": "triage-playbook-1",
+  "git": "80f1e0d4a126ee13c5971f57e3b689059edc2854",
+  "org": "orbital-engineering",
+  "limit": 300
+}

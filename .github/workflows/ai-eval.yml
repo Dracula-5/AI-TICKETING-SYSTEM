@@ -1,0 +1,58 @@
+name: AI evaluation gate
+
+# Model-promotion gate (docs/ai_evaluation.md): replays a fixed slice of a
+# synthetic organization through the production AI pipeline on PostgreSQL +
+# pgvector and fails if quality drops below reports/pipeline/gate_baseline.json.
+# Runs when AI code changes, weekly, and on demand. Heavier than unit tests
+# (downloads the public ticket dataset and the embedding model), so it is not
+# part of every push.
+
+on:
+  pull_request:
+    paths: ["backend/app/ai/**", "backend/app/agent/**", "backend/app/kb/**", "experiments/pipeline_eval.py",
+            "experiments/regression_gate.py", "reports/pipeline/gate_baseline.json"]
+  push:
+    branches: [main]
+    paths: ["backend/app/ai/**", "backend/app/agent/**", "backend/app/kb/**"]
+  schedule:
+    - cron: "17 3 * * 1"   # Mondays 03:17 UTC
+  workflow_dispatch:
+
+jobs:
+  gate:
+    name: Pipeline regression gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env: { POSTGRES_USER: nexadesk, POSTGRES_PASSWORD: ci-only, POSTGRES_DB: nexadesk_eval }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nexadesk" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip, cache-dependency-path: backend/requirements.txt }
+      - uses: actions/cache@v4
+        with:
+          path: |
+            data/raw
+            data/cache/fastembed
+          key: ai-eval-data-v1-${{ hashFiles('ml/nexadesk_ml/datasets.py') }}
+      - name: Install
+        run: |
+          python -m venv backend/.venv
+          backend/.venv/bin/pip install -r backend/requirements.txt
+          pip install numpy pandas pyarrow
+      - name: Prepare the public ticket dataset and the synthetic organizations
+        env: { PYTHONPATH: ml }
+        run: |
+          python -m nexadesk_ml.datasets fetch
+          python -m nexadesk_ml.datasets prepare
+          python -m nexadesk_ml.synthetic
+          python -m nexadesk_ml.synthetic export-csv
+      - name: Regression gate
+        env:
+          EVAL_DATABASE_URL: postgresql+psycopg://nexadesk:ci-only@localhost:5432/nexadesk_eval
+        run: backend/.venv/bin/python experiments/regression_gate.py

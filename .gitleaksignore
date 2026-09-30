@@ -1,0 +1,8 @@
+# Reviewed gitleaks findings (see docs/security.md, "Secrets"). Add a line here only after review.
+# Test-fixture passwords, not secrets:
+b6f05c2588b542e3e95839b35e65df8395a99404:backend/tests/test_org_config.py:generic-api-key:132
+b6f05c2588b542e3e95839b35e65df8395a99404:backend/tests/test_security.py:generic-api-key:23
+# Legacy default JWT key committed before the NexaDesk rewrite (public history). The key is burned:
+# the current code never uses it and refuses weak SECRET_KEYs outside development. Any deployment
+# that ever ran the legacy code must rotate SECRET_KEY.
+d8506168462fb298d3936bb658485b6f3134f34a:ai-ticketing-system/backend/app/main.py:generic-api-key:31
