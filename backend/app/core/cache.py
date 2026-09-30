@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 _client: "redis.Redis | bool | None" = None
 
 
+def get_redis():
+    """Shared synchronous Redis client, or None when Redis is unavailable."""
+    return _get_client()
+
+
 def _get_client():
     global _client
     if _client is False:

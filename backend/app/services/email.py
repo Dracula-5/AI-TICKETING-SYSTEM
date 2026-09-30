@@ -1,17 +1,23 @@
 """
 Outgoing email via a transactional outbox.
 
-`queue_email()` inserts an EmailOutbox row in the caller's transaction.
-`deliver_pending()` sends queued rows with the configured backend and records
-the outcome; it runs after the request (FastAPI BackgroundTasks) and will move
-to the background worker in P2. Delivery failures never fail the request that
-queued the email — the row stays `failed` with its error for retry/inspection.
+Producer → queue → worker → result → retry → dead letter:
+
+* `queue_email()` inserts an EmailOutbox row in the caller's transaction, so an
+  email exists if and only if the change that caused it committed.
+* `deliver_pending()` is the consumer: the worker process runs it every few
+  seconds (BACKGROUND_MODE=worker); in single-process development the API
+  runs it after the response instead (BACKGROUND_MODE=inline).
+* Failures are retried with exponential backoff and parked as `dead` after
+  MAX_ATTEMPTS. Delivery never fails the request that queued the email.
 """
 
 import logging
 import smtplib
+from datetime import timedelta
 from email.message import EmailMessage
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -55,29 +61,60 @@ def _send(row: EmailOutbox) -> None:
         logger.info("email_console_delivery", extra={"email_id": row.id, "template": row.template})
 
 
+def schedule_delivery(background) -> None:
+    """Deliver right after the response in single-process mode; with a worker,
+    the worker's poll picks the message up within EMAIL_POLL_INTERVAL_SECONDS."""
+    if settings.background_mode == "inline":
+        background.add_task(deliver_pending)
+
+
+def _backoff(attempts: int) -> timedelta:
+    # 1, 2, 4, 8 … minutes, capped at an hour.
+    return timedelta(minutes=min(2 ** max(attempts - 1, 0), 60))
+
+
 def deliver_pending(session_factory=SessionLocal, limit: int = 50) -> int:
-    db = session_factory()
+    """Drain the outbox. Each message is claimed in its own transaction with
+    FOR UPDATE SKIP LOCKED, so any number of workers can run this concurrently
+    without sending a message twice. Failures are retried with exponential
+    backoff; after MAX_ATTEMPTS the message is parked as `dead` (dead letter)."""
     sent = 0
-    try:
-        rows = (
-            db.query(EmailOutbox)
-            .filter(EmailOutbox.status.in_(["queued", "failed"]), EmailOutbox.attempts < MAX_ATTEMPTS)
-            .order_by(EmailOutbox.id)
-            .limit(limit)
-            .all()
-        )
-        for row in rows:
+    for _ in range(limit):
+        db = session_factory()
+        try:
+            now = utcnow()
+            row = (
+                db.query(EmailOutbox)
+                .filter(
+                    EmailOutbox.status.in_(["queued", "failed"]),
+                    or_(EmailOutbox.next_attempt_at.is_(None), EmailOutbox.next_attempt_at <= now),
+                )
+                .order_by(EmailOutbox.id)
+                .with_for_update(skip_locked=True)
+                .first()
+            )
+            if row is None:
+                break
             row.attempts += 1
             try:
                 _send(row)
-                row.status, row.sent_at, row.last_error = "sent", utcnow(), None
+                row.status, row.sent_at, row.last_error, row.next_attempt_at = "sent", utcnow(), None, None
                 sent += 1
             except Exception as exc:  # delivery errors are recorded, not raised
-                row.status, row.last_error = "failed", str(exc)[:1000]
-                logger.warning("email_delivery_failed", extra={"email_id": row.id})
+                row.last_error = str(exc)[:1000]
+                if row.attempts >= MAX_ATTEMPTS:
+                    row.status, row.next_attempt_at = "dead", None
+                    logger.error("email_dead_lettered", extra={"email_id": row.id, "attempts": row.attempts})
+                else:
+                    row.status, row.next_attempt_at = "failed", now + _backoff(row.attempts)
+                    logger.warning("email_delivery_failed", extra={"email_id": row.id, "attempts": row.attempts})
             db.commit()
-    finally:
-        db.close()
+        except Exception:
+            db.rollback()
+            logger.exception("email_delivery_loop_failed")
+            break
+        finally:
+            db.close()
     return sent
 
 

@@ -2,7 +2,7 @@
 
 **Status:** living document. Sections are marked **Implemented** (in the codebase and
 tested), **Planned** (designed, not built) or **Pending measurement** (built, numbers not yet
-collected). Last updated at the end of Priority 1.
+collected). Last updated at the end of Priority 2.
 
 Contents: 1 Business requirements · 2 Functional · 3 Non-functional · 4 Architecture ·
 5 Components · 6 Data flow · 7 AI architecture · 8 Database · 9 API · 10 Security ·
@@ -54,8 +54,9 @@ flowchart LR
     A --> DB[(PostgreSQL 16<br/>+ pgvector)]
     A -.fail-open cache.-> R[(Redis)]
     A --> FS[(Attachment volume<br/>→ S3-compatible, P2)]
-    WK[Worker - planned P2<br/>SLA sweeps, email, AI jobs] --> DB
-    WK --> R
+    WK[Worker<br/>SLA sweep, email outbox] --> DB
+    WK -- pub/sub --> R
+    R -- pub/sub --> A
 ```
 
 **Modules inside the API** (by package): `auth` + `users` (identity, sessions), `organizations`
@@ -70,9 +71,12 @@ flowchart LR
 | SPA | All user interfaces; access token in memory; session restore via refresh cookie | React 19, TypeScript, MUI 7, TanStack Query, Vite |
 | API | REST + WebSocket; all authorization decisions | FastAPI, SQLAlchemy 2 (typed), Pydantic 2 |
 | Rules engine | Deterministic triage baseline and fallback (`app/ai/rules.py`) | Python regex word-boundary matching |
-| SLA sweep | Breaches, escalation, auto-close; idempotent, `SKIP LOCKED` | In-process loop now → worker in P2 |
-| Email | Transactional outbox → console (dev) / SMTP | `email_outbox` table |
-| Storage | Attachment bytes under random keys, validated by extension + magic bytes | Local volume → S3 (P2) |
+| Worker | SLA sweep + email outbox delivery; heartbeat health check | `python -m app.worker` |
+| SLA sweep | Breaches, escalation, auto-close; idempotent, `SKIP LOCKED` | Worker (or in-process in dev) |
+| Email | Transactional outbox → console (dev) / SMTP; retry with backoff, dead letter | `email_outbox` table |
+| Realtime | Redis pub/sub fan-out to every API process's WebSockets | `services/realtime.py` |
+| Storage | Attachment bytes under random keys, validated by extension + magic bytes | Local volume or S3-compatible |
+| Error monitoring | Sentry-compatible, PII and credentials scrubbed; off without a DSN | `core/monitoring.py` |
 
 ## 6. Data flow — creating and working a ticket
 
@@ -194,10 +198,18 @@ immediately. PostgreSQL row-level security as a second line of defence is evalua
 Redis wrapper exists and fails open. Candidates: dashboard aggregates, category/routing tables,
 rate-limit counters. Added only with a with/without benchmark.
 
-## 13. Queues (Planned — P2)
+## 13. Queues (Implemented — P2)
 
-Producer → Redis queue → worker → result/audit → retry with backoff → dead-letter table. The
-SLA sweep and email outbox already have the idempotent, retry-safe shape a worker needs.
+**Email:** producer (`queue_email`, inside the business transaction) → `email_outbox` table
+(queue) → worker (`deliver_pending`, one message per transaction, `FOR UPDATE SKIP LOCKED`) →
+result (`sent`) → retry (`failed`, exponential backoff 1→60 min) → dead letter (`dead` after 5
+attempts, error retained). **Scheduled work:** the SLA sweep. Both are idempotent, so any number
+of worker replicas is safe.
+
+Why a PostgreSQL-backed queue instead of Redis (ADR-17): enqueueing is transactional with the
+change that caused it (no "email for a rolled-back change"), no extra durable store to operate,
+and the throughput needed is far below what a `SKIP LOCKED` queue sustains. Revisit when P6
+document ingestion needs high-volume jobs.
 
 ## 14. Observability
 
@@ -217,9 +229,9 @@ SLA sweep and email outbox already have the idempotent, retry-safe shape a worke
 
 ## 16. Scalability
 
-Stateless API processes scale horizontally except for two single-process pieces, both
-scheduled: in-memory WebSocket fan-out and per-process rate-limit counters → Redis pub/sub and
-Redis storage (P2/P11). No capacity claim is made until P10–P11 load tests exist.
+API processes are stateless and scale horizontally: WebSocket fan-out goes through Redis
+pub/sub and rate-limit counters live in Redis (P2). The worker scales by adding replicas. No
+capacity claim is made until P10–P11 load tests exist.
 
 ## 17. Cost considerations (P17)
 
@@ -247,7 +259,7 @@ Parameterized cost model to be added with real resource measurements.
 | 5 | Six fixed roles + central permission map (`app/core/rbac.py`) | Accepted |
 | 6 | Explicit ticket state machine; history + audit per transition (`app/services/tickets.py`) | Accepted |
 | 7 | Redis for cache, rate limits, queue; always fail-open for cache | Accepted |
-| 8 | Background worker replaces the in-process SLA loop | Accepted (P2) |
+| 8 | Background worker (`app.worker`) owns the SLA sweep and email delivery in deployed environments; the in-process loop remains only for single-process development | Accepted (P2) |
 | 9 | Deterministic rules remain the safety layer under every model | Accepted |
 | 10 | CPU-only models sized for a small VM | Accepted |
 | 11 | LLM behind a provider interface, every call logged and costed | Accepted (P5) |
@@ -256,6 +268,10 @@ Parameterized cost model to be added with real resource measurements.
 | 14 | **Transactional outbox for email and post-commit WebSocket push** — side effects only after the change commits | Accepted |
 | 15 | **Replace CRA with Vite + TypeScript.** CRA is unmaintained; every old page targeted removed flows; TypeScript adds a type-check gate. Measured: production build 26 s (vs ~6 min CRA on the same machine), initial JS 250 kB gzip with charts split into the lazily loaded dashboard chunk | Accepted |
 | 16 | **PyJWT instead of python-jose** — python-jose pulled in `ecdsa`, which has an advisory with no fixed release | Accepted |
+| 17 | **PostgreSQL-backed queue** (outbox + `SKIP LOCKED`) rather than a Redis queue — transactional enqueue, one durable store | Accepted (P2) |
+| 18 | **Single VM + Docker Compose + Caddy** for the public deployment; immutable images tagged by commit SHA; one-shot migrate service; automatic rollback on failed smoke test | Accepted (P2) |
+| 19 | **Rate limiter fails open** when Redis is unavailable (availability over strictness), logged; auth endpoints keep per-route limits | Accepted (P2) |
+| 20 | **psycopg 3** (SQLAlchemy 2.1's default PostgreSQL driver) instead of psycopg2 | Accepted (P2) |
 
 ## 20. Future architecture
 

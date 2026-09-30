@@ -14,9 +14,11 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 
+from app.core.cache import get_redis
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.logging import setup_logging
+from app.core.monitoring import init_error_monitoring
 from app.core.request_context import RequestContext, reset_request_context, set_request_context
 from app.db.database import SessionLocal
 from app.routers import (
@@ -31,6 +33,8 @@ from app.routers import (
     tickets,
     users,
 )
+from app.services.notification_ws import manager as ws_manager
+from app.services.realtime import run_subscriber
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -53,8 +57,9 @@ def _sla_sweep_once() -> None:
 
 
 async def _sla_loop() -> None:
-    # Runs in every API process; run_sla_sweep is idempotent and uses
-    # SKIP LOCKED, so concurrent sweeps are safe. Moves to the worker in P2.
+    # BACKGROUND_MODE=inline only (single-process development). In deployed
+    # environments the worker process owns this; either way run_sla_sweep is
+    # idempotent and uses SKIP LOCKED, so an overlap is harmless.
     while True:
         await anyio.to_thread.run_sync(_sla_sweep_once)
         await asyncio.sleep(settings.sla_sweep_interval_seconds)
@@ -63,10 +68,23 @@ async def _sla_loop() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.validate_for_environment()
-    task = asyncio.create_task(_sla_loop()) if settings.sla_sweep_enabled else None
-    logger.info("startup", extra={"environment": settings.environment, "sla_sweep": bool(task)})
+    init_error_monitoring("api")
+    tasks = []
+    if settings.background_mode == "inline" and settings.sla_sweep_enabled:
+        tasks.append(asyncio.create_task(_sla_loop()))
+    if get_redis() is not None:
+        # Cross-process WebSocket fan-out (services/realtime.py).
+        tasks.append(asyncio.create_task(run_subscriber(ws_manager)))
+    logger.info(
+        "startup",
+        extra={
+            "environment": settings.environment,
+            "background_mode": settings.background_mode,
+            "realtime": "redis" if get_redis() is not None else "in-process",
+        },
+    )
     yield
-    if task:
+    for task in tasks:
         task.cancel()
 
 

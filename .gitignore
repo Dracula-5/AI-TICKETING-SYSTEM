@@ -98,3 +98,8 @@ backend/nexadesk.db
 *.db-journal
 .ruff_cache/
 .mypy_cache/
+
+# Deployment state on the VM
+.deployed_tag
+.previous_tag
+backups/

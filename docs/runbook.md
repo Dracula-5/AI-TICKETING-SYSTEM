@@ -1,6 +1,6 @@
 # Runbook
 
-Operational procedures. Deployment-specific sections are filled in during Priority 2.
+Operational procedures for development. Deployment, rollback, backup and restore: [`deployment.md`](deployment.md).
 
 ## Local development
 
@@ -53,9 +53,10 @@ alembic upgrade head
 ## Updating dependencies
 
 Backend top-level dependencies live in `backend/requirements.in`; `requirements.txt` is the
-pinned resolution. To update: create a clean venv, `pip install -r requirements.in`,
-`pip freeze > requirements.txt` (keep the header), run the full test suite on SQLite and
-PostgreSQL, then `pip-audit -r requirements.txt`.
+pinned resolution. To update: in a clean venv run
+`pip install --dry-run --ignore-installed --report r.json -r requirements.in`, write the
+`install` entries of `r.json` as `name==version` lines (dropping Windows-only `colorama` and
+`tzdata`), then run the full test suite on SQLite and PostgreSQL and `pip-audit -r requirements.txt`.
 
 ## Demo organizations
 

@@ -32,7 +32,7 @@ from app.schemas.auth import (
 from app.schemas.common import MessageOut
 from app.schemas.users import MeOut
 from app.services import audit
-from app.services.email import deliver_pending, password_reset_email, queue_email, verification_email
+from app.services.email import password_reset_email, queue_email, schedule_delivery, verification_email
 from app.services.organizations import create_organization, org_setting
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -194,7 +194,7 @@ def register(
     user.last_login_at = utcnow()
     tokens = _issue_session(db, response, user)
     db.commit()
-    background.add_task(deliver_pending)
+    schedule_delivery(background)
     return tokens
 
 
@@ -334,7 +334,7 @@ def resend_verification(
         return {"message": "Email already verified"}
     _send_verification(db, user)
     db.commit()
-    background.add_task(deliver_pending)
+    schedule_delivery(background)
     return {"message": "Verification email sent"}
 
 
@@ -368,7 +368,7 @@ def forgot_password(request: Request, payload: EmailIn, background: BackgroundTa
                 entity_id=user.id,
             )
             db.commit()
-            background.add_task(deliver_pending)
+            schedule_delivery(background)
     return {"message": "If an account exists for that email, a reset link is on its way"}
 
 

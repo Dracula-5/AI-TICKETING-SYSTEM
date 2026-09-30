@@ -5,7 +5,7 @@ uvicorn
 websockets
 sqlalchemy
 alembic
-psycopg2-binary
+psycopg[binary]
 pydantic
 pydantic-settings
 email-validator
@@ -14,3 +14,5 @@ bcrypt
 python-multipart
 redis
 slowapi
+sentry-sdk
+boto3

@@ -45,13 +45,33 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_use_tls: bool = True
 
+    # Attachment storage: "local" (a directory / mounted volume) or "s3"
+    # (any S3-compatible object store: AWS S3, Cloudflare R2, MinIO, ...).
+    storage_backend: Literal["local", "s3"] = "local"
     attachment_dir: str = "./var/attachments"
     attachment_max_bytes: int = 10 * 1024 * 1024
+    s3_bucket: str = ""
+    s3_endpoint_url: str = ""
+    s3_region: str = "auto"
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
 
+    # inline: the API process runs the SLA sweep and delivers email itself
+    #         (single-process development).
+    # worker: a separate `python -m app.worker` process does both; required
+    #         whenever the API runs more than one process.
+    background_mode: Literal["inline", "worker"] = "inline"
     sla_sweep_enabled: bool = True
     sla_sweep_interval_seconds: int = 60
+    email_poll_interval_seconds: int = 5
 
     rate_limit_default: str = "300/minute"
+    # "memory://" is per process; use redis:// whenever there is more than one.
+    rate_limit_storage_uri: str = "memory://"
+
+    # Error monitoring (Sentry-compatible DSN). Disabled when empty.
+    sentry_dsn: str = ""
+    release: str = "dev"
 
     @property
     def is_production(self) -> bool:

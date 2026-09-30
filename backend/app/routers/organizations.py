@@ -22,7 +22,7 @@ from app.schemas.organizations import (
 )
 from app.schemas.users import MemberUpdate, UserOut
 from app.services import audit
-from app.services.email import deliver_pending, invitation_email, invite_url, queue_email
+from app.services.email import invitation_email, invite_url, queue_email, schedule_delivery
 from app.services.guards import ensure_not_demo
 from app.services.organizations import DEFAULT_ORG_SETTINGS, org_setting
 
@@ -253,7 +253,7 @@ def create_invitation(
         changes={"email": email, "role": payload.role},
     )
     db.commit()
-    background.add_task(deliver_pending)
+    schedule_delivery(background)
     return InvitationCreatedOut.model_validate({**InvitationOut.model_validate(inv).model_dump(), "invite_url": url})
 
 

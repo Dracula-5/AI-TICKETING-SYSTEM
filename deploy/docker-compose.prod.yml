@@ -1,0 +1,129 @@
+# Production / public-demo stack for a single VM.
+#
+#   cd /opt/nexadesk && ./deploy/deploy.sh <image-tag>
+#
+# Only Caddy publishes ports (80/443). The API, worker, database and Redis are
+# reachable solely on the internal network. Images come from the registry
+# (built by CI and tagged with the git SHA), so every deploy — and every
+# rollback — runs a known build.
+
+name: nexadesk
+
+x-backend: &backend
+  image: ${REGISTRY:-ghcr.io/owner}/nexadesk-backend:${IMAGE_TAG:?set IMAGE_TAG}
+  env_file: ../.env
+  environment:
+    ENVIRONMENT: ${ENVIRONMENT:-production}
+    DATABASE_URL: postgresql://${POSTGRES_USER:-nexadesk}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:-nexadesk}
+    REDIS_URL: redis://redis:6379/0
+    RATE_LIMIT_STORAGE_URI: redis://redis:6379/1
+    BACKGROUND_MODE: worker
+    MIGRATE_ON_START: "false"
+    COOKIE_SECURE: "true"
+    FRONTEND_BASE_URL: https://${DOMAIN:?}
+    CORS_ORIGINS: https://${DOMAIN}
+    RELEASE: ${IMAGE_TAG}
+  volumes:
+    - attachments:/app/var/attachments
+  restart: unless-stopped
+  logging: &logging
+    driver: json-file
+    options: { max-size: "20m", max-file: "5" }
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexadesk}
+      POSTGRES_USER: ${POSTGRES_USER:-nexadesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexadesk}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging: *logging
+
+  redis:
+    image: redis:7-alpine
+    # Cache, rate-limit counters and pub/sub only — nothing that needs persisting.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    logging: *logging
+
+  # One-shot: applies migrations before any new code starts. A failed
+  # migration stops the rollout (api/worker depend on its success).
+  migrate:
+    <<: *backend
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  backend:
+    <<: *backend
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexadesk}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:-nexadesk}
+      REDIS_URL: redis://redis:6379/0
+      RATE_LIMIT_STORAGE_URI: redis://redis:6379/1
+      BACKGROUND_MODE: worker
+      MIGRATE_ON_START: "false"
+      COOKIE_SECURE: "true"
+      FRONTEND_BASE_URL: https://${DOMAIN:?}
+      CORS_ORIGINS: https://${DOMAIN}
+      RELEASE: ${IMAGE_TAG}
+      API_WORKERS: ${API_WORKERS:-2}
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.worker"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.worker", "--check"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  web:
+    image: ${REGISTRY:-ghcr.io/owner}/nexadesk-web:${IMAGE_TAG}
+    restart: unless-stopped
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend: { condition: service_healthy }
+      web: { condition: service_started }
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  postgres_data:
+  attachments:
+  caddy_data:
+  caddy_config:

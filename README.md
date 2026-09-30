@@ -1,8 +1,8 @@
 # NexaDesk AI — Enterprise AI Service Management Platform
 
-> **Project status: Priority 1 of 18 complete.** The multi-tenant service-management core is
-> built and tested end to end. AI models, the public deployment and all performance/quality
-> benchmarks are later stages — no model-quality, performance or business-impact numbers are
+> **Project status: Priorities 1–2 of 18 complete.** The multi-tenant service-management core is
+> built and tested end to end, and the production deployment is rehearsed (awaiting the owner's
+> VM and domain). AI models and all performance/quality benchmarks are later stages — no model-quality, performance or business-impact numbers are
 > claimed below until the experiment that produced them is in this repository.
 > Roadmap and stage reports: [`docs/execution_plan.md`](docs/execution_plan.md).
 
@@ -99,15 +99,17 @@ Without Docker, see [`docs/runbook.md`](docs/runbook.md). API reference: `http:/
 
 ## Deployment
 
-Public demo deployment is Priority 2 (single VM, Docker Compose, Caddy auto-HTTPS). Until real
-external users exist it is described as a *public demo deployment*, not production adoption.
+Single VM with Docker Compose: Caddy (automatic HTTPS) → web + FastAPI (2 processes) + worker,
+PostgreSQL, Redis. CI builds images tagged with the commit SHA; `deploy.sh` backs up, migrates
+once, starts, smoke-tests and **rolls back automatically** on failure. Rehearsed locally,
+including a deliberately broken release — see [`docs/deployment.md`](docs/deployment.md). Until
+real external users exist the URL is a *public demo deployment*, not production adoption.
 
 ## Limitations (honest, current)
 
 * No machine-learning models yet — triage is the rules engine, and is labelled as such.
-* Background work (SLA sweep, email delivery) runs in the API process; moves to a worker in P2.
-* WebSocket fan-out and rate-limit counters are per process (single-instance) until moved to Redis.
-* Email delivery requires SMTP configuration; in development emails are read from the outbox.
+* The public URL is not live yet: it needs the owner-created VM, domain and deploy secrets.
+* Email delivery requires SMTP configuration; without it, emails stay in the outbox table.
 * No load or performance testing yet.
 
 ## Roadmap

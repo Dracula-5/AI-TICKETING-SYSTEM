@@ -1,0 +1,43 @@
+# TLS terminator and router. Caddy obtains and renews Let's Encrypt
+# certificates automatically for {$DOMAIN} (ports 80/443 must be reachable).
+# Setting DOMAIN=localhost uses Caddy's internal CA for local testing.
+# Optional: add `email you@example.com` inside the global block below to get
+# Let's Encrypt expiry notices (certificates renew automatically either way).
+{
+	servers {
+		# The API trusts X-Forwarded-For from the proxy; only Caddy reaches it.
+		trusted_proxies static private_ranges
+	}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# API, API docs and the notification WebSocket.
+	handle /api/* {
+		reverse_proxy backend:8000 {
+			health_uri /health
+			health_interval 15s
+		}
+	}
+
+	# Health endpoints for external uptime monitors.
+	handle /ready {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else is the single-page app.
+	handle {
+		reverse_proxy web:8080
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

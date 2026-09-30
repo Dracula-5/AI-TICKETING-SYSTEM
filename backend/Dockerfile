@@ -31,5 +31,8 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 # --proxy-headers: trust X-Forwarded-For from the reverse proxy so rate limits
-# and audit logs see the real client address.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]
+# and audit logs see the real client address. The API port is reachable only
+# on the internal Docker network (the proxy is the sole client), which is what
+# makes trusting forwarded headers from any peer acceptable.
+ENV API_WORKERS=1
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${API_WORKERS} --proxy-headers --forwarded-allow-ips '*'"]

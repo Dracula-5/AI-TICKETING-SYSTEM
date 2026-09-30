@@ -8,8 +8,9 @@ served only through an authenticated endpoint with `Content-Disposition:
 attachment` and `nosniff`, so an upload cannot be rendered as HTML/JS in the
 app's origin.
 
-LocalStorage is the development/single-VM backend; an S3-compatible backend
-implements the same two methods for multi-instance deployments.
+Backends: LocalStorage (development / single VM with a mounted volume) and
+S3Storage (any S3-compatible object store, for multi-host deployments), chosen
+by STORAGE_BACKEND.
 """
 
 import hashlib
@@ -17,6 +18,7 @@ import os
 import re
 import secrets
 from pathlib import Path
+from typing import Any, Protocol
 
 from app.core.config import settings
 
@@ -78,18 +80,37 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+_KEY_RE = re.compile(r"[A-Za-z0-9_-]+/[A-Za-z0-9_-]+")
+
+
+def _new_key(tenant_id: int) -> str:
+    return f"t{tenant_id}/{secrets.token_urlsafe(24)}"
+
+
+def _check_key(key: str) -> str:
+    # Keys are generated server-side; still refuse anything path-like.
+    if not _KEY_RE.fullmatch(key):
+        raise ValueError("invalid storage key")
+    return key
+
+
+class Storage(Protocol):
+    def save(self, tenant_id: int, data: bytes) -> str: ...
+    def read(self, key: str) -> bytes: ...
+    def delete(self, key: str) -> None: ...
+
+
 class LocalStorage:
+    """Directory / mounted volume. Right for a single VM (backed up with the VM)."""
+
     def __init__(self, root: str):
         self.root = Path(root)
 
     def _path(self, key: str) -> Path:
-        # Keys are generated server-side; still refuse anything path-like.
-        if not re.fullmatch(r"[A-Za-z0-9_-]+/[A-Za-z0-9_-]+", key):
-            raise ValueError("invalid storage key")
-        return self.root / key
+        return self.root / _check_key(key)
 
     def save(self, tenant_id: int, data: bytes) -> str:
-        key = f"t{tenant_id}/{secrets.token_urlsafe(24)}"
+        key = _new_key(tenant_id)
         path = self._path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
@@ -102,5 +123,44 @@ class LocalStorage:
         self._path(key).unlink(missing_ok=True)
 
 
-def get_storage() -> LocalStorage:
+class S3Storage:
+    """Any S3-compatible object store (AWS S3, Cloudflare R2, MinIO). Objects
+    stay private; the API streams them after its own authorization check, so no
+    presigned URLs ever leave the server."""
+
+    def __init__(self, bucket: str, client: Any = None):
+        if client is None:
+            import boto3
+
+            client = boto3.client(
+                "s3",
+                endpoint_url=settings.s3_endpoint_url or None,
+                region_name=settings.s3_region or None,
+                aws_access_key_id=settings.s3_access_key_id or None,
+                aws_secret_access_key=settings.s3_secret_access_key or None,
+            )
+        self.bucket = bucket
+        self.client = client
+
+    def save(self, tenant_id: int, data: bytes) -> str:
+        key = _new_key(tenant_id)
+        self.client.put_object(Bucket=self.bucket, Key=key, Body=data, ServerSideEncryption="AES256")
+        return key
+
+    def read(self, key: str) -> bytes:
+        return self.client.get_object(Bucket=self.bucket, Key=_check_key(key))["Body"].read()
+
+    def delete(self, key: str) -> None:
+        self.client.delete_object(Bucket=self.bucket, Key=_check_key(key))
+
+
+_storage: Storage | None = None
+
+
+def get_storage() -> Storage:
+    global _storage
+    if settings.storage_backend == "s3":
+        if _storage is None:
+            _storage = S3Storage(settings.s3_bucket)
+        return _storage
     return LocalStorage(settings.attachment_dir)

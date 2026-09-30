@@ -3,7 +3,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 # Make "app" importable when alembic is invoked from the backend/ directory.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -21,6 +21,9 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = Base.metadata
+
+# Arbitrary constant identifying "NexaDesk schema migration" in pg_advisory_lock.
+MIGRATION_LOCK_KEY = 7_424_150_301
 
 
 def render_item(type_, obj, autogen_context):
@@ -53,15 +56,26 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            render_item=render_item,
-            render_as_batch=connection.dialect.name == "sqlite",
-            compare_type=True,
-        )
-        with context.begin_transaction():
-            context.run_migrations()
+        postgres = connection.dialect.name == "postgresql"
+        if postgres:
+            # Serialize concurrent `alembic upgrade` runs (e.g. two containers
+            # starting together): the second waits, then finds nothing to do.
+            connection.execute(text("SELECT pg_advisory_lock(:k)"), {"k": MIGRATION_LOCK_KEY})
+            connection.commit()
+        try:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                render_item=render_item,
+                render_as_batch=connection.dialect.name == "sqlite",
+                compare_type=True,
+            )
+            with context.begin_transaction():
+                context.run_migrations()
+        finally:
+            if postgres:
+                connection.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": MIGRATION_LOCK_KEY})
+                connection.commit()
 
 
 if context.is_offline_mode():

@@ -235,3 +235,23 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
 * **Known issues:** SLA sweep and email delivery run in-process (worker in P2); WebSocket and
   rate limiting are single-instance; no email provider configured; dark mode not implemented.
 * **Next:** P2 — deployment.
+
+### P2 — Deployment ✅ engineering complete · ⏳ go-live blocked on owner (2026-09-30)
+* **Completed:** worker process (`python -m app.worker`) for SLA sweep and email delivery;
+  email outbox retry with exponential backoff and dead-lettering (migration `0002`); Redis
+  pub/sub fan-out so live notifications work across API processes and from the worker; Redis
+  rate-limit storage; optional Sentry (scrubbed) and S3-compatible storage; production compose
+  (Caddy auto-HTTPS, one-shot migrate service + advisory lock, health checks everywhere);
+  `bootstrap-vm.sh`, `deploy.sh` (auto-rollback), `rollback.sh`, `backup.sh`, `restore.sh`,
+  `smoke.sh`, `verify_realtime.py`; CD workflow (GHCR images by SHA, SSH deploy behind an
+  approval environment); psycopg 3.
+* **Measured / verified (local rehearsal, `ENVIRONMENT=staging`, DOMAIN=localhost):** stack
+  healthy; smoke test passes; 3/3 cross-process WebSocket pushes delivered; worker SLA-breach push
+  delivered after 105 s; backup→restore round trip; deploy→rollback; broken image → automatic
+  rollback with the site staying up. Backend: 266 tests pass on SQLite and PostgreSQL 16.
+* **Blocked:** real public URL — needs VM, DNS record, GitHub secrets (`DEPLOY_HOST`,
+  `DEPLOY_SSH_KEY`) — steps in [`deployment.md`](deployment.md). Let's Encrypt, GHCR pull and SSH
+  deploy are therefore unverified.
+* **Known issues:** backend image is 357 MB (boto3/botocore); backups stay on the VM until an
+  off-site target is configured.
+* **Next:** P3 — realistic data.

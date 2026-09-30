@@ -3,11 +3,12 @@ Notifications are written in the caller's transaction and pushed over the
 WebSocket only after that transaction commits, so users are never told about
 a change that was rolled back.
 
-Endpoints that notify are plain `def` handlers (run in Starlette's thread
-pool), which lets the post-commit hook hand the push to the event loop with
-`anyio.from_thread.run`. Outside a request (scripts, the SLA sweep's thread)
-there may be no loop to hand to; the row is still stored and the user sees it
-on their next fetch.
+With Redis available the push is published to every API process
+(services/realtime.py), so it also works from the background worker. Without
+Redis, endpoints (plain `def` handlers in Starlette's thread pool) hand the
+push to the local event loop with `anyio.from_thread.run`; outside a request
+there is no loop to hand to, but the row is stored and the user sees it on
+their next fetch.
 """
 
 import logging
@@ -19,6 +20,7 @@ from sqlalchemy.orm import Session
 from app.db.models import Notification
 from app.schemas.notifications import NotificationOut
 from app.services.notification_ws import manager
+from app.services.realtime import publish
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,10 @@ def _push_after_commit(session: Session) -> None:
     if not pending:
         return
     for user_id, payload in pending:
+        # Preferred path: Redis pub/sub reaches every API process (and works
+        # from the background worker). Fallback: this process's own sockets.
+        if publish(user_id, payload):
+            continue
         try:
             anyio.from_thread.run(manager.send_to_user, user_id, payload)
         except RuntimeError:
