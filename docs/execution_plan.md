@@ -236,7 +236,20 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
   rate limiting are single-instance; no email provider configured; dark mode not implemented.
 * **Next:** P2 — deployment.
 
-### P2 — Deployment ✅ engineering complete · ⏳ go-live blocked on owner (2026-09-30)
+### P2 — Deployment ✅ public demo live on free tiers (2026-10-01) · VM path rehearsed, not live
+* **Live (2026-10-01):** owner chose zero-cost hosting — API on Render Free
+  (<https://nexadesk-api-qp6v.onrender.com>), PostgreSQL on Neon Free, SPA on Netlify
+  (<https://nexadesk-api.netlify.app>, `netlify.toml`). Migrations and demo seed ran on first
+  start; `/ready` reports database and migration head OK.
+* **Measured for it:** local 512 MB / 0.1-CPU simulation found an OOM and a CPU-quota problem with
+  default AI settings → `EMBEDDING_THREADS=1`, `EMBEDDING_BATCH_SIZE=4`, `MALLOC_ARENA_MAX=2`,
+  one-process start-up (restart 6 min → 146–161 s); live checks: warm p50 0.31–0.36 s for
+  reads, login 2.0 s; sign-up/login/refresh/WebSocket verified in a browser
+  (`reports/render_free_tier.md`).
+* **Not live:** the VM deployment below (Caddy, worker, Redis, backups, CD) — not needed for the
+  free demo; still the production target.
+
+#### P2 (VM path) — engineering complete (2026-09-30)
 * **Completed:** worker process (`python -m app.worker`) for SLA sweep and email delivery;
   email outbox retry with exponential backoff and dead-lettering (migration `0002`); Redis
   pub/sub fan-out so live notifications work across API processes and from the worker; Redis

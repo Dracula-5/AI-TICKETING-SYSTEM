@@ -196,6 +196,21 @@ Render may add a suffix to a service URL if the name is taken; use the URLs show
 service's page. Create the API first, then the web service with its URL, then set
 `FRONTEND_BASE_URL` on the API. Changing `VITE_DEMO_PASSWORD` needs a rebuild of the web service.
 
+**Frontend on Netlify instead (what the live demo uses).** A static host serves the SPA without
+sleeping. [`netlify.toml`](../netlify.toml) builds `frontend/`, rewrites `/api/*` to the API
+(the login cookie stays first-party) and sets the security headers. Netlify does not proxy
+WebSockets, so the build sets `VITE_API_ORIGIN` and the notification socket connects to the API
+directly (it authenticates with a token message, not the cookie). Netlify gives up on a
+proxied request after 26 s, shorter than the API's wake-up, so with `VITE_API_ORIGIN` set the SPA
+pings the API's `/health` and shows a "server is starting" notice until it answers. In the
+Netlify site settings:
+
+* *Build & deploy → Branches*: production branch = the branch with `netlify.toml`
+  (`nexadesk-transformation` until merged). Build settings in the file override the UI.
+* *Environment variables*: `VITE_DEMO_PASSWORD` (optional, same as the API's `DEMO_PASSWORD`).
+* If the API URL changes, edit it in the three places in `netlify.toml`.
+* Set the API's `FRONTEND_BASE_URL` to the Netlify URL.
+
 **3. Check.** Open the web URL and sign in (demo buttons, or a demo account listed in the API's
 start-up log). `https://<web>/api/docs` shows the API; `https://<api>/ready` reports database and
 migration state.

@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
-import { API_BASE, getAccessToken, refreshAccessToken } from "../api/client";
+import { getAccessToken, notificationSocketUrl, refreshAccessToken } from "../api/client";
 import type { NotificationItem } from "../api/types";
 
 const MAX_BACKOFF_MS = 30_000;
@@ -29,8 +29,7 @@ export function useNotificationSocket(enabled: boolean, onNotification?: (n: Not
     const connect = async () => {
       const token = getAccessToken() ?? (await refreshAccessToken());
       if (stopped || !token) return;
-      const scheme = window.location.protocol === "https:" ? "wss" : "ws";
-      socket = new WebSocket(`${scheme}://${window.location.host}${API_BASE}/notifications/ws`);
+      socket = new WebSocket(notificationSocketUrl());
       socket.onopen = () => socket?.send(JSON.stringify({ type: "auth", token }));
       socket.onmessage = (event) => {
         const msg = JSON.parse(event.data as string) as { type: string; data?: NotificationItem };

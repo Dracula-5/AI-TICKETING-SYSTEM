@@ -2,7 +2,9 @@
 
 What it costs to run NexaDesk, split into what was **measured** in this repository and what comes
 from **third-party price lists** (dated, to be re-checked before buying). No operating cost has
-been incurred yet — nothing is deployed on paid infrastructure.
+been incurred: the live public demo (2026-10-01) runs on free tiers — API on Render Free
+(512 MB, 0.1 CPU), PostgreSQL on Neon Free, SPA on Netlify Free — so hosting costs **$0/month**
+within those plans' limits (see `reports/render_free_tier.md` for what fits on 512 MB).
 
 ## 1. Resource use — measured
 

@@ -12,6 +12,20 @@ import type { TokenOut } from "./types";
  */
 export const API_BASE = "/api/v1";
 
+/**
+ * Public origin of the API when the SPA is hosted on a static host that proxies
+ * /api over HTTP but cannot proxy WebSockets (Netlify), e.g.
+ * "https://nexadesk-api.onrender.com". Empty when nginx serves SPA and API together.
+ */
+export const API_ORIGIN = (import.meta.env.VITE_API_ORIGIN ?? "").trim().replace(/\/+$/, "");
+
+/** Notification WebSocket URL: the API origin when set, otherwise this page's host. */
+export function notificationSocketUrl(apiOrigin: string = API_ORIGIN, page: Location = window.location): string {
+  if (apiOrigin) return `${apiOrigin.replace(/^http/, "ws")}${API_BASE}/notifications/ws`;
+  const scheme = page.protocol === "https:" ? "wss" : "ws";
+  return `${scheme}://${page.host}${API_BASE}/notifications/ws`;
+}
+
 export const api = axios.create({ baseURL: API_BASE, withCredentials: true });
 
 let accessToken: string | null = null;

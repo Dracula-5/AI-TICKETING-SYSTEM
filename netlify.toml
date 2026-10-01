@@ -1,0 +1,52 @@
+# Netlify: the SPA (frontend/) as static files, /api proxied to the API on Render.
+#
+# Browser → https://<site>.netlify.app        SPA, and /api/* rewritten (proxied) to the API,
+#                                              so the login cookie stays first-party
+#         → wss://<api>.onrender.com           notification WebSocket, direct (Netlify
+#                                              does not proxy WebSockets; it authenticates
+#                                              with a token message, not the cookie)
+#
+# Netlify site settings: set the production branch to the one holding this file
+# (nexadesk-transformation until it is merged), and VITE_DEMO_PASSWORD under
+# Site configuration → Environment variables if the demo buttons should appear.
+# Change the API address in the three places below if the Render URL changes.
+# Guide: docs/deployment.md → "Render (free tier)" → "Frontend on Netlify".
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_API_ORIGIN = "https://nexadesk-api-qp6v.onrender.com"
+
+# Proxy (status 200 = rewrite). Netlify gives up on a proxied request after 26 s;
+# the SPA shows a "server is starting" notice while a sleeping API wakes up.
+[[redirects]]
+  from = "/api/*"
+  to = "https://nexadesk-api-qp6v.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Client-side routes (/tickets/12, /login, …) load the SPA.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Same headers as frontend/security-headers.conf (nginx), plus the API origin for
+# the WebSocket and the wake-up ping.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://nexadesk-api-qp6v.onrender.com wss://nexadesk-api-qp6v.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

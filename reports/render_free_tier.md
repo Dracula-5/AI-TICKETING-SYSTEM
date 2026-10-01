@@ -50,6 +50,34 @@ models), 112 s checking the demo seed, and about 2.5 min importing the API.
 * Re-check on Render itself: watch the service's memory graph and restart events after the first
   deploy, and note real wake-up and login times before quoting any of them.
 
+## Live deployment checks (Render free + Neon, 2026-10-01)
+
+**Evidence type: live public demo, warm instance, one client on another continent calling the
+Oregon region** (`/health` alone takes ~0.3 s, so most of each number is network round trip). Accounts used were
+throw-away requesters created through the Helix Health (Demo) portal.
+
+| Request | n | p50 | max |
+|---|---|---|---|
+| `GET /health` | 10 | 330 ms | 810 ms |
+| `GET /ready` (database + migration head) | 10 | 318 ms | 394 ms |
+| `POST /auth/login` (bcrypt cost 12) | 5 | 2,015 ms | 2,186 ms |
+| `GET /auth/me` | 10 | 320 ms | 499 ms |
+| `GET /tickets` | 10 | 313 ms | 392 ms |
+| `GET /kb/search` (empty knowledge base → full-text fallback) | 10 | 364 ms | 425 ms |
+| `POST /tickets` | 1 | 560 ms | — |
+
+* AI capabilities reported by the live API: triage on, `sentence-transformers/all-MiniLM-L6-v2`,
+  text generation off.
+* Login took 2.0 s on Render versus 13–15 s in the local 0.1-CPU simulation: Render's instance
+  gives more CPU to a short burst than Docker's hard quota did, so the simulation's CPU-bound
+  timings are pessimistic. The memory results are the part to rely on.
+* Browser check (Playwright, Chromium) with the production build of the SPA served through a
+  local stand-in for the Netlify rewrite and the live API: portal sign-up → "New ticket";
+  reload restored the session from the refresh cookie; sign-out → sign-in; the notification
+  WebSocket connected directly to the API and received `ready`; no CSP errors.
+* Not measured yet on the live demo: wake-up time after sleep, AI triage latency as seen by an
+  agent, memory over days of use (Render's metrics page shows it).
+
 ## Web service (nginx)
 
 Verified with the web image in the same setup: SPA and deep links served; `/api` proxied with a

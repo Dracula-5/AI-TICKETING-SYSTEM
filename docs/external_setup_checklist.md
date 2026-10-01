@@ -17,6 +17,8 @@ chat or commit them to Git.
 **No budget?** Instead of sections B–D, deploy the public demo on Render's free tier with a free
 Neon database: [`deployment.md` → Render (free tier)](deployment.md#render-free-tier--zero-cost-public-demo).
 No VM, domain or deploy secrets are needed; the free-tier limits listed there apply.
+✅ Done 2026-10-01: API <https://nexadesk-api-qp6v.onrender.com> (Render + Neon), web
+<https://nexadesk-api.netlify.app> (Netlify, `netlify.toml`).
 
 ## B. Provision the VM and DNS
 

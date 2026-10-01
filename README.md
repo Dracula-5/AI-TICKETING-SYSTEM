@@ -1,11 +1,14 @@
 # NexaDesk AI — Enterprise AI Service Management Platform
 
-> **Status: public-demo-ready; not yet deployed, no real users yet.** Core workflow, AI-assisted
+> **Status: public demo deployment (free tier); no real users yet.** Core workflow, AI-assisted
 > triage, knowledge base, triage agent with human approval, observability, security controls and
-> CI gates are implemented and measured on public benchmarks, synthetic replays and a local load
-> test. The public URL waits on the owner's VM, domain and deploy secrets
-> ([setup checklist](docs/external_setup_checklist.md)); generated-answer quality and real-user
-> outcomes are not measured yet. Every number below says which kind of evidence it is.
+> CI gates are implemented and measured on public benchmarks, synthetic replays, a local load
+> test and checks against the live demo. Generated-answer quality and real-user outcomes are not
+> measured yet. Every number below says which kind of evidence it is.
+>
+> **Live demo:** web <https://nexadesk-api.netlify.app> · API <https://nexadesk-api-qp6v.onrender.com>
+> (OpenAPI at `/api/docs`). Free tier: the API sleeps when idle and needs 2–3 minutes to wake up;
+> the web app says so while it waits. Demo organizations and tickets are illustrative data.
 
 ## The business problem
 
@@ -98,7 +101,9 @@ grew from: [`docs/current_architecture.md`](docs/current_architecture.md).
 | Agent ablation [synthetic replay] | no gate: 47–54% of automatic changes wrong; default gate 0.9: 5–6% automated, 0 of 133 wrong, rest to people | `reports/pipeline/agent_ablation.md` |
 | Vector index [synthetic replay] | pgvector defaults returned as few as 14/60 rows for a tenant (recall 0.41); NexaDesk settings 60/60, recall ≥ 0.99 | `reports/pipeline/` |
 | Load [local laptop, 100k synthetic tickets] | 100 users: ~30 req/s, p95 150 ms, 0 errors; 250 users: ~66 req/s, 0 errors; saturates ~65–70 req/s; ≈ 1.2 GiB memory. Found and fixed a connection-pool deadlock | `reports/load/README.md` |
-| Tests | backend 381 (SQLite and PostgreSQL 16 + pgvector, 91% coverage), frontend 29, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
+| Free-tier fit [local simulation: 512 MB, no swap, 0.1 CPU] | default settings OOM-killed on a large KB document; with 1 embedding thread, batch 4 and `MALLOC_ARENA_MAX=2` memory levelled off at ~360 MB (peaks ≤ 412 MB) under repeated search + triage; restart 6 min → 146–161 s after start-up fixes | `reports/render_free_tier.md` |
+| Live demo [Render free API + Neon, probed from one client, 2026-10-01] | warm: health/me/tickets/KB search p50 0.31–0.36 s, login 2.0 s (bcrypt), ticket create 0.56 s; sign-up, login, session refresh and notification WebSocket verified in a browser | `reports/render_free_tier.md` |
+| Tests | backend 385 (SQLite and PostgreSQL 16 + pgvector, 91% coverage), frontend 34, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
 | Real users, business impact, generated-answer quality | **not measured yet** | `docs/pilot_plan.md`, `docs/business_value.md` |
 
 ## Further documentation
@@ -121,8 +126,13 @@ Without Docker, see [`docs/runbook.md`](docs/runbook.md). API reference: `http:/
 
 ## Deployment
 
-Single VM with Docker Compose: Caddy (automatic HTTPS) → web + FastAPI (2 processes) + worker,
-PostgreSQL, Redis. CI builds images tagged with the commit SHA; `deploy.sh` backs up, migrates
+**Live (free tier):** API on Render (Docker, 512 MB / 0.1 CPU, AI on with measured settings),
+PostgreSQL on Neon, SPA on Netlify proxying `/api` to the API — zero hosting cost; set up with
+[`render.yaml`](render.yaml) and [`netlify.toml`](netlify.toml), steps in
+[`docs/deployment.md`](docs/deployment.md#render-free-tier--zero-cost-public-demo).
+
+**Production target:** single VM with Docker Compose: Caddy (automatic HTTPS) → web + FastAPI
+(2 processes) + worker, PostgreSQL, Redis. CI builds images tagged with the commit SHA; `deploy.sh` backs up, migrates
 once, starts, smoke-tests and **rolls back automatically** on failure. Rehearsed locally,
 including a deliberately broken release — see [`docs/deployment.md`](docs/deployment.md). Until
 real external users exist the URL is a *public demo deployment*, not production adoption.
@@ -130,7 +140,9 @@ real external users exist the URL is a *public demo deployment*, not production 
 ## Limitations (honest, current)
 
 * AI recommendations and retrieval are implemented; generated-answer quality is not benchmarked and external text generation remains opt-in.
-* The public URL is not live yet: it needs the owner-created VM, domain and deploy secrets.
+* The live demo runs on free tiers: the API sleeps when idle (2–3 min wake-up), has 0.1 CPU, no
+  Redis or separate worker, and loses ticket attachments on restart. The VM deployment (Caddy,
+  worker, Redis, backups, CD) is rehearsed locally but not live.
 * Email delivery requires SMTP configuration; without it, emails stay in the outbox table.
 * Load and scale were measured on a laptop, not on the target VM; re-run `loadtest/` there.
 * A pre-rewrite JWT default key exists in public git history; it is unused and must be treated as

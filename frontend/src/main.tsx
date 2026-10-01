@@ -6,6 +6,7 @@ import { BrowserRouter } from "react-router";
 
 import App from "./App";
 import { AuthProvider } from "./auth/AuthProvider";
+import { ServerWakeBanner } from "./components/ServerWakeBanner";
 import { ToastProvider } from "./components/Toast";
 import { theme } from "./theme";
 
@@ -19,6 +20,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <ServerWakeBanner />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <ToastProvider>
