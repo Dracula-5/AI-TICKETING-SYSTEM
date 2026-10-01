@@ -14,6 +14,10 @@ chat or commit them to Git.
 4. Keep the CI-passing commit ready, but wait to merge it to `main` until VM access and GitHub
    deployment secrets are configured below. The deploy workflow watches `main`.
 
+**No budget?** Instead of sections B–D, deploy the public demo on Render's free tier with a free
+Neon database: [`deployment.md` → Render (free tier)](deployment.md#render-free-tier--zero-cost-public-demo).
+No VM, domain or deploy secrets are needed; the free-tier limits listed there apply.
+
 ## B. Provision the VM and DNS
 
 1. Create an Ubuntu 22.04 or 24.04 VM with a stable public IPv4 address. Capacity was measured

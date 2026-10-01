@@ -151,6 +151,18 @@ class TestProductionConfig:
         self._prod().validate_for_environment()
 
     @pytest.mark.parametrize(
+        "url,expected",
+        [
+            ("postgres://u:p@h/db?sslmode=require", "postgresql+psycopg://u:p@h/db?sslmode=require"),
+            ("postgresql://u:p@h/db", "postgresql+psycopg://u:p@h/db"),
+            ("postgresql+psycopg://u:p@h/db", "postgresql+psycopg://u:p@h/db"),
+            ("sqlite:///./x.db", "sqlite:///./x.db"),
+        ],
+    )
+    def test_hosted_database_urls_use_the_installed_driver(self, url, expected):
+        assert Settings(database_url=url).database_url == expected
+
+    @pytest.mark.parametrize(
         "override,message",
         [
             ({"secret_key": "dev-only-insecure-secret-key-change-me-before-deploying"}, "SECRET_KEY"),

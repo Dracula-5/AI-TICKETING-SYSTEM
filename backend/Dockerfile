@@ -39,15 +39,19 @@ ENV ATTACHMENT_DIR=/app/var/attachments
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:%s/health' % os.environ.get('PORT', '8000'))"
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 # --proxy-headers: trust X-Forwarded-For from the reverse proxy so rate limits
 # and audit logs see the real client address. The API port is reachable only
 # on the internal Docker network (the proxy is the sole client), which is what
-# makes trusting forwarded headers from any peer acceptable.
-ENV API_WORKERS=1
+# makes trusting forwarded headers from any peer acceptable. On a platform where
+# the API has its own public URL (Render), clients can reach it directly and add
+# their own X-Forwarded-For, so per-IP rate limits there are best-effort.
+# PORT: listening port; hosting platforms such as Render set it (default 8000).
+ENV API_WORKERS=1 \
+    FORWARDED_ALLOW_IPS="*"
 # API_LIMIT_CONCURRENCY (optional): per-process cap on in-flight requests; beyond it uvicorn
 # answers 503 at once instead of queueing requests that hold database connections (P11).
 ENV API_LIMIT_CONCURRENCY=""
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${API_WORKERS} --proxy-headers --forwarded-allow-ips '*' ${API_LIMIT_CONCURRENCY:+--limit-concurrency $API_LIMIT_CONCURRENCY}"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers ${API_WORKERS} --proxy-headers --forwarded-allow-ips \"$FORWARDED_ALLOW_IPS\" ${API_LIMIT_CONCURRENCY:+--limit-concurrency $API_LIMIT_CONCURRENCY}"]

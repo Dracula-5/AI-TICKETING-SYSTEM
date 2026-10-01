@@ -1,0 +1,10 @@
+#!/bin/sh
+# Sourced by the nginx image entrypoint before the config template is rendered.
+# proxy_pass with a variable replaces the request path when the value contains
+# a path, so "https://api.example.com/" would send every /api call to "/".
+API_UPSTREAM="${API_UPSTREAM%/}"
+case "$API_UPSTREAM" in
+  http://*|https://*) ;;
+  *) echo "API_UPSTREAM must start with http:// or https:// (got '$API_UPSTREAM')" >&2; exit 1 ;;
+esac
+export API_UPSTREAM

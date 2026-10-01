@@ -126,6 +126,96 @@ On Windows 11 + Docker Desktop, with `DOMAIN=localhost` (Caddy internal CA) and
 **Not yet verified:** Let's Encrypt issuance (needs a real domain), GHCR pull, SSH deploy job,
 SMTP delivery — all depend on the owner-created VM, domain and secrets.
 
+## Render (free tier) — zero-cost public demo
+
+An alternative to the VM when there is no budget: two Render **web services** from this
+repository plus a free **Neon** PostgreSQL database. [`render.yaml`](../render.yaml) describes
+both services.
+
+```mermaid
+flowchart LR
+    B[Browser] --> W[nexadesk-web<br/>nginx + SPA]
+    W -->|/api + WebSocket<br/>API_UPSTREAM| A[nexadesk-api<br/>FastAPI, inline jobs]
+    A --> N[(Neon PostgreSQL<br/>+ pgvector)]
+```
+
+The browser only talks to `nexadesk-web`; its nginx forwards `/api` to the API service. The site
+therefore has one origin, so the login cookie and CSP work without CORS changes.
+
+**1. Database (Neon, free).** Create a project in region *AWS US West 2 (Oregon)* (next to
+Render's Oregon region). Copy the **direct** connection string (host without `-pooler`), e.g.
+`postgresql://user:password@ep-xxx.us-west-2.aws.neon.tech/neondb?sslmode=require`. The
+migrations create the `vector` and `pg_trgm` extensions themselves. A `postgresql://` or
+`postgres://` URL is accepted as is (the API switches it to the psycopg 3 driver).
+
+**2. Services.** Either *New → Blueprint*, pick this repository and branch
+`nexadesk-transformation` (Render reads `render.yaml` and asks for the `sync: false` values), or
+create two *New → Web Service* entries by hand:
+
+| Field | API | Web |
+|---|---|---|
+| Name | `nexadesk-api` | `nexadesk-web` |
+| Language | Docker | Docker |
+| Branch | `nexadesk-transformation` (or `main` after merging) | same |
+| Root Directory | *(empty)* | *(empty)* |
+| Dockerfile Path | `./backend/Dockerfile` | `./frontend/Dockerfile` |
+| Docker Build Context Directory | `./backend` | `./frontend` |
+| Health Check Path | `/health` | `/` |
+| Instance type | Free | Free |
+
+API environment variables:
+
+| Key | Value |
+|---|---|
+| `ENVIRONMENT` | `staging` |
+| `DATABASE_URL` | the Neon connection string |
+| `SECRET_KEY` | random, ≥ 32 characters (Render's *Generate*, or `python -c "import secrets; print(secrets.token_urlsafe(48))"`) |
+| `METRICS_TOKEN` | random, ≥ 24 characters (same way) |
+| `COOKIE_SECURE` | `true` |
+| `BACKGROUND_MODE` | `inline` |
+| `EMAIL_BACKEND` | `console` |
+| `AI_ENABLED` | `false` (see limits below) |
+| `LLM_PROVIDER` | `none` |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `3` / `2` |
+| `API_LIMIT_CONCURRENCY` | `20` |
+| `SEED_DEMO_ON_START` | `true` to create the three demo organizations on first start |
+| `DEMO_PASSWORD` | the shared demo password (required for the seed) |
+| `FRONTEND_BASE_URL` | `https://nexadesk-web.onrender.com` (the web service's URL) |
+
+Web environment variables:
+
+| Key | Value |
+|---|---|
+| `API_UPSTREAM` | `https://nexadesk-api.onrender.com` (the API service's URL) |
+| `VITE_DEMO_PASSWORD` | same as `DEMO_PASSWORD`; read at build time, shows "Explore the demo" |
+
+Render may add a suffix to a service URL if the name is taken; use the URLs shown on each
+service's page. Create the API first, then the web service with its URL, then set
+`FRONTEND_BASE_URL` on the API. Changing `VITE_DEMO_PASSWORD` needs a rebuild of the web service.
+
+**3. Check.** Open the web URL and sign in (demo buttons, or a demo account listed in the API's
+start-up log). `https://<web>/api/docs` shows the API; `https://<api>/ready` reports database and
+migration state.
+
+**Limits of the free tier — say so on the demo:**
+
+* Both services sleep after about 15 minutes without traffic; the next visit waits for the web
+  service and then the API to start (roughly a minute or more each). Free instance hours are
+  shared across a workspace each month — check Render's current free-tier page.
+* 0.1 CPU: password hashing (bcrypt cost 12) and the first requests after start are slow.
+* No persistent disk: attachments and uploaded knowledge-base files are lost on every restart or
+  redeploy (set `STORAGE_BACKEND=s3` with an S3-compatible bucket to keep them). The database
+  lives in Neon and is not affected.
+* No Redis: caching is per process and live notifications are delivered in process, which is
+  correct with the single API process used here. Per-IP rate limits are in memory and
+  best-effort, because the API's own public URL lets clients supply `X-Forwarded-For`.
+* Emails (verification, password reset) are only written to the API log.
+* **AI off by default.** With `AI_ENABLED=true` the API loads the MiniLM embedding model into the
+  same 512 MB instance. That has **not** been measured on Render (≈ 1.2 GiB was measured for the
+  whole stack under load on a laptop, `reports/load/`). Try it, watch the service's memory graph,
+  and set it back to `false` if Render restarts the service for exceeding memory.
+* Metrics/Grafana are not part of this setup; `/metrics` stays protected by `METRICS_TOKEN`.
+
 ## Status label
 
 Once live, the URL is a **public demo deployment**. It becomes "production usage" only when real

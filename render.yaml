@@ -1,0 +1,69 @@
+# Render Blueprint — public demo deployment on Render's free tier.
+#
+# Two web services built from this repository:
+#   nexadesk-api  FastAPI backend (backend/Dockerfile); migrates on start.
+#   nexadesk-web  React SPA behind nginx (frontend/Dockerfile); proxies /api
+#                 (including the notification WebSocket) to nexadesk-api, so the
+#                 browser sees one site and the login cookie stays first-party.
+#
+# The database is external (Neon free PostgreSQL, with pgvector). Values marked
+# `sync: false` are asked for when the Blueprint is created; nothing secret is
+# committed here. Step-by-step guide: docs/deployment.md → "Render (free tier)".
+services:
+  - type: web
+    name: nexadesk-api
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: nexadesk-transformation
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: staging
+      - key: DATABASE_URL          # Neon connection string, ending in ?sslmode=require
+        sync: false
+      - key: FRONTEND_BASE_URL     # https://<nexadesk-web>.onrender.com (links in emails)
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: BACKGROUND_MODE       # no separate worker on the free tier
+        value: inline
+      - key: EMAIL_BACKEND         # emails are written to the service log
+        value: console
+      # Off until memory is checked on the 512 MB instance (the embedding model
+      # loads into the API process); see docs/deployment.md before enabling.
+      - key: AI_ENABLED
+        value: "false"
+      - key: LLM_PROVIDER          # text generation stays off (no provider approved)
+        value: none
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
+        value: "2"
+      - key: API_LIMIT_CONCURRENCY
+        value: "20"
+      - key: SEED_DEMO_ON_START    # creates the demo organizations once (idempotent)
+        value: "true"
+      - key: DEMO_PASSWORD         # shared password of the demo accounts
+        sync: false
+
+  - type: web
+    name: nexadesk-web
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: nexadesk-transformation
+    dockerContext: ./frontend
+    dockerfilePath: ./frontend/Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: API_UPSTREAM          # https://<nexadesk-api>.onrender.com (no trailing slash)
+        sync: false
+      - key: VITE_DEMO_PASSWORD    # same as DEMO_PASSWORD; shows "Explore the demo" (build arg)
+        sync: false

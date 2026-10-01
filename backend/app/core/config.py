@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -105,6 +106,16 @@ class Settings(BaseSettings):
     # Error monitoring (Sentry-compatible DSN). Disabled when empty.
     sentry_dsn: str = ""
     release: str = "dev"
+
+    @field_validator("database_url")
+    @classmethod
+    def _use_psycopg3(cls, url: str) -> str:
+        # Hosted databases (Neon, Render, Heroku-style) hand out postgres:// or
+        # postgresql:// URLs, which SQLAlchemy maps to psycopg2; the image ships psycopg 3.
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                return "postgresql+psycopg://" + url[len(prefix) :]
+        return url
 
     @property
     def is_production(self) -> bool:

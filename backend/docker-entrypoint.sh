@@ -10,6 +10,18 @@ if [ "${MIGRATE_ON_START:-true}" = "true" ]; then
   alembic upgrade head
 fi
 
+# Hosts without a shell (Render free tier) cannot run the demo seed by hand.
+# Idempotent: skips organizations that already exist. Requires DEMO_PASSWORD so
+# no generated password ends up in platform logs.
+if [ "${SEED_DEMO_ON_START:-false}" = "true" ]; then
+  if [ -n "${DEMO_PASSWORD:-}" ]; then
+    echo "Seeding demo organizations (if missing)..."
+    python -m app.scripts.seed_demo
+  else
+    echo "SEED_DEMO_ON_START=true but DEMO_PASSWORD is empty; skipping demo seed." >&2
+  fi
+fi
+
 # Prometheus multi-process mode: every API worker process writes its metrics
 # to this directory and one /metrics scrape aggregates them. Cleared on start
 # so a restart does not resurrect stale counters.

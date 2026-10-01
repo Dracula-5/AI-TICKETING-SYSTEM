@@ -1,14 +1,26 @@
 # Serves the built SPA and proxies /api to the backend, so browser, SPA and
 # API share one origin (the refresh cookie stays first-party, no CORS needed).
-# In the VM deployment, Caddy terminates TLS in front of this container.
+# In the VM deployment, Caddy terminates TLS in front of this container and
+# routes /api itself. On Render (two web services) this proxy is the path:
+# API_UPSTREAM=https://<api-service>.onrender.com.
+#
+# Template: the nginx image substitutes ${PORT}, ${API_UPSTREAM} and
+# ${NGINX_LOCAL_RESOLVERS} at start-up. The upstream is a variable resolved through DNS at request time,
+# so a hosted API whose IP changes keeps working without restarting nginx.
 
 map $http_upgrade $connection_upgrade {
   default upgrade;
   ""      close;
 }
 
+# Keep the original scheme when a platform load balancer terminated TLS first.
+map $http_x_forwarded_proto $forwarded_proto {
+  default $http_x_forwarded_proto;
+  ""      $scheme;
+}
+
 server {
-  listen 8080;
+  listen ${PORT};
   server_name _;
   root /usr/share/nginx/html;
   index index.html;
@@ -21,15 +33,22 @@ server {
   # Security headers are added per SPA location (see security-headers.conf);
   # /api responses carry the backend's own headers.
 
+  resolver ${NGINX_LOCAL_RESOLVERS} valid=30s ipv6=off;
+
   location /api/ {
-    proxy_pass http://backend:8000;
+    set $api_upstream ${API_UPSTREAM};
+    proxy_pass $api_upstream;
     proxy_http_version 1.1;
-    proxy_set_header Host $host;
+    # Host of the upstream itself: hosted platforms route by Host/SNI.
+    proxy_set_header Host $proxy_host;
+    proxy_ssl_server_name on;
+    proxy_set_header X-Forwarded-Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Proto $forwarded_proto;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection $connection_upgrade;
+    # Also covers a sleeping free-tier API waking up (about a minute on Render).
     proxy_read_timeout 120s;
   }
 
