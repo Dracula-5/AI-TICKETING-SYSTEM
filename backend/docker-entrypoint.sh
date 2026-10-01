@@ -1,25 +1,16 @@
 #!/bin/sh
 set -e
 
-# Development compose migrates on start for convenience. Production runs a
-# dedicated one-shot `migrate` service first and sets MIGRATE_ON_START=false
-# on the API and worker, so a deploy migrates exactly once (and a failed
-# migration stops the rollout before new code starts).
-if [ "${MIGRATE_ON_START:-true}" = "true" ]; then
-  echo "Running database migrations..."
-  alembic upgrade head
-fi
-
-# Hosts without a shell (Render free tier) cannot run the demo seed by hand.
-# Idempotent: skips organizations that already exist. Requires DEMO_PASSWORD so
-# no generated password ends up in platform logs.
-if [ "${SEED_DEMO_ON_START:-false}" = "true" ]; then
-  if [ -n "${DEMO_PASSWORD:-}" ]; then
-    echo "Seeding demo organizations (if missing)..."
-    python -m app.scripts.seed_demo
-  else
-    echo "SEED_DEMO_ON_START=true but DEMO_PASSWORD is empty; skipping demo seed." >&2
-  fi
+# Start-up tasks, in one Python process (app/scripts/prestart.py):
+# * MIGRATE_ON_START (default true): `alembic upgrade head`. Development compose
+#   migrates on start for convenience. Production runs a dedicated one-shot
+#   `migrate` service first and sets MIGRATE_ON_START=false on the API and
+#   worker, so a deploy migrates exactly once (and a failed migration stops the
+#   rollout before new code starts).
+# * SEED_DEMO_ON_START (default false): create the demo organizations if
+#   missing, for hosts without a shell (Render free tier). Needs DEMO_PASSWORD.
+if [ "${MIGRATE_ON_START:-true}" = "true" ] || [ "${SEED_DEMO_ON_START:-false}" = "true" ]; then
+  python -m app.scripts.prestart
 fi
 
 # Prometheus multi-process mode: every API worker process writes its metrics

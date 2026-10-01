@@ -174,7 +174,10 @@ API environment variables:
 | `COOKIE_SECURE` | `true` |
 | `BACKGROUND_MODE` | `inline` |
 | `EMAIL_BACKEND` | `console` |
-| `AI_ENABLED` | `false` (see limits below) |
+| `AI_ENABLED` | `true` |
+| `EMBEDDING_THREADS` | `1` (more threads only use up the 0.1-CPU quota) |
+| `EMBEDDING_BATCH_SIZE` | `4` (the default 32 exceeded 512 MB on a large document — see below) |
+| `MALLOC_ARENA_MAX` | `2` (less memory growth under load) |
 | `LLM_PROVIDER` | `none` |
 | `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `3` / `2` |
 | `API_LIMIT_CONCURRENCY` | `20` |
@@ -199,21 +202,24 @@ migration state.
 
 **Limits of the free tier — say so on the demo:**
 
+* **AI fits, CPU is the limit.** Simulated locally with the same limits (512 MB, no swap,
+  0.1 CPU — [`reports/render_free_tier.md`](../reports/render_free_tier.md), not measured on
+  Render itself): with the settings above memory levelled off at ~360 MB (peaks ≤ 412 MB) under
+  repeated search and triage; a restart took 146–161 s; login 13–15 s; KB search p50
+  ~0.8 s; a 0.6 MB / 800-chunk document took 37 minutes to index. Keep uploads to a few pages
+  and check Render's memory graph after the first deploy.
 * Both services sleep after about 15 minutes without traffic; the next visit waits for the web
-  service and then the API to start (roughly a minute or more each). Free instance hours are
-  shared across a workspace each month — check Render's current free-tier page.
-* 0.1 CPU: password hashing (bcrypt cost 12) and the first requests after start are slow.
-* No persistent disk: attachments and uploaded knowledge-base files are lost on every restart or
-  redeploy (set `STORAGE_BACKEND=s3` with an S3-compatible bucket to keep them). The database
-  lives in Neon and is not affected.
+  service and then the API to start (the API needed ~2.5 min in the simulation). Free instance
+  hours are shared across a workspace each month — check Render's current free-tier page.
+* No persistent disk: ticket attachments are lost on every restart or redeploy (set
+  `STORAGE_BACKEND=s3` with an S3-compatible bucket to keep them). Tickets, knowledge-base
+  text and embeddings live in the Neon database and are not affected.
 * No Redis: caching is per process and live notifications are delivered in process, which is
   correct with the single API process used here. Per-IP rate limits are in memory and
   best-effort, because the API's own public URL lets clients supply `X-Forwarded-For`.
 * Emails (verification, password reset) are only written to the API log.
-* **AI off by default.** With `AI_ENABLED=true` the API loads the MiniLM embedding model into the
-  same 512 MB instance. That has **not** been measured on Render (≈ 1.2 GiB was measured for the
-  whole stack under load on a laptop, `reports/load/`). Try it, watch the service's memory graph,
-  and set it back to `false` if Render restarts the service for exceeding memory.
+* If Render ever restarts the API for exceeding memory, set `AI_ENABLED=false`: tickets, rules
+  and search keep working without the model.
 * Metrics/Grafana are not part of this setup; `/metrics` stays protected by `METRICS_TOKEN`.
 
 ## Status label

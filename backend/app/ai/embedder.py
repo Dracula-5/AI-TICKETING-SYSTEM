@@ -37,10 +37,15 @@ class FastEmbedEmbedder:
         from fastembed import TextEmbedding
 
         self.name = model_name
-        self._model = TextEmbedding(model_name=model_name, cache_dir=settings.model_cache_dir or None)
+        self._model = TextEmbedding(
+            model_name=model_name,
+            cache_dir=settings.model_cache_dir or None,
+            threads=settings.embedding_threads or None,
+        )
 
     def embed(self, texts: list[str]) -> np.ndarray:
-        vecs = np.asarray(list(self._model.embed(texts, batch_size=32)), dtype=np.float32)
+        batch_size = max(1, settings.embedding_batch_size)
+        vecs = np.asarray(list(self._model.embed(texts, batch_size=batch_size)), dtype=np.float32)
         return vecs / np.maximum(np.linalg.norm(vecs, axis=1, keepdims=True), 1e-12)
 
 

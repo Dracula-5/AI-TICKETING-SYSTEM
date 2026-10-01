@@ -17,12 +17,14 @@ FROM nginxinc/nginx-unprivileged:1.27-alpine
 # Rendered to /etc/nginx/conf.d/default.conf at start-up (envsubst of the
 # variables below). API_UPSTREAM: where /api is proxied — the compose service by
 # default, e.g. https://nexadesk-api.onrender.com on Render. PORT: hosting
-# platforms such as Render may set their own.
+# platforms such as Render may set their own. Worker processes follow the
+# container's CPU limit (1 on a 0.1-CPU instance) instead of the host's cores.
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --chmod=755 nginx/10-api-upstream.envsh /docker-entrypoint.d/10-api-upstream.envsh
 ENV API_UPSTREAM=http://backend:8000 \
     PORT=8080 \
-    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+    NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 \
+    NGINX_ENTRYPOINT_WORKER_PROCESSES_AUTOTUNE=1
 COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080

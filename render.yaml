@@ -36,10 +36,18 @@ services:
         value: inline
       - key: EMAIL_BACKEND         # emails are written to the service log
         value: console
-      # Off until memory is checked on the 512 MB instance (the embedding model
-      # loads into the API process); see docs/deployment.md before enabling.
+      # AI on. Measured in a container limited like the free instance (512 MB, no
+      # swap, 0.1 CPU; reports/render_free_tier.md): batch 32 was OOM-killed on a
+      # large KB document; batch 4 + one thread + MALLOC_ARENA_MAX=2 levelled off
+      # at ~360 MB (peaks ≤ 412 MB). More threads only burn the CPU quota.
       - key: AI_ENABLED
-        value: "false"
+        value: "true"
+      - key: EMBEDDING_THREADS
+        value: "1"
+      - key: EMBEDDING_BATCH_SIZE
+        value: "4"
+      - key: MALLOC_ARENA_MAX     # fewer glibc arenas: ~45 MB less growth under load
+        value: "2"
       - key: LLM_PROVIDER          # text generation stays off (no provider approved)
         value: none
       - key: DB_POOL_SIZE

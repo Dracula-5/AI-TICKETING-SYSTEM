@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     ai_enabled: bool = True
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     model_cache_dir: str = ""
+    # ONNX Runtime threads for the embedding model (0 = one per visible core). On a
+    # fractional-CPU host (Render free: 0.1 CPU but all host cores visible) set 1:
+    # many threads exhaust the CPU quota and starve request handling.
+    embedding_threads: int = 0
+    # Texts per model call. ONNX Runtime keeps its peak buffers, which grow with batch
+    # size × text length: 32 long KB chunks took a 512 MB instance past its limit.
+    embedding_batch_size: int = 32
     job_poll_interval_seconds: int = 2
     # Run queued jobs inside the API process when BACKGROUND_MODE=inline. The
     # test suite turns this off and drives jobs explicitly.

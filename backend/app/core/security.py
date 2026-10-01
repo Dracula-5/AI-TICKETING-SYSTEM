@@ -1,3 +1,4 @@
+import functools
 import hashlib
 import secrets
 import uuid
@@ -24,13 +25,17 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return False
 
 
-# A real hash of a random string, compared against when the email is unknown,
-# so login takes the same time whether or not the account exists.
-_DUMMY_HASH = get_password_hash(secrets.token_urlsafe(16))
+@functools.cache
+def _dummy_hash() -> str:
+    # Computed on first use, not at import: a cost-12 hash is seconds of CPU on a
+    # fractional-CPU host and every process (API, migrations, scripts) imports this.
+    return get_password_hash(secrets.token_urlsafe(16))
 
 
 def burn_password_check(plain_password: str) -> None:
-    verify_password(plain_password, _DUMMY_HASH)
+    """Compare against a real hash of a random string when the email is unknown,
+    so login takes the same time whether or not the account exists."""
+    verify_password(plain_password, _dummy_hash())
 
 
 def create_access_token(user_id: int, tenant_id: int | None, role: str) -> tuple[str, int]:

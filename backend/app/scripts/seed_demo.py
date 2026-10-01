@@ -348,7 +348,7 @@ def _play_lifecycle(db: Session, ticket: Ticket, created: datetime, agents: list
 def seed(reset: bool = False, seed_value: int = 7) -> dict:
     rng = random.Random(seed_value)
     password = os.environ.get("DEMO_PASSWORD") or secrets.token_urlsafe(12)
-    password_hash = get_password_hash(password)
+    password_hash = None  # hashed only when an organization is created (bcrypt is slow on small hosts)
     db = SessionLocal()
     created = []
     try:
@@ -359,6 +359,7 @@ def seed(reset: bool = False, seed_value: int = 7) -> dict:
                 existing = None
             if existing:
                 continue
+            password_hash = password_hash or get_password_hash(password)
             created.append(_seed_org(db, spec, password_hash, rng))
     finally:
         db.close()
@@ -369,7 +370,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--reset", action="store_true", help="delete and re-create the demo organizations")
     args = parser.parse_args()
-    result = seed(reset=args.reset)
+    run(reset=args.reset)
+
+
+def run(reset: bool = False) -> None:
+    result = seed(reset=reset)
     if not result["created"]:
         print("Demo organizations already exist; nothing to do (use --reset to re-create).")
         return
