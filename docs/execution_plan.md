@@ -246,6 +246,11 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
   one-process start-up (restart 6 min → 146–161 s); live checks: warm p50 0.31–0.36 s for
   reads, login 2.0 s; sign-up/login/refresh/WebSocket verified in a browser
   (`reports/render_free_tier.md`).
+* **2026-10-04:** the Netlify site was still building the legacy app from `main`, so sign-in and
+  sign-up failed there; with the owner's approval `main` was fast-forwarded to
+  `nexadesk-transformation` (legacy app remains at tag `legacy-marketplace`). Verified on the live
+  site in a browser: 13/13 steps (sign-up, ticket, sign-out/in, main pages, portal sign-up,
+  WebSocket).
 * **Not live:** the VM deployment below (Caddy, worker, Redis, backups, CD) — not needed for the
   free demo; still the production target.
 

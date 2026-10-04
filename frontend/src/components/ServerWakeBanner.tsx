@@ -48,8 +48,8 @@ export function ServerWakeBanner({
   if (!waking) return null;
   return (
     <Alert severity="info" role="status" sx={{ borderRadius: 0, justifyContent: "center" }}>
-      The free demo server is starting up — this can take 2–3 minutes after a quiet period. The page
-      works as soon as it is ready.
+      The free demo server is starting up — this can take a minute or two after a quiet period. The
+      page works as soon as it is ready.
     </Alert>
   );
 }

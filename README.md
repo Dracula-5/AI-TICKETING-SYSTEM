@@ -7,8 +7,8 @@
 > measured yet. Every number below says which kind of evidence it is.
 >
 > **Live demo:** web <https://nexadesk-api.netlify.app> · API <https://nexadesk-api-qp6v.onrender.com>
-> (OpenAPI at `/api/docs`). Free tier: the API sleeps when idle and needs 2–3 minutes to wake up;
-> the web app says so while it waits. Demo organizations and tickets are illustrative data.
+> (OpenAPI at `/api/docs`). Free tier: the API sleeps when idle and takes about a minute to wake up
+> (43 s observed once); the web app says so while it waits. Demo organizations and tickets are illustrative data.
 
 ## The business problem
 
@@ -102,7 +102,7 @@ grew from: [`docs/current_architecture.md`](docs/current_architecture.md).
 | Vector index [synthetic replay] | pgvector defaults returned as few as 14/60 rows for a tenant (recall 0.41); NexaDesk settings 60/60, recall ≥ 0.99 | `reports/pipeline/` |
 | Load [local laptop, 100k synthetic tickets] | 100 users: ~30 req/s, p95 150 ms, 0 errors; 250 users: ~66 req/s, 0 errors; saturates ~65–70 req/s; ≈ 1.2 GiB memory. Found and fixed a connection-pool deadlock | `reports/load/README.md` |
 | Free-tier fit [local simulation: 512 MB, no swap, 0.1 CPU] | default settings OOM-killed on a large KB document; with 1 embedding thread, batch 4 and `MALLOC_ARENA_MAX=2` memory levelled off at ~360 MB (peaks ≤ 412 MB) under repeated search + triage; restart 6 min → 146–161 s after start-up fixes | `reports/render_free_tier.md` |
-| Live demo [Render free API + Neon, probed from one client, 2026-10-01] | warm: health/me/tickets/KB search p50 0.31–0.36 s, login 2.0 s (bcrypt), ticket create 0.56 s; sign-up, login, session refresh and notification WebSocket verified in a browser | `reports/render_free_tier.md` |
+| Live demo [Render free API + Neon, probed from one client, 2026-10-01] | warm: health/me/tickets/KB search p50 0.31–0.36 s, login 2.0 s (bcrypt), ticket create 0.56 s; wake-up from sleep 43 s (one observation); 13/13 browser steps on the live site (sign-up, ticket, sign-out/in, main pages, portal sign-up, WebSocket) | `reports/render_free_tier.md` |
 | Tests | backend 385 (SQLite and PostgreSQL 16 + pgvector, 91% coverage), frontend 34, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
 | Real users, business impact, generated-answer quality | **not measured yet** | `docs/pilot_plan.md`, `docs/business_value.md` |
 
@@ -140,7 +140,7 @@ real external users exist the URL is a *public demo deployment*, not production 
 ## Limitations (honest, current)
 
 * AI recommendations and retrieval are implemented; generated-answer quality is not benchmarked and external text generation remains opt-in.
-* The live demo runs on free tiers: the API sleeps when idle (2–3 min wake-up), has 0.1 CPU, no
+* The live demo runs on free tiers: the API sleeps when idle (about a minute to wake), has 0.1 CPU, no
   Redis or separate worker, and loses ticket attachments on restart. The VM deployment (Caddy,
   worker, Redis, backups, CD) is rehearsed locally but not live.
 * Email delivery requires SMTP configuration; without it, emails stay in the outbox table.

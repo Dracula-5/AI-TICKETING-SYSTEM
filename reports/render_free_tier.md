@@ -75,8 +75,18 @@ throw-away requesters created through the Helix Health (Demo) portal.
   local stand-in for the Netlify rewrite and the live API: portal sign-up → "New ticket";
   reload restored the session from the refresh cookie; sign-out → sign-in; the notification
   WebSocket connected directly to the API and received `ready`; no CSP errors.
-* Not measured yet on the live demo: wake-up time after sleep, AI triage latency as seen by an
-  agent, memory over days of use (Render's metrics page shows it).
+* **Live site, 2026-10-04** (<https://nexadesk-api.netlify.app>, after `main` was fast-forwarded
+  so Netlify builds the new SPA): Playwright/Chromium against the real site — create-organization
+  sign-up → dashboard; new ticket (rules triage + AI recommendations panel shown); reload keeps
+  the session through Netlify's `/api` rewrite; sign-out; wrong password rejected with a
+  message; sign-in; tickets, knowledge base, AI approvals, members and dashboard pages load;
+  requester-portal sign-up; 7 notification WebSockets authenticated directly against the API.
+  13 of 13 steps passed. The only console errors were Netlify's own injected script being
+  blocked by the CSP (not part of the app) and the expected 401s of the session probe.
+* **Wake-up after sleep, one observation (2026-10-04):** first `/health` after days idle answered
+  in 42.7 s — much faster than the 146–161 s of the local hard-quota simulation.
+* Not measured yet on the live demo: AI triage latency as seen by an agent, memory over days of
+  use (Render's metrics page shows it).
 
 ## Web service (nginx)
 
