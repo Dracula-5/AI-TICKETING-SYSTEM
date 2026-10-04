@@ -22,7 +22,7 @@ import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link as RouterLink } from "react-router";
 
-import { api, errorMessage } from "../api/client";
+import { errorMessage } from "../api/client";
 import { auditApi, authApi } from "../api/endpoints";
 import { useAuth } from "../auth/AuthProvider";
 import { EmptyState, ErrorState, Loading, PageHeader } from "../components/states";
@@ -180,44 +180,6 @@ export function ProfilePage() {
           </Card>
         </Grid>
       </Grid>
-    </>
-  );
-}
-
-interface PlatformOverview {
-  organizations: number;
-  demo_organizations: number;
-  users_by_origin: Record<string, number>;
-  tickets_by_origin: Record<string, number>;
-  active_users_7d_real: number;
-}
-
-export function PlatformPage() {
-  const overview = useQuery({ queryKey: ["platform"], queryFn: () => api.get<PlatformOverview>("/platform/overview").then((r) => r.data) });
-  if (overview.isLoading) return <Loading />;
-  if (overview.isError || !overview.data) return <ErrorState error={overview.error} />;
-  const o = overview.data;
-  const rows: [string, number | string][] = [
-    ["Organizations", o.organizations],
-    ["Demo organizations", o.demo_organizations],
-    ["Users (real)", o.users_by_origin.real ?? 0],
-    ["Users (demo)", o.users_by_origin.demo ?? 0],
-    ["Tickets (real)", o.tickets_by_origin.real ?? 0],
-    ["Tickets (demo)", o.tickets_by_origin.demo ?? 0],
-    ["Real users active in last 7 days", o.active_users_7d_real],
-  ];
-  return (
-    <>
-      <PageHeader title="Platform overview" subtitle="Aggregate counts across organizations, split by data origin. Demo data is never counted as real usage." />
-      <Card sx={{ maxWidth: 560 }}>
-        <Table>
-          <TableBody>
-            {rows.map(([k, v]) => (
-              <TableRow key={k}><TableCell>{k}</TableCell><TableCell align="right" sx={{ fontVariantNumeric: "tabular-nums" }}>{v}</TableCell></TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
     </>
   );
 }

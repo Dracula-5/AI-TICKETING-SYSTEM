@@ -61,3 +61,16 @@ class PlatformOverviewOut(BaseModel):
     users_by_origin: dict[str, int]
     tickets_by_origin: dict[str, int]
     active_users_7d_real: int
+    open_tickets: int
+    tickets_7d: int
+    sla_breached_open: int
+    # Background systems: queued/running/done/failed/dead jobs, queued/sent/failed emails.
+    jobs_by_status: dict[str, int]
+    emails_by_status: dict[str, int]
+    ai_enabled: bool
+    embedding_model: str | None
+    text_generation: bool
+    environment: str
+    release: str
+    background_mode: str
+    email_backend: str

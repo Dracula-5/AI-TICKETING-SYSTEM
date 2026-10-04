@@ -4,7 +4,34 @@ import secrets
 from sqlalchemy.orm import Session
 
 from app.ai.rules import DEFAULT_CATEGORIES, DEFAULT_TEAMS
-from app.db.models import Category, SlaPolicy, Team, Tenant
+from app.db.models import (
+    AgentRun,
+    AIMonitoringRun,
+    AIPrediction,
+    Attachment,
+    AuditLog,
+    Category,
+    EmailOutbox,
+    Feedback,
+    Invitation,
+    Job,
+    KBChunk,
+    KBDocument,
+    KBQuery,
+    LLMCall,
+    Notification,
+    RefreshToken,
+    SlaPolicy,
+    Team,
+    TeamMember,
+    Tenant,
+    Ticket,
+    TicketComment,
+    TicketEmbedding,
+    TicketStatusHistory,
+    User,
+    UserToken,
+)
 
 DEFAULT_ORG_SETTINGS: dict = {
     # Assign newly triaged tickets to the least-loaded agent of the routed team.
@@ -108,3 +135,40 @@ def create_organization(
         )
     db.flush()
     return tenant
+
+
+def delete_organization(db: Session, tenant: Tenant) -> None:
+    """Delete an organization and everything that belongs to it (children before
+    parents, so it works without ON DELETE CASCADE). The caller commits. Used to
+    re-create demo organizations and by the platform console."""
+    tid = tenant.id
+    user_ids = [u for (u,) in db.query(User.id).filter(User.tenant_id == tid)]
+    for model in (
+        Attachment,
+        TicketComment,
+        TicketStatusHistory,
+        Notification,
+        AuditLog,
+        Invitation,
+        EmailOutbox,
+        AIPrediction,
+        AgentRun,
+        AIMonitoringRun,
+        Feedback,
+        TicketEmbedding,
+        Job,
+        KBQuery,
+        KBChunk,
+        KBDocument,
+        LLMCall,
+    ):
+        db.query(model).filter(model.tenant_id == tid).delete(synchronize_session=False)
+    db.query(Ticket).filter(Ticket.tenant_id == tid).delete(synchronize_session=False)
+    if user_ids:
+        for user_model in (TeamMember, RefreshToken, UserToken):
+            db.query(user_model).filter(user_model.user_id.in_(user_ids)).delete(synchronize_session=False)
+    db.query(Category).filter(Category.tenant_id == tid).delete(synchronize_session=False)
+    db.query(SlaPolicy).filter(SlaPolicy.tenant_id == tid).delete(synchronize_session=False)
+    db.query(Team).filter(Team.tenant_id == tid).delete(synchronize_session=False)
+    db.query(User).filter(User.tenant_id == tid).delete(synchronize_session=False)
+    db.delete(tenant)

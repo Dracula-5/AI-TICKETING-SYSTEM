@@ -60,6 +60,13 @@ services:
         value: "true"
       - key: DEMO_PASSWORD         # shared password of the demo accounts
         sync: false
+      # Platform administrator (console at /platform: all organizations, sign-ups,
+      # system health). Created at start-up when both are set; changing the
+      # password here changes it on the next start.
+      - key: PLATFORM_ADMIN_EMAIL
+        sync: false
+      - key: PLATFORM_ADMIN_PASSWORD
+        sync: false
 
   - type: web
     name: nexadesk-web

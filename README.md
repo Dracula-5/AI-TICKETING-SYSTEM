@@ -47,6 +47,7 @@ actions** (P8). Every automated decision is labelled as a *system rule*, *AI rec
 | AI-assisted operations | Per-organization recommendations for category, priority, team, assignee and possible duplicates from the org's own resolved tickets, with confidence and the similar tickets behind them; SLA-risk and resolution-time statistics; accept / edit / reject; optional auto-apply above a confidence threshold for low-risk fields only |
 | Knowledge base | PDF/DOCX/Markdown/HTML upload, published vs internal articles, search, article suggestions while a requester writes a ticket, related articles for agents; cited answers when a text-generation provider is enabled |
 | Triage agent + approvals | Typed tools with validation, risk levels, verification and rollback; every high-risk action (replies, requests for details, escalation, duplicate links) waits in an approval queue |
+| Platform console | For the operator of the installation: totals split into real and demo data, activity per organization, newest accounts, background-system health, organization deletion — counts only, never ticket content |
 | Operations | Prometheus metrics, Grafana dashboard and alert rules, daily AI drift checks, model-promotion regression gate, pilot/CSAT/feedback reporting |
 
 | AI recommendations on a ticket | Approval queue |
@@ -103,7 +104,7 @@ grew from: [`docs/current_architecture.md`](docs/current_architecture.md).
 | Load [local laptop, 100k synthetic tickets] | 100 users: ~30 req/s, p95 150 ms, 0 errors; 250 users: ~66 req/s, 0 errors; saturates ~65–70 req/s; ≈ 1.2 GiB memory. Found and fixed a connection-pool deadlock | `reports/load/README.md` |
 | Free-tier fit [local simulation: 512 MB, no swap, 0.1 CPU] | default settings OOM-killed on a large KB document; with 1 embedding thread, batch 4 and `MALLOC_ARENA_MAX=2` memory levelled off at ~360 MB (peaks ≤ 412 MB) under repeated search + triage; restart 6 min → 146–161 s after start-up fixes | `reports/render_free_tier.md` |
 | Live demo [Render free API + Neon, probed from one client, 2026-10-01] | warm: health/me/tickets/KB search p50 0.31–0.36 s, login 2.0 s (bcrypt), ticket create 0.56 s; wake-up from sleep 43 s (one observation); 13/13 browser steps on the live site (sign-up, ticket, sign-out/in, main pages, portal sign-up, WebSocket) | `reports/render_free_tier.md` |
-| Tests | backend 385 (SQLite and PostgreSQL 16 + pgvector, 91% coverage), frontend 34, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
+| Tests | backend 395 (SQLite and PostgreSQL 16 + pgvector), frontend 36, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
 | Real users, business impact, generated-answer quality | **not measured yet** | `docs/pilot_plan.md`, `docs/business_value.md` |
 
 ## Further documentation

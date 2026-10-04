@@ -9,7 +9,9 @@ set -e
 #   rollout before new code starts).
 # * SEED_DEMO_ON_START (default false): create the demo organizations if
 #   missing, for hosts without a shell (Render free tier). Needs DEMO_PASSWORD.
-if [ "${MIGRATE_ON_START:-true}" = "true" ] || [ "${SEED_DEMO_ON_START:-false}" = "true" ]; then
+# * PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD: create the platform administrator.
+if [ "${MIGRATE_ON_START:-true}" = "true" ] || [ "${SEED_DEMO_ON_START:-false}" = "true" ] ||
+  [ -n "${PLATFORM_ADMIN_EMAIL:-}" ]; then
   python -m app.scripts.prestart
 fi
 

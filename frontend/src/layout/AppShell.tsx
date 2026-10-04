@@ -113,6 +113,8 @@ export function AppShell() {
 
   if (!me) return null;
   const isRequester = !can("tickets:read_all");
+  // The platform administrator belongs to no organization: only the console applies.
+  const isPlatform = me.role === "platform_admin";
 
   const drawer = (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -127,7 +129,12 @@ export function AppShell() {
           </Button>
         )}
       </Box>
-      {isRequester ? (
+      {isPlatform ? (
+        <NavSection
+          items={[{ to: "/platform", label: "Platform console", icon: <DashboardOutlined /> }]}
+          onNavigate={() => setMobileOpen(false)}
+        />
+      ) : isRequester ? (
         <NavSection
           items={[
             { to: "/tickets", label: "My tickets", icon: <ConfirmationNumberOutlined />, end: true },
@@ -143,7 +150,7 @@ export function AppShell() {
       <Divider />
       <Box sx={{ p: 2 }}>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-          {me.organization?.name}
+          {isPlatform ? "Platform administration" : me.organization?.name}
         </Typography>
         {me.organization?.is_demo && <Chip size="small" label="Demo organization" color="warning" variant="outlined" sx={{ mt: 0.5 }} />}
       </Box>
@@ -182,10 +189,12 @@ export function AppShell() {
               <ListItemIcon><SettingsOutlined fontSize="small" /></ListItemIcon>
               Profile & security
             </MenuItem>
-            <MenuItem onClick={() => { setMenuAnchor(null); setFeedbackOpen(true); }}>
-              <ListItemIcon><FeedbackOutlined fontSize="small" /></ListItemIcon>
-              Send feedback
-            </MenuItem>
+            {!isPlatform && (
+              <MenuItem onClick={() => { setMenuAnchor(null); setFeedbackOpen(true); }}>
+                <ListItemIcon><FeedbackOutlined fontSize="small" /></ListItemIcon>
+                Send feedback
+              </MenuItem>
+            )}
             <MenuItem component={NavLink} to="/ai-notice" onClick={() => setMenuAnchor(null)}>
               <ListItemIcon><InfoOutlined fontSize="small" /></ListItemIcon>
               How NexaDesk uses AI

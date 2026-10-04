@@ -251,6 +251,11 @@ baseline 163 backend tests / 70% coverage; live backend unreachable.
   `nexadesk-transformation` (legacy app remains at tag `legacy-marketplace`). Verified on the live
   site in a browser: 13/13 steps (sign-up, ticket, sign-out/in, main pages, portal sign-up,
   WebSocket).
+* **2026-10-04, demo content and platform console:** demo seed v2 (per organization 13 people,
+  ~70 tickets over six weeks at every stage, requester ratings, six help articles — all
+  `data_origin = demo`, labelled in the UI, excluded from real-usage counts); platform
+  administrator created from `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD`; console with
+  per-organization aggregates, newest accounts, system health and audited organization deletion.
 * **Not live:** the VM deployment below (Caddy, worker, Redis, backups, CD) — not needed for the
   free demo; still the production target.
 
