@@ -50,7 +50,6 @@ jobs:
           context: frontend
           push: true
           tags: ${{ env.REGISTRY_LC }}/nexadesk-web:${{ env.SHA }}
-          build-args: VITE_DEMO_PASSWORD=${{ secrets.DEMO_PASSWORD }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 

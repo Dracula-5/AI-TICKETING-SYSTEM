@@ -80,5 +80,3 @@ services:
     envVars:
       - key: API_UPSTREAM          # https://<nexadesk-api>.onrender.com (no trailing slash)
         sync: false
-      - key: VITE_DEMO_PASSWORD    # same as DEMO_PASSWORD; shows "Explore the demo" (build arg)
-        sync: false

@@ -90,6 +90,10 @@ class Settings(BaseSettings):
     # Create or refresh the demo organizations in the background once the API is up
     # (hosts without a shell, e.g. Render free tier). Needs DEMO_PASSWORD in the environment.
     seed_demo_on_start: bool = False
+    # Public demo: visitors can enter the seeded accounts of a demo organization from
+    # the landing page without a password (demo organizations lock credentials and
+    # settings). Also on whenever SEED_DEMO_ON_START is.
+    demo_login_enabled: bool = False
     # Run queued jobs inside the API process when BACKGROUND_MODE=inline. The
     # test suite turns this off and drives jobs explicitly.
     job_runner_enabled: bool = True
@@ -126,6 +130,10 @@ class Settings(BaseSettings):
             if url.startswith(prefix):
                 return "postgresql+psycopg://" + url[len(prefix) :]
         return url
+
+    @property
+    def demo_login(self) -> bool:
+        return self.demo_login_enabled or self.seed_demo_on_start
 
     @property
     def is_production(self) -> bool:

@@ -45,6 +45,7 @@ beforeEach(() => {
   // No real network in unit tests: stub the calls the app shell makes after sign-in.
   vi.spyOn(ticketsApi, "list").mockResolvedValue({ items: [], total: 0, page: 1, page_size: 25 });
   vi.spyOn(notificationsApi, "unreadCount").mockResolvedValue({ count: 0 });
+  vi.spyOn(authApi, "demo").mockResolvedValue({ enabled: false, accounts: [] });
 });
 afterEach(() => vi.restoreAllMocks());
 
@@ -89,4 +90,29 @@ it("shows the API's error message on failed sign-in", async () => {
   await userEvent.type(screen.getByLabelText(/Password/), "wrong-Password1");
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
   expect(await screen.findByText("Incorrect email or password")).toBeInTheDocument();
+});
+
+it("a public demo offers one-click entry to the seeded demo accounts", async () => {
+  vi.spyOn(authApi, "demo").mockResolvedValue({
+    enabled: true,
+    accounts: [
+      { role: "manager", name: "Morgan (manager)", email: "morgan.manager@helix-health.example.com", organization: "Helix Health (Demo)" },
+      { role: "customer", name: "Taylor (customer)", email: "taylor.customer@helix-health.example.com", organization: "Helix Health (Demo)" },
+    ],
+  });
+  const demoLogin = vi.spyOn(authApi, "demoLogin").mockResolvedValue({ access_token: "t", token_type: "bearer", expires_in: 900 });
+  vi.spyOn(authApi, "me").mockResolvedValue(customer);
+  renderApp("/");
+
+  expect(await screen.findByRole("button", { name: "Continue as Manager" })).toBeInTheDocument();
+  expect(screen.getByText(/enter Helix Health \(Demo\)/)).toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Continue as Requester" }));
+  await waitFor(() => expect(demoLogin).toHaveBeenCalledWith("taylor.customer@helix-health.example.com"));
+  expect(await screen.findByRole("button", { name: "Account menu" })).toBeInTheDocument();
+});
+
+it("without a public demo the landing page shows no demo buttons", async () => {
+  renderApp("/");
+  expect(await screen.findByText(/Resolve internal service requests faster/)).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Continue as/ })).not.toBeInTheDocument();
 });

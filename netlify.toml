@@ -7,8 +7,8 @@
 #                                              with a token message, not the cookie)
 #
 # Netlify site settings: set the production branch to the one holding this file
-# (nexadesk-transformation until it is merged), and VITE_DEMO_PASSWORD under
-# Site configuration → Environment variables if the demo buttons should appear.
+# (main, or nexadesk-transformation until it is merged). The "Explore the demo"
+# buttons need no build setting: the API tells the page whether it is a public demo.
 # Change the API address in the three places below if the Render URL changes.
 # Guide: docs/deployment.md → "Render (free tier)" → "Frontend on Netlify".
 

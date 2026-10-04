@@ -191,11 +191,10 @@ Web environment variables:
 | Key | Value |
 |---|---|
 | `API_UPSTREAM` | `https://nexadesk-api.onrender.com` (the API service's URL) |
-| `VITE_DEMO_PASSWORD` | same as `DEMO_PASSWORD`; read at build time, shows "Explore the demo" |
 
 Render may add a suffix to a service URL if the name is taken; use the URLs shown on each
 service's page. Create the API first, then the web service with its URL, then set
-`FRONTEND_BASE_URL` on the API. Changing `VITE_DEMO_PASSWORD` needs a rebuild of the web service.
+`FRONTEND_BASE_URL` on the API.
 
 **Frontend on Netlify instead (what the live demo uses).** A static host serves the SPA without
 sleeping. [`netlify.toml`](../netlify.toml) builds `frontend/`, rewrites `/api/*` to the API
@@ -208,7 +207,6 @@ Netlify site settings:
 
 * *Build & deploy → Branches*: production branch = the branch with `netlify.toml`
   (`nexadesk-transformation` until merged). Build settings in the file override the UI.
-* *Environment variables*: `VITE_DEMO_PASSWORD` (optional, same as the API's `DEMO_PASSWORD`).
 * If the API URL changes, edit it in the three places in `netlify.toml`.
 * Set the API's `FRONTEND_BASE_URL` to the Netlify URL.
 
@@ -221,7 +219,13 @@ after it has started (a few minutes on the free instance; a deploy does not wait
 labelled *Demo* — Helix Health, Brightline Retail, Orbital Engineering — each with 13 people,
 about 70 tickets over six weeks at every workflow stage, requester ratings, six help articles and
 AI recommendations for the open tickets. A newer seed version re-creates them on the next start
-(anything visitors added to a demo organization is discarded). All accounts share `DEMO_PASSWORD`:
+(anything visitors added to a demo organization is discarded).
+
+On a public demo (`SEED_DEMO_ON_START=true`, or `DEMO_LOGIN_ENABLED=true`) the landing page shows
+**Continue as Manager / Support agent / Requester / Organization admin / Analyst** buttons that
+enter the seeded Helix Health accounts without a password. Only those five seeded addresses can
+be entered that way — never an account someone registered, and never another organization. With
+a password, all demo accounts share `DEMO_PASSWORD`:
 
 | Role | Sign in as (Helix Health; replace the domain for the others) |
 |---|---|

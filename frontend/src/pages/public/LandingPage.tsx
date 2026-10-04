@@ -5,13 +5,16 @@ import HubOutlined from "@mui/icons-material/HubOutlined";
 import InsightsOutlined from "@mui/icons-material/InsightsOutlined";
 import TimerOutlined from "@mui/icons-material/TimerOutlined";
 import { Alert, Box, Button, Card, CardContent, Container, Grid, Stack, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link as RouterLink, Navigate, useNavigate } from "react-router";
 
 import { errorMessage } from "../../api/client";
+import { authApi } from "../../api/endpoints";
 import { useAuth } from "../../auth/AuthProvider";
 import { homePath } from "../../auth/homePath";
 import { Brand } from "../../components/Brand";
+import { ROLE } from "../../lib/labels";
 
 const CAPABILITIES = [
   {
@@ -46,29 +49,35 @@ const CAPABILITIES = [
   },
 ];
 
-// Shared demo accounts exist only when the deployment was built with a demo
-// password (see docs/runbook.md). Emails follow app/scripts/seed_demo.py.
-const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD as string | undefined;
-const DEMO_ACCOUNTS = [
-  { label: "Manager", email: "morgan.manager@helix-health.example.com" },
-  { label: "Support agent", email: "jordan.agent@helix-health.example.com" },
-  { label: "Requester", email: "taylor.customer@helix-health.example.com" },
-];
-
 export function LandingPage() {
-  const { status, me, login } = useAuth();
+  const { status, me, startSession } = useAuth();
   const navigate = useNavigate();
   const [demoError, setDemoError] = useState("");
+  const [entering, setEntering] = useState("");
+  // Shared demo accounts are offered only by a public demo deployment (the API decides).
+  // Retries cover a free-tier API that is still waking up.
+  const demo = useQuery({
+    queryKey: ["demo"],
+    queryFn: authApi.demo,
+    retry: 8,
+    retryDelay: 8000,
+    staleTime: 5 * 60_000,
+    enabled: status === "anonymous",
+  });
   if (status === "authenticated" && me) return <Navigate to={homePath(me)} replace />;
 
   const tryDemo = async (email: string) => {
     setDemoError("");
+    setEntering(email);
     try {
-      navigate(homePath(await login(email, DEMO_PASSWORD!)));
+      navigate(homePath(await startSession(await authApi.demoLogin(email))));
     } catch (e) {
       setDemoError(errorMessage(e));
+    } finally {
+      setEntering("");
     }
   };
+  const accounts = demo.data?.enabled ? demo.data.accounts : [];
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
@@ -101,19 +110,19 @@ export function LandingPage() {
           </Button>
         </Stack>
 
-        {DEMO_PASSWORD && (
-          <Card sx={{ mt: 5, maxWidth: 720 }}>
+        {accounts.length > 0 && (
+          <Card sx={{ mt: 5, maxWidth: 860 }}>
             <CardContent>
               <Typography variant="h3">Explore the demo organization</Typography>
               <Typography color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-                Sign in to a shared demo workspace with illustrative (not real) tickets. Settings that could affect other
-                visitors are locked.
+                One click, no password: enter {accounts[0].organization}, a shared workspace with illustrative (not
+                real) tickets, articles and AI recommendations. Settings that could affect other visitors are locked.
               </Typography>
               {demoError && <Alert severity="error" sx={{ mb: 2 }}>{demoError}</Alert>}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                {DEMO_ACCOUNTS.map((a) => (
-                  <Button key={a.email} variant="outlined" onClick={() => tryDemo(a.email)}>
-                    Continue as {a.label}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
+                {accounts.map((a) => (
+                  <Button key={a.email} variant="outlined" disabled={!!entering} onClick={() => tryDemo(a.email)}>
+                    {entering === a.email ? "Opening…" : `Continue as ${ROLE[a.role]}`}
                   </Button>
                 ))}
               </Stack>

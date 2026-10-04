@@ -1,5 +1,10 @@
 // Mirrors backend/app/schemas. Keep in sync when the API changes.
 
+export interface DemoInfo {
+  enabled: boolean;
+  accounts: { role: Role; name: string; email: string; organization: string }[];
+}
+
 export type Role = "platform_admin" | "org_admin" | "manager" | "agent" | "customer" | "analyst";
 export type Priority = "low" | "medium" | "high" | "critical";
 export type TicketStatus =

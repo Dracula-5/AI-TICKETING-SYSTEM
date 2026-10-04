@@ -41,6 +41,22 @@ class TokenOut(BaseModel):
     expires_in: int
 
 
+class DemoAccountOut(BaseModel):
+    role: str
+    name: str
+    email: str
+    organization: str
+
+
+class DemoOut(BaseModel):
+    enabled: bool
+    accounts: list[DemoAccountOut]
+
+
+class DemoLoginRequest(BaseModel):
+    email: EmailStr
+
+
 class TokenIn(BaseModel):
     token: str = Field(min_length=10, max_length=200)
 

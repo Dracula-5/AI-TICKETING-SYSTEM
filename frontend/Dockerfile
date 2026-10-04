@@ -6,9 +6,6 @@ RUN npm ci --no-audit --no-fund
 COPY index.html vite.config.ts tsconfig*.json ./
 COPY public/ public/
 COPY src/ src/
-# Set only for the public demo build (shows "Explore the demo" buttons).
-ARG VITE_DEMO_PASSWORD=""
-ENV VITE_DEMO_PASSWORD=$VITE_DEMO_PASSWORD
 RUN npx vite build
 
 # ── Serve ────────────────────────────────────────────────────────────────────

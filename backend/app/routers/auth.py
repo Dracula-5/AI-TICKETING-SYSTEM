@@ -22,6 +22,9 @@ from app.db.database import get_db, utcnow
 from app.db.models import Invitation, RefreshToken, TeamMember, Tenant, User, UserToken
 from app.schemas.auth import (
     AcceptInvitationIn,
+    DemoAccountOut,
+    DemoLoginRequest,
+    DemoOut,
     EmailIn,
     InvitationPreviewOut,
     RegisterRequest,
@@ -228,6 +231,72 @@ def login(
 
     user.last_login_at = utcnow()
     audit.record(db, "auth.login", tenant_id=user.tenant_id, actor=user, entity_type="user", entity_id=user.id)
+    tokens = _issue_session(db, response, user)
+    db.commit()
+    return tokens
+
+
+# ---------------------------------------------------------------------------
+# Public demo
+# ---------------------------------------------------------------------------
+# (role, mailbox) of the accounts app/scripts/seed_demo.py creates in every demo
+# organization; the address is <mailbox>@<organization domain>.
+_DEMO_LOGINS = [
+    (Role.MANAGER, "morgan.manager"),
+    (Role.AGENT, "jordan.agent"),
+    (Role.CUSTOMER, "taylor.customer"),
+    (Role.ORG_ADMIN, "avery.orgadmin"),
+    (Role.ANALYST, "quinn.analyst"),
+]
+
+
+def _demo_accounts(db: Session) -> list[tuple[User, Tenant]]:
+    """The accounts a visitor may enter without a password: the seeded accounts
+    of one demo organization, matched by exact address and role. People who
+    registered through the demo portal have their own password and are never
+    offered (they cannot take a seeded address, and always get the requester
+    role)."""
+    if not settings.demo_login:
+        return []
+    tenants = (
+        db.query(Tenant)
+        .filter(Tenant.is_demo.is_(True), Tenant.domain.isnot(None))
+        .order_by(Tenant.name, Tenant.id)
+        .all()
+    )
+    if not tenants:
+        return []
+    # The organization with the public requester portal when there is one.
+    tenant = next((t for t in tenants if (t.settings or {}).get("portal_signup_enabled")), tenants[0])
+    wanted = {f"{mailbox}@{tenant.domain}": role.value for role, mailbox in _DEMO_LOGINS}
+    found = {
+        u.email: u
+        for u in db.query(User).filter(
+            User.tenant_id == tenant.id, User.email.in_(wanted), User.is_active.is_(True), User.data_origin == "demo"
+        )
+    }
+    return [(found[email], tenant) for email, role in wanted.items() if email in found and found[email].role == role]
+
+
+@router.get("/demo", response_model=DemoOut)
+def demo(db: Session = Depends(get_db)):
+    """Which demo accounts the landing page can offer (none unless this is a public demo)."""
+    accounts = _demo_accounts(db)
+    return DemoOut(
+        enabled=bool(accounts),
+        accounts=[DemoAccountOut(role=u.role, name=u.name, email=u.email, organization=t.name) for u, t in accounts],
+    )
+
+
+@router.post("/demo-login", response_model=TokenOut)
+@limiter.limit("20/minute")
+def demo_login(request: Request, response: Response, payload: DemoLoginRequest, db: Session = Depends(get_db)):
+    email = _normalize_email(payload.email)
+    user = next((u for u, _ in _demo_accounts(db) if u.email == email), None)
+    if user is None:
+        raise HTTPException(status_code=404, detail="This demo account is not available")
+    user.last_login_at = utcnow()
+    audit.record(db, "auth.demo_login", tenant_id=user.tenant_id, actor=user, entity_type="user", entity_id=user.id)
     tokens = _issue_session(db, response, user)
     db.commit()
     return tokens

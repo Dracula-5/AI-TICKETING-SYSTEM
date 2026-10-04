@@ -104,7 +104,7 @@ grew from: [`docs/current_architecture.md`](docs/current_architecture.md).
 | Load [local laptop, 100k synthetic tickets] | 100 users: ~30 req/s, p95 150 ms, 0 errors; 250 users: ~66 req/s, 0 errors; saturates ~65–70 req/s; ≈ 1.2 GiB memory. Found and fixed a connection-pool deadlock | `reports/load/README.md` |
 | Free-tier fit [local simulation: 512 MB, no swap, 0.1 CPU] | default settings OOM-killed on a large KB document; with 1 embedding thread, batch 4 and `MALLOC_ARENA_MAX=2` memory levelled off at ~360 MB (peaks ≤ 412 MB) under repeated search + triage; restart 6 min → 146–161 s after start-up fixes | `reports/render_free_tier.md` |
 | Live demo [Render free API + Neon, probed from one client, 2026-10-01] | warm: health/me/tickets/KB search p50 0.31–0.36 s, login 2.0 s (bcrypt), ticket create 0.56 s; wake-up from sleep 43 s (one observation); 13/13 browser steps on the live site (sign-up, ticket, sign-out/in, main pages, portal sign-up, WebSocket) | `reports/render_free_tier.md` |
-| Tests | backend 395 (SQLite and PostgreSQL 16 + pgvector), frontend 36, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
+| Tests | backend 400 (SQLite and PostgreSQL 16 + pgvector), frontend 38, Playwright 3 flows, Bandit/gitleaks reviewed | CI, `docs/execution_plan.md` |
 | Real users, business impact, generated-answer quality | **not measured yet** | `docs/pilot_plan.md`, `docs/business_value.md` |
 
 ## Further documentation

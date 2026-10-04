@@ -1,5 +1,6 @@
 import { api } from "./client";
 import type {
+  DemoInfo,
   AgentRun,
   AICapabilities,
   AIMonitoringRun,
@@ -46,6 +47,9 @@ export const authApi = {
     ),
   register: (body: { name: string; email: string; password: string; organization_name?: string; join_slug?: string }) =>
     data<TokenOut>(api.post("/auth/register", body)),
+  /** Demo accounts a visitor can enter from the landing page (empty unless this is a public demo). */
+  demo: () => data<DemoInfo>(api.get("/auth/demo")),
+  demoLogin: (email: string) => data<TokenOut>(api.post("/auth/demo-login", { email })),
   logout: () => data(api.post("/auth/logout")),
   me: () => data<Me>(api.get("/auth/me")),
   verifyEmail: (token: string) => data(api.post("/auth/verify-email", { token })),
