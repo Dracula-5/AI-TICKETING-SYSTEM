@@ -56,7 +56,7 @@ services:
         value: "2"
       - key: API_LIMIT_CONCURRENCY
         value: "20"
-      - key: SEED_DEMO_ON_START    # creates the demo organizations once (idempotent)
+      - key: SEED_DEMO_ON_START    # demo organizations, seeded in the background after start (idempotent)
         value: "true"
       - key: DEMO_PASSWORD         # shared password of the demo accounts
         sync: false

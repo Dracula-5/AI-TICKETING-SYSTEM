@@ -80,6 +80,31 @@ async def _jobs_loop() -> None:
         await asyncio.sleep(settings.job_poll_interval_seconds)
 
 
+def _seed_demo() -> None:
+    # Runs in a worker thread after start-up, not before it: on a small host the
+    # seed takes minutes, and a deploy must not wait for demo content.
+    import os
+
+    if not os.environ.get("DEMO_PASSWORD"):
+        logger.warning("demo_seed_skipped", extra={"reason": "DEMO_PASSWORD is not set"})
+        return
+    from app.scripts import seed_demo
+
+    started = time.perf_counter()
+    try:
+        result = seed_demo.seed()
+    except Exception:
+        logger.exception("demo_seed_failed")
+        return
+    logger.info(
+        "demo_seed",
+        extra={
+            "created": [o["org"] for o in result["created"]],
+            "seconds": round(time.perf_counter() - started, 1),
+        },
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings.validate_for_environment()
@@ -95,6 +120,8 @@ async def lifespan(app: FastAPI):
         from app.ai.embedder import get_embedder
 
         tasks.append(asyncio.create_task(anyio.to_thread.run_sync(get_embedder)))
+    if settings.seed_demo_on_start and settings.environment != "test":
+        tasks.append(asyncio.create_task(anyio.to_thread.run_sync(_seed_demo)))
     if get_redis() is not None:
         # Cross-process WebSocket fan-out (services/realtime.py).
         tasks.append(asyncio.create_task(run_subscriber(ws_manager)))

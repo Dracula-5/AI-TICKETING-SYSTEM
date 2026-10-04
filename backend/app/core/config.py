@@ -87,6 +87,9 @@ class Settings(BaseSettings):
     # size × text length: 32 long KB chunks took a 512 MB instance past its limit.
     embedding_batch_size: int = 32
     job_poll_interval_seconds: int = 2
+    # Create or refresh the demo organizations in the background once the API is up
+    # (hosts without a shell, e.g. Render free tier). Needs DEMO_PASSWORD in the environment.
+    seed_demo_on_start: bool = False
     # Run queued jobs inside the API process when BACKGROUND_MODE=inline. The
     # test suite turns this off and drives jobs explicitly.
     job_runner_enabled: bool = True

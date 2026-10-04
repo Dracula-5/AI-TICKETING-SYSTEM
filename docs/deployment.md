@@ -181,7 +181,7 @@ API environment variables:
 | `LLM_PROVIDER` | `none` |
 | `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | `3` / `2` |
 | `API_LIMIT_CONCURRENCY` | `20` |
-| `SEED_DEMO_ON_START` | `true` to create the three demo organizations on first start |
+| `SEED_DEMO_ON_START` | `true` to create the three demo organizations (in the background after start) |
 | `DEMO_PASSWORD` | the shared demo password (required for the seed) |
 | `PLATFORM_ADMIN_EMAIL` / `PLATFORM_ADMIN_PASSWORD` | optional: creates the platform administrator at start-up (≥ 10 characters, upper and lower case and a digit) |
 | `FRONTEND_BASE_URL` | `https://nexadesk-web.onrender.com` (the web service's URL) |
@@ -216,7 +216,8 @@ Netlify site settings:
 start-up log). `https://<web>/api/docs` shows the API; `https://<api>/ready` reports database and
 migration state.
 
-**Demo data and accounts.** With `SEED_DEMO_ON_START=true` the API creates three organizations
+**Demo data and accounts.** With `SEED_DEMO_ON_START=true` the API creates, in the background
+after it has started (a few minutes on the free instance; a deploy does not wait for it), three organizations
 labelled *Demo* — Helix Health, Brightline Retail, Orbital Engineering — each with 13 people,
 about 70 tickets over six weeks at every workflow stage, requester ratings, six help articles and
 AI recommendations for the open tickets. A newer seed version re-creates them on the next start

@@ -7,11 +7,9 @@ set -e
 #   `migrate` service first and sets MIGRATE_ON_START=false on the API and
 #   worker, so a deploy migrates exactly once (and a failed migration stops the
 #   rollout before new code starts).
-# * SEED_DEMO_ON_START (default false): create the demo organizations if
-#   missing, for hosts without a shell (Render free tier). Needs DEMO_PASSWORD.
 # * PLATFORM_ADMIN_EMAIL + PLATFORM_ADMIN_PASSWORD: create the platform administrator.
-if [ "${MIGRATE_ON_START:-true}" = "true" ] || [ "${SEED_DEMO_ON_START:-false}" = "true" ] ||
-  [ -n "${PLATFORM_ADMIN_EMAIL:-}" ]; then
+# (SEED_DEMO_ON_START is handled by the API itself, in the background after start-up.)
+if [ "${MIGRATE_ON_START:-true}" = "true" ] || [ -n "${PLATFORM_ADMIN_EMAIL:-}" ]; then
   python -m app.scripts.prestart
 fi
 

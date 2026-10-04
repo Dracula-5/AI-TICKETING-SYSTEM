@@ -28,13 +28,15 @@ import argparse
 import os
 import random
 import secrets
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import get_password_hash
-from app.db.database import SessionLocal, utcnow
+from app.db.database import SessionLocal, engine, utcnow
 from app.db.models import (
     Feedback,
     Team,
@@ -458,9 +460,9 @@ def _ticket_texts(rng: random.Random, count: int) -> list[tuple[str, str, str | 
     unique: list[tuple[str, str, str | None]] = []
     rest: list[tuple[str, str, str | None]] = []
     seen: set[str] = set()
-    for text in pool:
-        (rest if text[0] in seen else unique).append(text)
-        seen.add(text[0])
+    for item in pool:
+        (rest if item[0] in seen else unique).append(item)
+        seen.add(item[0])
     return (unique + rest)[:count]
 
 
@@ -648,6 +650,27 @@ def _play_lifecycle(
         )
 
 
+_LOCK_KEY = 727274
+
+
+@contextmanager
+def _seed_lock():
+    """One seeder at a time across processes: a PostgreSQL advisory lock held on
+    its own connection for the duration (the session's connection changes between
+    transactions). Yields False when another process holds it. Other databases
+    are single-process setups."""
+    if engine.dialect.name != "postgresql":
+        yield True
+        return
+    with engine.connect() as conn:
+        acquired = bool(conn.execute(text("SELECT pg_try_advisory_lock(:k)"), {"k": _LOCK_KEY}).scalar())
+        try:
+            yield acquired
+        finally:
+            if acquired:
+                conn.execute(text("SELECT pg_advisory_unlock(:k)"), {"k": _LOCK_KEY})
+
+
 def _outdated(tenant: Tenant) -> bool:
     return int((tenant.settings or {}).get("demo_seed_version", 1)) < SEED_VERSION
 
@@ -659,16 +682,19 @@ def seed(reset: bool = False, seed_value: int = 7) -> dict:
     db = SessionLocal()
     created = []
     try:
-        for spec in ORGS:
-            existing = db.query(Tenant).filter(Tenant.name == spec["name"], Tenant.is_demo.is_(True)).first()
-            if existing and (reset or _outdated(existing)):
-                delete_organization(db, existing)
-                db.commit()
-                existing = None
-            if existing:
-                continue
-            password_hash = password_hash or get_password_hash(password)
-            created.append(_seed_org(db, spec, password_hash, rng))
+        with _seed_lock() as acquired:
+            if not acquired:  # another process is seeding right now
+                return {"password": None, "created": []}
+            for spec in ORGS:
+                existing = db.query(Tenant).filter(Tenant.name == spec["name"], Tenant.is_demo.is_(True)).first()
+                if existing and (reset or _outdated(existing)):
+                    delete_organization(db, existing)
+                    db.commit()
+                    existing = None
+                if existing:
+                    continue
+                password_hash = password_hash or get_password_hash(password)
+                created.append(_seed_org(db, spec, password_hash, rng))
     finally:
         db.close()
     return {"password": password if created else None, "created": created}
